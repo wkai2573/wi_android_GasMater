@@ -1,0 +1,5 @@
+<resources>
+  <string name="app_name">GasMater</string>
+
+  <string name="request_permission">請求權限</string>
+</resources>
