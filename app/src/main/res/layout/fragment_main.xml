@@ -8,6 +8,7 @@
   tools:context=".ui.main.MainFragment">
 
   <LinearLayout
+    android:id="@+id/linearLayout"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -98,12 +99,21 @@
   </androidx.constraintlayout.widget.ConstraintLayout>
 
   <TextView
+    android:id="@+id/countTv"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:text="0"
+    app:layout_constraintBottom_toTopOf="@+id/stateTv"
+    app:layout_constraintEnd_toEndOf="parent" />
+
+  <TextView
     android:id="@+id/msgTv"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:text="接收訊息"
-    app:layout_constraintBottom_toTopOf="@+id/stateTv"
+    app:layout_constraintBottom_toTopOf="@+id/countTv"
     app:layout_constraintEnd_toEndOf="parent" />
+
   <TextView
     android:id="@+id/stateTv"
     android:layout_width="wrap_content"

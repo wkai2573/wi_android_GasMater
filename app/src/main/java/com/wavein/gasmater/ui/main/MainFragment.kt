@@ -261,6 +261,7 @@ class MainFragment : Fragment() {
 
 	private fun 傳送並接收訊息() {
 		if (sendReceive == null) return
+		binding.msgTv.text = "🔼接收到的訊息🔼"
 
 		val text = binding.sendEt.editableText.toString()
 		val asciiCode = text.toCharArray().getOrElse(0) { '0' }.code.toByte()
@@ -284,8 +285,10 @@ class MainFragment : Fragment() {
 			STATE_CONNECTION_FAILED -> binding.stateTv.text = "Connection Failed"
 			STATE_MESSAGE_RECEIVED -> {
 				val readBuff = msg.obj as ByteArray
-				val tempMsg = String(readBuff, 0, msg.arg1)
-				binding.msgTv.text = tempMsg
+//				val tempMsg = String(readBuff, 0, msg.arg1)
+				val tempMsg = "[" + readBuff.joinToString { it.toString() } + "]"
+				binding.countTv.text = (binding.countTv.text.toString().toInt() + 1).toString()
+				binding.msgTv.text = tempMsg + '\n' + binding.msgTv.text
 			}
 		}
 		true
@@ -343,9 +346,9 @@ class MainFragment : Fragment() {
 		}
 
 		override fun run() {
-			val buffer = ByteArray(100)
 			var bytes:Int
 			while (true) {
+				val buffer = ByteArray(50)
 				try {
 					bytes = inputStream!!.read(buffer)
 					handler.obtainMessage(STATE_MESSAGE_RECEIVED, bytes, -1, buffer).sendToTarget()
