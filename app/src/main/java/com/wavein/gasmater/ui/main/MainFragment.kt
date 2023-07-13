@@ -29,12 +29,12 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmater.databinding.FragmentMainBinding
-import com.wavein.gasmater.tools.MESSAGE_READ
-import com.wavein.gasmater.tools.MESSAGE_TOAST
-import com.wavein.gasmater.tools.MESSAGE_WRITE
-import com.wavein.gasmater.tools.MyBluetoothService
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import java.util.UUID
 import kotlin.experimental.xor
+
 
 @SuppressLint("MissingPermission")
 class MainFragment : Fragment() {
@@ -60,10 +60,12 @@ class MainFragment : Fragment() {
 		}
 	}
 
-	// 藍芽設備 & 連線
-	private var device:BluetoothDevice? = null
-	private var bluetoothService:MyBluetoothService? = null
-	private var socketThread:MyBluetoothService.ConnectedThread? = null
+	// 藍牙設備
+	private var BtDevice:BluetoothDevice? = null
+
+	// 藍牙連線
+	private val MY_UUID = UUID.fromString("8ce255c0-223a-11e0-ac64-0803450c9a66")
+	var sendReceive:SendReceive? = null
 
 	// 藍牙adapter
 	private val bluetoothManager:BluetoothManager by lazy { requireContext().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager }
@@ -74,7 +76,12 @@ class MainFragment : Fragment() {
 	private val ETX = 0x03.toByte()
 	private fun getBcc(bytes:ByteArray):Byte { // 取得BCC(傳送bytes的最後驗證碼)
 		var bcc:Byte = 0
-		for (byte in bytes) bcc = bcc xor byte
+		if (bytes.isNotEmpty()) {
+			for (i in 1 until bytes.size) {
+				val byte = bytes[i]
+				bcc = bcc xor byte
+			}
+		}
 		return bcc
 	}
 
@@ -141,7 +148,7 @@ class MainFragment : Fragment() {
 			when (intent.action) {
 				// 選擇藍牙設備
 				"android.bluetooth.devicepicker.action.DEVICE_SELECTED" -> {
-					device = IntentCompat.getParcelableExtra(intent, BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
+					BtDevice = IntentCompat.getParcelableExtra(intent, BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
 					顯示藍牙資訊()
 				}
 				// 當藍牙配對改變
@@ -152,12 +159,12 @@ class MainFragment : Fragment() {
 
 				BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
 					Log.i("@@@", "ACTION_DISCOVERY_STARTED")
-					binding.scanStateTv.text = "掃描中..."
+					binding.stateTv.text = "掃描中..."
 				}
 
 				BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
 					Log.i("@@@", "ACTION_DISCOVERY_FINISHED")
-					binding.scanStateTv.text = "掃描結束"
+					binding.stateTv.text = "掃描結束"
 				}
 
 				BluetoothDevice.ACTION_FOUND -> {
@@ -166,7 +173,7 @@ class MainFragment : Fragment() {
 					顯示藍牙資訊(scannedDevice)
 					if (scannedDevice?.name == "MBH7BTZ43PANA") {
 						bluetoothAdapter.cancelDiscovery()
-						device = scannedDevice
+						BtDevice = scannedDevice
 						顯示藍牙資訊()
 					}
 				}
@@ -214,8 +221,8 @@ class MainFragment : Fragment() {
 	}
 
 	private fun 藍牙配對() {
-		if (device == null) return
-		device?.createBond()
+		if (BtDevice == null) return
+		BtDevice?.createBond()
 	}
 
 	private fun 顯示已配對的藍牙裝置() {
@@ -228,11 +235,11 @@ class MainFragment : Fragment() {
 	private fun 檢查配對Azbil母機() {
 		val devices:Set<BluetoothDevice> = bluetoothAdapter?.bondedDevices!!
 		val foundDevice = devices.find { it.name == "MBH7BTZ43PANA" }
-		this.device = foundDevice
+		this.BtDevice = foundDevice
 		顯示藍牙資訊()
 	}
 
-	private fun 顯示藍牙資訊(_device:BluetoothDevice? = device) {
+	private fun 顯示藍牙資訊(_device:BluetoothDevice? = BtDevice) {
 		if (_device == null) {
 			binding.devicesTv.text = "無配對"
 			return
@@ -247,86 +254,116 @@ class MainFragment : Fragment() {
 	}
 
 	private fun 連接母機() {
-		if (socketThread != null) {
-			socketThread?.cancel()
-			socketThread = null
-			return
-		}
-
-		Snackbar.make(binding.root, "嘗試連接母機", Snackbar.LENGTH_SHORT).show()
-		val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-		Thread {
-			val socket = device!!.createInsecureRfcommSocketToServiceRecord(uuid)
-			val clazz = socket.remoteDevice.javaClass
-			val paramTypes = arrayOf<Class<*>>(Integer.TYPE)
-			val m = clazz.getMethod("createRfcommSocket", *paramTypes)
-			val fallbackSocket = m.invoke(socket.remoteDevice, Integer.valueOf(1)) as BluetoothSocket
-			try {
-				fallbackSocket.connect()
-				bluetoothService = MyBluetoothService(handler)
-				socketThread = bluetoothService?.ConnectedThread(fallbackSocket)
-				socketThread?.start()
-				Snackbar.make(binding.root, "已與母機建立連接", Snackbar.LENGTH_SHORT).show()
-				// 寫入
-//				var outputStream = fallbackSocket.outputStream
-//				outputStream.write(text.toByteArray(Charset.forName("UTF-8")))
-//				Snackbar.make(binding.root, "成功連接母機並傳送資料?", Snackbar.LENGTH_SHORT).show()
-//				// 讀取
-//				val buffer = ByteArray(256)
-//				val bytes = fallbackSocket.inputStream.read(buffer)
-//				val readMessage:String = String(buffer, 0, bytes)
-//				Snackbar.make(binding.root, "成功連接母機並取得資料? $readMessage", Snackbar.LENGTH_SHORT).show()
-			} catch (e:Exception) {
-				e.printStackTrace()
-				Snackbar.make(binding.root, "連接母機失敗 An error occurred", Snackbar.LENGTH_SHORT).show()
-			}
-		}.start()
+		val clientClass = ClientClass(BtDevice!!)
+		clientClass.start()
+		binding.stateTv.text = "Connecting"
 	}
 
 	private fun 傳送並接收訊息() {
-		if (socketThread == null) return
+		if (sendReceive == null) return
 
 		val text = binding.sendEt.editableText.toString()
 		val asciiCode = text.toCharArray().getOrElse(0) { '0' }.code.toByte()
 		var byteArray = byteArrayOf(STX, asciiCode, ETX)
 		byteArray += getBcc(byteArray)
-		socketThread!!.write(byteArray)
+		sendReceive!!.write(byteArray)
 	}
 
+	val STATE_LISTENING = 1
+	val STATE_CONNECTING = 2
+	val STATE_CONNECTED = 3
+	val STATE_CONNECTION_FAILED = 4
+	val STATE_MESSAGE_RECEIVED = 5
+
 	// 藍牙傳送接收處理
-//	var handler:Handler? = Handler { msg ->
-//		when (msg.what) {
-//			STATE_LISTENING -> status.setText("Listening")
-//			STATE_CONNECTING -> status.setText("Connecting")
-//			STATE_CONNECTED -> status.setText("Connected")
-//			STATE_CONNECTION_FAILED -> status.setText("Connection Failed")
-//			STATE_MESSAGE_RECEIVED -> {
-//				val readBuff = msg.obj as ByteArray
-//				val tempMsg = String(readBuff, 0, msg.arg1)
-//				msg_box.setText(tempMsg)
-//			}
-//		}
-//		true
-//	}
-
-	val handler:Handler = Handler(Looper.getMainLooper()) { msg ->
+	var handler:Handler = Handler(Looper.getMainLooper()) { msg ->
 		when (msg.what) {
-			MESSAGE_TOAST -> {
-				val msg = "吐司: ${msg.data}"
-				Snackbar.make(binding.root, msg, Snackbar.LENGTH_SHORT).show()
-			}
-
-			MESSAGE_WRITE -> {
-				val msg = "傳送: ${msg.arg1} ${(msg.obj as ByteArray).joinToString(",") { "0x%02x".format(it) }}"
-				Snackbar.make(binding.root, msg, Snackbar.LENGTH_SHORT).show()
-			}
-
-			MESSAGE_READ -> {
-				val msg = "接收: ${msg.arg1} ${msg.obj} ${msg.data}"
-				Log.i("@@@", msg)
+			STATE_LISTENING -> binding.stateTv.text = "Listening"
+			STATE_CONNECTING -> binding.stateTv.text = "Connecting"
+			STATE_CONNECTED -> binding.stateTv.text = "Connected"
+			STATE_CONNECTION_FAILED -> binding.stateTv.text = "Connection Failed"
+			STATE_MESSAGE_RECEIVED -> {
+				val readBuff = msg.obj as ByteArray
+				val tempMsg = String(readBuff, 0, msg.arg1)
+				binding.msgTv.text = tempMsg
 			}
 		}
 		true
+	}
+
+	//
+	private inner class ClientClass(private val device:BluetoothDevice) : Thread() {
+		private var socket:BluetoothSocket? = null
+
+		init {
+			try {
+				val _socket = device.createRfcommSocketToServiceRecord(MY_UUID)
+				val clazz = _socket.remoteDevice.javaClass
+				val paramTypes = arrayOf<Class<*>>(Integer.TYPE)
+				val m = clazz.getMethod("createRfcommSocket", *paramTypes)
+				val fallbackSocket = m.invoke(_socket.remoteDevice, Integer.valueOf(1)) as BluetoothSocket
+				socket = fallbackSocket
+			} catch (e:IOException) {
+				e.printStackTrace()
+			}
+		}
+
+		override fun run() {
+			try {
+				socket!!.connect()
+				val message:Message = Message.obtain()
+				message.what = STATE_CONNECTED
+				handler.sendMessage(message)
+				sendReceive = SendReceive(socket)
+				sendReceive!!.start()
+			} catch (e:IOException) {
+				e.printStackTrace()
+				val message:Message = Message.obtain()
+				message.what = STATE_CONNECTION_FAILED
+				handler.sendMessage(message)
+			}
+		}
+	}
+
+	inner class SendReceive(private val bluetoothSocket:BluetoothSocket?) : Thread() {
+		private val inputStream:InputStream?
+		private val outputStream:OutputStream?
+
+		init {
+			var tempIn:InputStream? = null
+			var tempOut:OutputStream? = null
+			try {
+				tempIn = bluetoothSocket!!.inputStream
+				tempOut = bluetoothSocket.outputStream
+			} catch (e:IOException) {
+				e.printStackTrace()
+			}
+			inputStream = tempIn
+			outputStream = tempOut
+		}
+
+		override fun run() {
+			val buffer = ByteArray(100)
+			var bytes:Int
+			while (true) {
+				try {
+					bytes = inputStream!!.read(buffer)
+					handler.obtainMessage(STATE_MESSAGE_RECEIVED, bytes, -1, buffer).sendToTarget()
+				} catch (e:IOException) {
+					e.printStackTrace()
+				}
+			}
+		}
+
+		fun write(bytes:ByteArray) {
+			try {
+				val msg = "傳送: " + bytes.joinToString(",") { /*"0x%02x"*/"%d".format(it) }
+				Snackbar.make(requireContext(), binding.root, msg, Snackbar.LENGTH_SHORT).show()
+				outputStream!!.write(bytes)
+			} catch (e:IOException) {
+				e.printStackTrace()
+			}
+		}
 	}
 
 	//region __________權限方法__________
