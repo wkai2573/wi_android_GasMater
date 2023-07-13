@@ -17,33 +17,47 @@
 
     <Button
       android:id="@+id/button"
-      android:layout_width="wrap_content"
+      android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:text="開啟藍牙 並 尋找設備" />
 
     <Button
       android:id="@+id/button2"
-      android:layout_width="wrap_content"
+      android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:text="藍芽配對" />
 
     <Button
       android:id="@+id/button3"
-      android:layout_width="wrap_content"
+      android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:text="已配對的藍牙裝置" />
 
     <Button
       android:id="@+id/button4"
-      android:layout_width="wrap_content"
+      android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:text="檢查配對Azbil母機" />
 
     <Button
       android:id="@+id/button5"
-      android:layout_width="wrap_content"
+      android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:text="連接母機" />
+      android:text="連接母機_斷開母機" />
+
+    <Button
+      android:id="@+id/button6"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:text="傳送並接收訊息" />
+
+    <EditText
+      android:id="@+id/sendEt"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:ems="10"
+      android:inputType="text"
+      android:text="5" />
   </LinearLayout>
 
 

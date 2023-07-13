@@ -6,12 +6,16 @@ import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothSocket
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -20,11 +24,17 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.IntentCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmater.databinding.FragmentMainBinding
+import com.wavein.gasmater.tools.MESSAGE_READ
+import com.wavein.gasmater.tools.MESSAGE_TOAST
+import com.wavein.gasmater.tools.MESSAGE_WRITE
+import com.wavein.gasmater.tools.MyBluetoothService
+import java.util.UUID
+import kotlin.experimental.xor
 
 @SuppressLint("MissingPermission")
 class MainFragment : Fragment() {
@@ -33,9 +43,6 @@ class MainFragment : Fragment() {
 	private var _binding:FragmentMainBinding? = null
 	private val binding get() = _binding!!
 	private val mainVM by activityViewModels<MainViewModel>()
-
-	// 藍芽設備
-	private var device:BluetoothDevice? = null
 
 	// 權限
 	private val permissions = arrayOf(
@@ -53,9 +60,23 @@ class MainFragment : Fragment() {
 		}
 	}
 
+	// 藍芽設備 & 連線
+	private var device:BluetoothDevice? = null
+	private var bluetoothService:MyBluetoothService? = null
+	private var socketThread:MyBluetoothService.ConnectedThread? = null
+
 	// 藍牙adapter
 	private val bluetoothManager:BluetoothManager by lazy { requireContext().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager }
 	private val bluetoothAdapter:BluetoothAdapter by lazy { bluetoothManager.adapter }
+
+	// 電文參數
+	private val STX = 0x02.toByte()
+	private val ETX = 0x03.toByte()
+	private fun getBcc(bytes:ByteArray):Byte { // 取得BCC(傳送bytes的最後驗證碼)
+		var bcc:Byte = 0
+		for (byte in bytes) bcc = bcc xor byte
+		return bcc
+	}
 
 	// 防止內存洩漏
 	override fun onDestroyView() {
@@ -96,8 +117,11 @@ class MainFragment : Fragment() {
 			檢查配對Azbil母機()
 			連接母機()
 		}
+		binding.button6.setOnClickListener {
+			傳送並接收訊息()
+		}
 
-		// 廣播:偵測藍牙配對
+		// 註冊廣播:偵測藍牙配對
 		val intentFilter = IntentFilter().apply {
 			addAction("android.bluetooth.devicepicker.action.DEVICE_SELECTED")
 //			addAction(BluetoothCommands.STATE_CONNECTING)
@@ -110,9 +134,9 @@ class MainFragment : Fragment() {
 		}
 		requireContext().registerReceiver(receiver, intentFilter)
 	}
-	private val receiver:BroadcastReceiver = object : BroadcastReceiver() {
 
-	// 接收廣播
+	// 藍牙廣播接收
+	private val receiver:BroadcastReceiver = object : BroadcastReceiver() {
 		override fun onReceive(context:Context, intent:Intent) {
 			when (intent.action) {
 				// 選擇藍牙設備
@@ -223,7 +247,86 @@ class MainFragment : Fragment() {
 	}
 
 	private fun 連接母機() {
+		if (socketThread != null) {
+			socketThread?.cancel()
+			socketThread = null
+			return
+		}
 
+		Snackbar.make(binding.root, "嘗試連接母機", Snackbar.LENGTH_SHORT).show()
+		val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+		Thread {
+			val socket = device!!.createInsecureRfcommSocketToServiceRecord(uuid)
+			val clazz = socket.remoteDevice.javaClass
+			val paramTypes = arrayOf<Class<*>>(Integer.TYPE)
+			val m = clazz.getMethod("createRfcommSocket", *paramTypes)
+			val fallbackSocket = m.invoke(socket.remoteDevice, Integer.valueOf(1)) as BluetoothSocket
+			try {
+				fallbackSocket.connect()
+				bluetoothService = MyBluetoothService(handler)
+				socketThread = bluetoothService?.ConnectedThread(fallbackSocket)
+				socketThread?.start()
+				Snackbar.make(binding.root, "已與母機建立連接", Snackbar.LENGTH_SHORT).show()
+				// 寫入
+//				var outputStream = fallbackSocket.outputStream
+//				outputStream.write(text.toByteArray(Charset.forName("UTF-8")))
+//				Snackbar.make(binding.root, "成功連接母機並傳送資料?", Snackbar.LENGTH_SHORT).show()
+//				// 讀取
+//				val buffer = ByteArray(256)
+//				val bytes = fallbackSocket.inputStream.read(buffer)
+//				val readMessage:String = String(buffer, 0, bytes)
+//				Snackbar.make(binding.root, "成功連接母機並取得資料? $readMessage", Snackbar.LENGTH_SHORT).show()
+			} catch (e:Exception) {
+				e.printStackTrace()
+				Snackbar.make(binding.root, "連接母機失敗 An error occurred", Snackbar.LENGTH_SHORT).show()
+			}
+		}.start()
+	}
+
+	private fun 傳送並接收訊息() {
+		if (socketThread == null) return
+
+		val text = binding.sendEt.editableText.toString()
+		val asciiCode = text.toCharArray().getOrElse(0) { '0' }.code.toByte()
+		var byteArray = byteArrayOf(STX, asciiCode, ETX)
+		byteArray += getBcc(byteArray)
+		socketThread!!.write(byteArray)
+	}
+
+	// 藍牙傳送接收處理
+//	var handler:Handler? = Handler { msg ->
+//		when (msg.what) {
+//			STATE_LISTENING -> status.setText("Listening")
+//			STATE_CONNECTING -> status.setText("Connecting")
+//			STATE_CONNECTED -> status.setText("Connected")
+//			STATE_CONNECTION_FAILED -> status.setText("Connection Failed")
+//			STATE_MESSAGE_RECEIVED -> {
+//				val readBuff = msg.obj as ByteArray
+//				val tempMsg = String(readBuff, 0, msg.arg1)
+//				msg_box.setText(tempMsg)
+//			}
+//		}
+//		true
+//	}
+
+	val handler:Handler = Handler(Looper.getMainLooper()) { msg ->
+		when (msg.what) {
+			MESSAGE_TOAST -> {
+				val msg = "吐司: ${msg.data}"
+				Snackbar.make(binding.root, msg, Snackbar.LENGTH_SHORT).show()
+			}
+
+			MESSAGE_WRITE -> {
+				val msg = "傳送: ${msg.arg1} ${(msg.obj as ByteArray).joinToString(",") { "0x%02x".format(it) }}"
+				Snackbar.make(binding.root, msg, Snackbar.LENGTH_SHORT).show()
+			}
+
+			MESSAGE_READ -> {
+				val msg = "接收: ${msg.arg1} ${msg.obj} ${msg.data}"
+				Log.i("@@@", msg)
+			}
+		}
+		true
 	}
 
 	//region __________權限方法__________
