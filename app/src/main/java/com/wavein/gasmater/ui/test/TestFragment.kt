@@ -27,7 +27,6 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.content.IntentCompat
 import androidx.fragment.app.activityViewModels
 import com.google.android.material.snackbar.Snackbar
@@ -70,35 +69,11 @@ class TestFragment : Fragment() {
 	private var btDevice:BluetoothDevice? = null
 
 	// 藍牙連線
-	private val MY_UUID = UUID.fromString("8ce255c0-223a-11e0-ac64-0803450c9a66")
 	var sendReceive:SendReceive? = null
 
 	// 藍牙adapter
 	private val bluetoothManager:BluetoothManager by lazy { requireContext().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager }
 	private val bluetoothAdapter:BluetoothAdapter by lazy { bluetoothManager.adapter }
-
-	// 電文參數
-	private val STX = 0x02.toByte()
-	private val ETX = 0x03.toByte()
-	private fun getBcc(bytes:ByteArray):Byte { // 取得BCC(傳送bytes的最後驗證碼)
-		var bcc:Byte = 0
-		if (bytes.isNotEmpty()) {
-			for (i in 1 until bytes.size) {
-				val byte = bytes[i]
-				bcc = bcc xor byte
-			}
-		}
-		return bcc
-	}
-
-	// 防止內存洩漏
-	override fun onDestroyView() {
-		super.onDestroyView()
-		_binding = null
-		kotlin.runCatching {
-			requireContext().unregisterReceiver(receiver)
-		}
-	}
 
 	override fun onCreateView(inflater:LayoutInflater, container:ViewGroup?, savedInstanceState:Bundle?):View {
 		_binding = FragmentTestBinding.inflate(inflater, container, false)
@@ -183,7 +158,7 @@ class TestFragment : Fragment() {
 					Log.i("@@@", "ACTION_FOUND")
 					val scannedDevice = IntentCompat.getParcelableExtra(intent, BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
 					顯示藍牙資訊(scannedDevice)
-					if (scannedDevice?.name == "MBH7BTZ43PANA") {
+					if (scannedDevice?.name == DEVICE_NAME) {
 						bluetoothAdapter.cancelDiscovery()
 						btDevice = scannedDevice
 						當掃描到設備()
@@ -248,7 +223,7 @@ class TestFragment : Fragment() {
 
 	private fun 獲取已配對Azbil母機() {
 		val devices:Set<BluetoothDevice> = bluetoothAdapter.bondedDevices!!
-		val foundDevice = devices.find { it.name == "MBH7BTZ43PANA" }
+		val foundDevice = devices.find { it.name == DEVICE_NAME }
 		this.btDevice = foundDevice
 		顯示藍牙資訊()
 	}
@@ -283,6 +258,9 @@ class TestFragment : Fragment() {
 		val asciiCodeList = text.toCharArray().map { it.code.toByte() }
 		var bytes = byteArrayOf(STX) + asciiCodeList.toByteArray() + byteArrayOf(ETX)
 		bytes += getBcc(bytes)
+		printByteArrayAsBinary(bytes)
+//		bytes = convertbitComposition(bytes)
+		printByteArrayAsBinary(bytes)
 		sendReceive!!.write(bytes)
 
 		val msg = "傳送: " + bytes.joinToString(" ") { /*"0x%02x"*/"%d".format(it) }
@@ -298,6 +276,15 @@ class TestFragment : Fragment() {
 	//region __________藍牙連接 & 資料傳送/接收處理__________
 	// 藍牙連接參考 https://www.youtube.com/watch?v=5M4o5dGigbY&ab_channel=SarthiTechnology
 
+	// ==藍牙連線參數==
+	// 舊母機:MBH7BTZ43PANA PIN:5678
+	// 新母機:RD64HGL       PIN:5893
+	private val DEVICE_NAME:String = "RD64HGL"
+	private val SSP_SERVICE = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+	private val serviceUuid = UUID.fromString("49535343-FE7D-4AE5-8FA9-9FAFD205E455")
+	private val characteristicUuid = UUID.fromString("49535343-1E4D-4BD9-BA61-23C647249616")
+
+	// 連線狀態
 	val STATE_LISTENING = 1
 	val STATE_CONNECTING = 2
 	val STATE_CONNECTED = 3
@@ -328,11 +315,7 @@ class TestFragment : Fragment() {
 
 		init {
 			try {
-				val _socket = device.createRfcommSocketToServiceRecord(MY_UUID)
-				val clazz = _socket.remoteDevice.javaClass
-				val paramTypes = arrayOf<Class<*>>(Integer.TYPE)
-				val m = clazz.getMethod("createRfcommSocket", *paramTypes)
-				val fallbackSocket = m.invoke(_socket.remoteDevice, Integer.valueOf(1)) as BluetoothSocket
+				val fallbackSocket = device.createRfcommSocketToServiceRecord(SSP_SERVICE)
 				socket = fallbackSocket
 			} catch (e:IOException) {
 				e.printStackTrace()
@@ -392,7 +375,7 @@ class TestFragment : Fragment() {
 						}
 					}
 				} catch (e:IOException) {
-					Snackbar.make(requireContext(), binding.root, "接收資料時發生錯誤", Snackbar.LENGTH_SHORT).show()
+					Snackbar.make(requireContext(), binding.root, "接收資料時發生錯誤: ${e.message}", Snackbar.LENGTH_SHORT).show()
 					e.printStackTrace()
 					break
 				}
@@ -412,6 +395,61 @@ class TestFragment : Fragment() {
 			} catch (e:IOException) {
 				e.printStackTrace()
 			}
+		}
+	}
+
+	// 電文參數
+	private val STX = 0x02.toByte()
+	private val ETX = 0x03.toByte()
+	private fun getBcc(bytes:ByteArray):Byte { // 取得BCC(傳送bytes的最後驗證碼)
+		var bcc:Byte = 0
+		if (bytes.isNotEmpty()) {
+			for (i in 1 until bytes.size) {
+				val byte = bytes[i]
+				bcc = bcc xor byte
+			}
+		}
+		return bcc
+	}
+
+	// 除錯: 印出byteArray二進位
+	private fun printByteArrayAsBinary(byteArray:ByteArray):List<String> {
+		val binaryList:MutableList<String> = mutableListOf()
+		for (byte in byteArray) {
+			val binaryString = Integer.toBinaryString(byte.toInt() and 0xFF)
+			val paddedBinaryString = binaryString.padStart(8, '0')
+			binaryList.add(paddedBinaryString)
+		}
+		Log.e("@@@", binaryList.toString())
+		return binaryList
+	}
+
+	//todo(測試中) 轉換傳送用bit組成
+	private fun convertbitComposition(inputByteArray:ByteArray):ByteArray {
+		val binaryList = mutableListOf<Byte>()
+		for (byteValue in inputByteArray) {
+			val byteBinary = byteValue.toUByte().toString(2).padStart(7, '0')
+			val reversedBinary = byteBinary.reversed()
+			val parityBit = calculateParityBit(reversedBinary)
+			val finalBinary = reversedBinary + parityBit
+			val byteValue = finalBinary.toInt(2).toByte()
+			binaryList.add(byteValue)
+		}
+		return binaryList.toByteArray()
+	}
+
+	//todo(測試中)
+	private fun calculateParityBit(binary:String):String {
+		val onesCount = binary.count { it == '1' }
+		return if (onesCount % 2 == 1) "1" else "0"
+	}
+
+	// 防止內存洩漏
+	override fun onDestroyView() {
+		super.onDestroyView()
+		_binding = null
+		kotlin.runCatching {
+			requireContext().unregisterReceiver(receiver)
 		}
 	}
 

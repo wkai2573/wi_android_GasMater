@@ -64,7 +64,6 @@ class MainFragment : Fragment() {
 	// 當權限皆允許
 	private fun onPermissionsAllow() {
 		binding.revokedPermissionLayout.visibility = View.GONE
-
 		//...
 	}
 
