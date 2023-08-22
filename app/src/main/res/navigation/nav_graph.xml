@@ -3,7 +3,7 @@
   xmlns:app="http://schemas.android.com/apk/res-auto"
   xmlns:tools="http://schemas.android.com/tools"
   android:id="@+id/nav_graph"
-  app:startDestination="@id/testFragment">
+  app:startDestination="@id/bleDeviceFragment">
   <fragment
     android:id="@+id/mainFragment"
     android:name="com.wavein.gasmater.ui.main.MainFragment"
@@ -14,4 +14,9 @@
     android:name="com.wavein.gasmater.ui.test.TestFragment"
     android:label="fragment_test"
     tools:layout="@layout/fragment_test" />
+  <fragment
+    android:id="@+id/bleDeviceFragment"
+    android:name="com.wavein.gasmater.ui.bt.BleDeviceFragment"
+    android:label="fragment_bt"
+    tools:layout="@layout/fragment_ble" />
 </navigation>

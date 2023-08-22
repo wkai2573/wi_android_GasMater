@@ -5,16 +5,22 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGatt
+import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothProfile
 import android.bluetooth.BluetoothSocket
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.ServiceConnection
+import android.content.ComponentName
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.IBinder
 import android.os.Looper
 import android.os.Message
 import android.util.Log
@@ -31,6 +37,7 @@ import androidx.core.content.IntentCompat
 import androidx.fragment.app.activityViewModels
 import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmater.databinding.FragmentTestBinding
+import com.wavein.gasmater.service.BluetoothLeService
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -48,9 +55,7 @@ class TestFragment : Fragment() {
 	// 權限
 	private val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
 		arrayOf(
-			Manifest.permission.BLUETOOTH_CONNECT,
-			Manifest.permission.BLUETOOTH_SCAN,
-			Manifest.permission.ACCESS_FINE_LOCATION
+			Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_FINE_LOCATION
 		)
 	} else {
 		arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -64,16 +69,6 @@ class TestFragment : Fragment() {
 			}
 		}
 	}
-
-	// 藍牙設備
-	private var btDevice:BluetoothDevice? = null
-
-	// 藍牙連線
-	var sendReceive:SendReceive? = null
-
-	// 藍牙adapter
-	private val bluetoothManager:BluetoothManager by lazy { requireContext().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager }
-	private val bluetoothAdapter:BluetoothAdapter by lazy { bluetoothManager.adapter }
 
 	override fun onCreateView(inflater:LayoutInflater, container:ViewGroup?, savedInstanceState:Bundle?):View {
 		_binding = FragmentTestBinding.inflate(inflater, container, false)
@@ -90,6 +85,15 @@ class TestFragment : Fragment() {
 				requestPermissionLauncher.launch(permissions)
 			}
 			requestPermissionLauncher.launch(permissions)
+		}
+	}
+
+	override fun onDestroyView() {
+		super.onDestroyView()
+		// 防止內存洩漏
+		_binding = null
+		kotlin.runCatching {
+			requireContext().unregisterReceiver(receiver)
 		}
 	}
 
@@ -116,7 +120,7 @@ class TestFragment : Fragment() {
 		binding.button10.setOnClickListener { binding.sendEt.setText("ZA00000000000101R16") }    // ZA00000000000000D16@@9  アラーム情報(S-14頁)
 		binding.button11.setOnClickListener { binding.sendEt.setText("ZA00000000000000R84121000000000000101????00000000000102????00000000000103????00000000000104????00000000000105????00000000000106????00000000000107????00000000000108????00000000000109????00000000000110????") }
 
-		// 註冊廣播:偵測藍牙配對
+		// 註冊廣播:偵測藍牙掃描結果
 		val intentFilter = IntentFilter().apply {
 			addAction("android.bluetooth.devicepicker.action.DEVICE_SELECTED")
 			addAction(BluetoothDevice.ACTION_FOUND)
@@ -125,9 +129,52 @@ class TestFragment : Fragment() {
 			addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
 		}
 		requireContext().registerReceiver(receiver, intentFilter)
+
+		// 藍牙服務
+		val gattServiceIntent = Intent(requireContext(), BluetoothLeService::class.java)
+		requireContext().bindService(gattServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
 	}
 
+	//region __________權限方法__________
+
+	// 當權限不允許
+	private fun onPermissionsNoAllow() {
+		val revokedPermissions:List<String> =
+			getPermissionsMap().filterValues { isGranted -> !isGranted }.map { (permission, isGranted) -> permission }
+		val revokedPermissionsText = """
+		缺少權限: ${
+			revokedPermissions.map { p -> p.replace(".+\\.".toRegex(), "") }.joinToString(", ")
+		}
+		請授予這些權限，以便應用程序正常運行。
+		Please grant all of them for the app to function properly.
+		""".trimIndent()
+		binding.revokedPermissionTv.text = revokedPermissionsText
+	}
+
+	// 是否有全部權限
+	private fun hasPermissions(
+		context:Context = requireContext(),
+		permissions:Array<String> = this.permissions,
+	):Boolean = getPermissionsMap(context, permissions).all { (permission, isGranted) -> isGranted }
+
+	// 取得權限狀態
+	private fun getPermissionsMap(
+		context:Context = requireContext(),
+		permissions:Array<String> = this.permissions,
+	):Map<String, Boolean> = permissions.associateWith {
+		ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+	}
+
+	//endregion
+
 	//region __________藍牙搜尋/配對__________
+
+	// 藍牙設備
+	private var btDevice:BluetoothDevice? = null
+
+	// 藍牙adapter
+	private val bluetoothManager:BluetoothManager by lazy { requireContext().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager }
+	private val bluetoothAdapter:BluetoothAdapter by lazy { bluetoothManager.adapter }
 
 	// 藍牙配對處理(接收廣播)
 	private val receiver:BroadcastReceiver = object : BroadcastReceiver() {
@@ -158,7 +205,7 @@ class TestFragment : Fragment() {
 					Log.i("@@@", "ACTION_FOUND")
 					val scannedDevice = IntentCompat.getParcelableExtra(intent, BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
 					顯示藍牙資訊(scannedDevice)
-					if (scannedDevice?.name == DEVICE_NAME) {
+					if (scannedDevice?.address == DEVICE_ADDR) {
 						bluetoothAdapter.cancelDiscovery()
 						btDevice = scannedDevice
 						當掃描到設備()
@@ -200,6 +247,7 @@ class TestFragment : Fragment() {
 	}
 	private var 當掃描到設備:() -> Unit = {}
 
+	// 掃描設備 scanForDevices
 	private fun 掃描設備(cb:() -> Unit = {}) {
 		if (!bluetoothAdapter.isEnabled) return
 
@@ -244,13 +292,13 @@ class TestFragment : Fragment() {
 
 	private fun 連接母機() {
 		if (btDevice == null) return
-		val clientClass = ClientClass(btDevice!!)
-		clientClass.start()
-		binding.stateTv.text = "Connecting"
+		binding.stateTv.text = "連接母機"
+		bluetoothGatt = btDevice!!.connectGatt(requireContext(), true, gattCallback)
+		bluetoothService
 	}
 
 	private fun 傳送並接收訊息() {
-		if (sendReceive == null) return
+//		if (sendReceive == null) return
 		val text = binding.sendEt.editableText.toString()
 		if (text.isEmpty()) return
 
@@ -260,8 +308,8 @@ class TestFragment : Fragment() {
 		bytes += getBcc(bytes)
 		printByteArrayAsBinary(bytes)
 //		bytes = convertbitComposition(bytes)
-		printByteArrayAsBinary(bytes)
-		sendReceive!!.write(bytes)
+//		printByteArrayAsBinary(bytes)
+//		sendReceive!!.write(bytes)
 
 		val msg = "傳送: " + bytes.joinToString(" ") { /*"0x%02x"*/"%d".format(it) }
 		Snackbar.make(requireContext(), binding.root, msg, Snackbar.LENGTH_SHORT).show()
@@ -273,130 +321,80 @@ class TestFragment : Fragment() {
 
 	//endregion
 
-	//region __________藍牙連接 & 資料傳送/接收處理__________
-	// 藍牙連接參考 https://www.youtube.com/watch?v=5M4o5dGigbY&ab_channel=SarthiTechnology
-
 	// ==藍牙連線參數==
-	// 舊母機:MBH7BTZ43PANA PIN:5678
-	// 新母機:RD64HGL       PIN:5893
+	// 舊母機:MBH7BTZ43PANA  ADDR:E0:18:77:FC:F1:5C  PIN:5678
+	// 新母機:RD64HGL        ADDR:E8:EB:1B:6E:49:47  PIN:5893
 	private val DEVICE_NAME:String = "RD64HGL"
-	private val SSP_SERVICE = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-	private val serviceUuid = UUID.fromString("49535343-FE7D-4AE5-8FA9-9FAFD205E455")
-	private val characteristicUuid = UUID.fromString("49535343-1E4D-4BD9-BA61-23C647249616")
+	private val DEVICE_ADDR:String = "E8:EB:1B:6E:49:47"
 
-	// 連線狀態
-	val STATE_LISTENING = 1
-	val STATE_CONNECTING = 2
-	val STATE_CONNECTED = 3
-	val STATE_CONNECTION_FAILED = 4
-	val STATE_MESSAGE_RECEIVED = 5
+	//region __________(新母機,GATT) 藍牙連接 & 資料傳送/接收處理__________
 
-	// 藍牙連線與資料處理
-	var bluetoothHandler:Handler = Handler(Looper.getMainLooper()) { msg ->
-		when (msg.what) {
-			STATE_LISTENING -> binding.stateTv.text = "Listening"
-			STATE_CONNECTING -> binding.stateTv.text = "Connecting"
-			STATE_CONNECTED -> binding.stateTv.text = "Connected"
-			STATE_CONNECTION_FAILED -> binding.stateTv.text = "Connection Failed"
-			STATE_MESSAGE_RECEIVED -> {
-				val readBuff = (msg.obj as ByteArray).copyOfRange(0, msg.arg1)
-				val msg = String(readBuff, 1, msg.arg1 - 3)
-				val msgByte = "[" + readBuff.joinToString(",") { it.toString() } + "]"
-				// binding.msgTv.text = "${binding.msgTv.text}\n$msgByte\n$msg"
-				binding.msgTv.text = "${binding.msgTv.text}\n$msg"
-			}
-		}
-		true
-	}
+	// 服務
+	private var bluetoothService:BluetoothLeService? = null
 
-	// 連接device用
-	private inner class ClientClass(private val device:BluetoothDevice) : Thread() {
-		private var socket:BluetoothSocket? = null
-
-		init {
-			try {
-				val fallbackSocket = device.createRfcommSocketToServiceRecord(SSP_SERVICE)
-				socket = fallbackSocket
-			} catch (e:IOException) {
-				e.printStackTrace()
-			}
-		}
-
-		override fun run() {
-			try {
-				socket!!.connect()
-				val message:Message = Message.obtain()
-				message.what = STATE_CONNECTED
-				bluetoothHandler.sendMessage(message)
-				sendReceive = SendReceive(socket)
-				sendReceive!!.start()
-			} catch (e:IOException) {
-				e.printStackTrace()
-				val message:Message = Message.obtain()
-				message.what = STATE_CONNECTION_FAILED
-				bluetoothHandler.sendMessage(message)
-			}
-		}
-	}
-
-	// 傳送與接收資料用
-	inner class SendReceive(private val bluetoothSocket:BluetoothSocket?) : Thread() {
-		private val inputStream:InputStream?
-		private val outputStream:OutputStream?
-
-		init {
-			var tempIn:InputStream? = null
-			var tempOut:OutputStream? = null
-			try {
-				tempIn = bluetoothSocket!!.inputStream
-				tempOut = bluetoothSocket.outputStream
-			} catch (e:IOException) {
-				e.printStackTrace()
-			}
-			inputStream = tempIn
-			outputStream = tempOut
-		}
-
-		override fun run() {
-			var totalBuffer = ByteArray(1024)
-			var totalBufferLength:Int = 0
-
-			while (true) {
-				val singleBuffer = ByteArray(50)
-				try {
-					val length = inputStream!!.read(singleBuffer)
-					if (length != -1) {
-						singleBuffer.copyInto(totalBuffer, totalBufferLength, 0, length)
-						totalBufferLength += length
-						if (checkReceiveOver(totalBuffer, totalBufferLength)) {
-							bluetoothHandler.obtainMessage(STATE_MESSAGE_RECEIVED, totalBufferLength, -1, totalBuffer).sendToTarget()
-							totalBuffer = ByteArray(1024)
-							totalBufferLength = 0
-						}
-					}
-				} catch (e:IOException) {
-					Snackbar.make(requireContext(), binding.root, "接收資料時發生錯誤: ${e.message}", Snackbar.LENGTH_SHORT).show()
-					e.printStackTrace()
-					break
+	// Code to manage Service lifecycle.
+	private val serviceConnection:ServiceConnection = object : ServiceConnection {
+		override fun onServiceConnected(
+			componentName:ComponentName,
+			service:IBinder,
+		) {
+			bluetoothService = (service as BluetoothLeService.LocalBinder).getService()
+			bluetoothService?.let { bluetoothService ->
+				if (!bluetoothService.initialize(requireContext())) {
+					Log.e("@@@", "Unable to initialize Bluetooth")
+					requireActivity().finish()
 				}
 			}
 		}
 
-		// 檢查是否接收結束(結尾是ETX & BCC)
-		private fun checkReceiveOver(bytes:ByteArray, length:Int):Boolean {
-			if (length <= 3) return false
-			val bcc = bytes[length - 1]
-			return bytes[length - 2] == ETX && bcc == getBcc(bytes.copyOfRange(0, length - 1))
+		override fun onServiceDisconnected(componentName:ComponentName) {
+			bluetoothService = null
+		}
+	}
+
+	private lateinit var bluetoothGatt:BluetoothGatt
+
+	// 設定您的服務和特性 UUID
+	val serviceUuid = UUID.fromString("49535343-FE7D-4AE5-8FA9-9FAFD205E455")
+	val characteristicUuid = UUID.fromString("49535343-1E4D-4BD9-BA61-23C647249616")
+
+	val gattCallback = object : BluetoothGattCallback() {
+		override fun onConnectionStateChange(gatt:BluetoothGatt, status:Int, newState:Int) {
+			when (newState) {
+				BluetoothProfile.STATE_CONNECTED -> {
+					// 成功連接，開始發現服務
+					binding.stateTv.text = "STATE_CONNECTED"
+					gatt.discoverServices()
+				}
+
+				BluetoothProfile.STATE_CONNECTING -> {
+					binding.stateTv.text = "STATE_CONNECTING"
+				}
+
+				BluetoothProfile.STATE_DISCONNECTING -> {
+					binding.stateTv.text = "STATE_DISCONNECTING"
+				}
+
+				BluetoothProfile.STATE_DISCONNECTED -> {
+					binding.stateTv.text = "STATE_DISCONNECTED"
+				}
+			}
 		}
 
-		fun write(bytes:ByteArray) {
-			try {
-				outputStream!!.write(bytes)
-			} catch (e:IOException) {
-				e.printStackTrace()
+		override fun onServicesDiscovered(gatt:BluetoothGatt, status:Int) {
+			// 發現 BLE 服務後，找到目標特性並進行相應操作
+			val service = gatt.getService(serviceUuid)
+			val characteristic = service?.getCharacteristic(characteristicUuid)
+
+			if (characteristic != null) {
+				// 在這裡進行您的特性操作，例如讀取或寫入數據
+				// gatt.readCharacteristic(targetCharacteristic)
+				// gatt.writeCharacteristic(targetCharacteristic)
 			}
 		}
 	}
+
+	//endregion
 
 	// 電文參數
 	private val STX = 0x02.toByte()
@@ -424,69 +422,4 @@ class TestFragment : Fragment() {
 		return binaryList
 	}
 
-	//todo(測試中) 轉換傳送用bit組成
-	private fun convertbitComposition(inputByteArray:ByteArray):ByteArray {
-		val binaryList = mutableListOf<Byte>()
-		for (byteValue in inputByteArray) {
-			val byteBinary = byteValue.toUByte().toString(2).padStart(7, '0')
-			val reversedBinary = byteBinary.reversed()
-			val parityBit = calculateParityBit(reversedBinary)
-			val finalBinary = reversedBinary + parityBit
-			val byteValue = finalBinary.toInt(2).toByte()
-			binaryList.add(byteValue)
-		}
-		return binaryList.toByteArray()
-	}
-
-	//todo(測試中)
-	private fun calculateParityBit(binary:String):String {
-		val onesCount = binary.count { it == '1' }
-		return if (onesCount % 2 == 1) "1" else "0"
-	}
-
-	// 防止內存洩漏
-	override fun onDestroyView() {
-		super.onDestroyView()
-		_binding = null
-		kotlin.runCatching {
-			requireContext().unregisterReceiver(receiver)
-		}
-	}
-
-	//endregion
-
-	//region __________權限方法__________
-
-	// 當權限不允許
-	private fun onPermissionsNoAllow() {
-		val revokedPermissions:List<String> = getPermissionsMap()
-			.filterValues { isGranted -> !isGranted }
-			.map { (permission, isGranted) -> permission }
-		val revokedPermissionsText = """
-		缺少權限: ${
-			revokedPermissions
-				.map { p -> p.replace(".+\\.".toRegex(), "") }
-				.joinToString(", ")
-		}
-		請授予這些權限，以便應用程序正常運行。
-		Please grant all of them for the app to function properly.
-		""".trimIndent()
-		binding.revokedPermissionTv.text = revokedPermissionsText
-	}
-
-	// 是否有全部權限
-	private fun hasPermissions(
-		context:Context = requireContext(),
-		permissions:Array<String> = this.permissions,
-	):Boolean = getPermissionsMap(context, permissions).all { (permission, isGranted) -> isGranted }
-
-	// 取得權限狀態
-	private fun getPermissionsMap(
-		context:Context = requireContext(),
-		permissions:Array<String> = this.permissions,
-	):Map<String, Boolean> = permissions.associateWith {
-		ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
-	}
-
-	//endregion
 }

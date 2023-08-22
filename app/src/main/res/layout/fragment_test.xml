@@ -186,19 +186,19 @@
 
       <TextView
         android:id="@+id/devicesTv"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="裝置" />
 
       <TextView
         android:id="@+id/stateTv"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="狀態" />
 
       <TextView
         android:id="@+id/msgTv"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="🔽接收到的訊息🔽" />
 
