@@ -4,26 +4,24 @@
   xmlns:tools="http://schemas.android.com/tools"
   android:id="@+id/nav_graph"
   app:startDestination="@id/mainFragment">
-  <fragment
-    android:id="@+id/mainFragment"
+  <fragment android:id="@+id/mainFragment"
     android:name="com.wavein.gasmater.ui.main.MainFragment"
     android:label="fragment_main"
-    tools:layout="@layout/fragment_main" >
-    <action
-      android:id="@+id/action_mainFragment_to_bleDeviceFragment"
-      app:destination="@id/bleDeviceFragment" />
-    <action
-      android:id="@+id/action_mainFragment_to_testFragment"
-      app:destination="@id/testFragment" />
+    tools:layout="@layout/fragment_main">
+    <action android:id="@+id/action_mainFragment_to_bleDeviceFragment" app:destination="@id/bleDeviceFragment" />
+    <action android:id="@+id/action_mainFragment_to_testFragment" app:destination="@id/testFragment" />
+    <action android:id="@+id/action_mainFragment_to_csvFragment" app:destination="@id/csvFragment" />
   </fragment>
-  <fragment
-    android:id="@+id/testFragment"
+  <fragment android:id="@+id/testFragment"
     android:name="com.wavein.gasmater.ui.test.TestFragment"
     android:label="fragment_test"
     tools:layout="@layout/fragment_test" />
-  <fragment
-    android:id="@+id/bleDeviceFragment"
+  <fragment android:id="@+id/bleDeviceFragment"
     android:name="com.wavein.gasmater.ui.bt.BleDeviceFragment"
     android:label="fragment_bt"
     tools:layout="@layout/fragment_ble" />
+  <fragment android:id="@+id/csvFragment"
+    android:name="com.wavein.gasmater.ui.csv.CsvFragment"
+    android:label="fragment_csv"
+    tools:layout="@layout/fragment_csv" />
 </navigation>

@@ -4,15 +4,15 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.wavein.gasmater.R
 import com.wavein.gasmater.databinding.ItemDeviceBinding
 
-class LeDeviceListAdapter(private val onClick:(BluetoothDevice) -> Unit) :
-	ListAdapter<BluetoothDevice, LeDeviceListAdapter.ViewHolder>(DiffCallback()) {
+class LeDeviceListAdapter(
+	private val onClick:(BluetoothDevice) -> Unit,
+) : ListAdapter<BluetoothDevice, LeDeviceListAdapter.ViewHolder>(DiffCallback()) {
+
 	override fun onCreateViewHolder(parent:ViewGroup, viewType:Int):LeDeviceListAdapter.ViewHolder {
 		val binding = ItemDeviceBinding.inflate(LayoutInflater.from(parent.context), parent, false)
 		return ViewHolder(binding)
@@ -24,9 +24,7 @@ class LeDeviceListAdapter(private val onClick:(BluetoothDevice) -> Unit) :
 		holder.bind(btDevice)
 	}
 
-	inner class ViewHolder(binding:ItemDeviceBinding) : RecyclerView.ViewHolder(binding.root) {
-		private val btInfoTv:TextView by lazy { itemView.findViewById(R.id.btInfoTv) }
-
+	inner class ViewHolder(private val binding:ItemDeviceBinding) : RecyclerView.ViewHolder(binding.root) {
 		init {
 			itemView.setOnClickListener {
 				onClick(getItem(adapterPosition))
@@ -35,7 +33,7 @@ class LeDeviceListAdapter(private val onClick:(BluetoothDevice) -> Unit) :
 
 		@SuppressLint("MissingPermission")
 		fun bind(item:BluetoothDevice) {
-			btInfoTv.text = "${item.name}🏀${item.address}🏀${item.uuids}"
+			binding.btInfoTv.text = "${item.name}🏀${item.address}🏀${item.uuids}"
 		}
 	}
 

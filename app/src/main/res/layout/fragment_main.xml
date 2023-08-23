@@ -7,12 +7,11 @@
   android:layout_height="match_parent"
   tools:context=".ui.main.MainFragment">
 
-  <com.google.android.material.button.MaterialButton
-    android:id="@+id/btn1"
+  <com.google.android.material.button.MaterialButton android:id="@+id/btn1"
     android:layout_width="200dp"
     android:layout_height="48dp"
     android:layout_marginTop="128dp"
-    android:text="設備連線"
+    android:text="@string/DeviceConnection"
     app:layout_constraintBottom_toTopOf="@+id/btn2"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintHorizontal_bias="0.5"
@@ -20,8 +19,7 @@
     app:layout_constraintTop_toTopOf="parent"
     app:layout_constraintVertical_chainStyle="spread_inside" />
 
-  <com.google.android.material.button.MaterialButton
-    android:id="@+id/btn2"
+  <com.google.android.material.button.MaterialButton android:id="@+id/btn2"
     android:layout_width="200dp"
     android:layout_height="wrap_content"
     android:text="數據管理?"
@@ -31,8 +29,7 @@
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintTop_toBottomOf="@+id/btn1" />
 
-  <com.google.android.material.button.MaterialButton
-    android:id="@+id/btn3"
+  <com.google.android.material.button.MaterialButton android:id="@+id/btn3"
     android:layout_width="200dp"
     android:layout_height="wrap_content"
     android:text="抄表處理"
@@ -42,8 +39,7 @@
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintTop_toBottomOf="@+id/btn2" />
 
-  <com.google.android.material.button.MaterialButton
-    android:id="@+id/btn4"
+  <com.google.android.material.button.MaterialButton android:id="@+id/btn4"
     android:layout_width="200dp"
     android:layout_height="wrap_content"
     android:text="告警查詢"
@@ -53,8 +49,7 @@
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintTop_toBottomOf="@+id/btn3" />
 
-  <com.google.android.material.button.MaterialButton
-    android:id="@+id/btn5"
+  <com.google.android.material.button.MaterialButton android:id="@+id/btn5"
     android:layout_width="200dp"
     android:layout_height="wrap_content"
     android:layout_marginBottom="128dp"
@@ -65,16 +60,14 @@
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintTop_toBottomOf="@+id/btn4" />
 
-  <com.google.android.material.button.MaterialButton
-    android:id="@+id/btn6"
+  <com.google.android.material.button.MaterialButton android:id="@+id/btn6"
     android:layout_width="200dp"
     android:layout_height="wrap_content"
     android:text="測試頁"
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintEnd_toEndOf="parent" />
 
-  <androidx.constraintlayout.widget.ConstraintLayout
-    android:id="@+id/revokedPermissionLayout"
+  <androidx.constraintlayout.widget.ConstraintLayout android:id="@+id/revokedPermissionLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/cardview_light_background"
@@ -84,8 +77,7 @@
     app:layout_constraintTop_toTopOf="parent"
     tools:visibility="gone">
 
-    <com.google.android.material.textview.MaterialTextView
-      android:id="@+id/revokedPermissionTv"
+    <com.google.android.material.textview.MaterialTextView android:id="@+id/revokedPermissionTv"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:layout_marginBottom="16dp"
@@ -99,8 +91,7 @@
       app:layout_constraintVertical_chainStyle="packed"
       tools:text="權限未同意顯示文字" />
 
-    <com.google.android.material.button.MaterialButton
-      android:id="@+id/requestPermissionBtn"
+    <com.google.android.material.button.MaterialButton android:id="@+id/requestPermissionBtn"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:text="@string/request_permission"
@@ -111,5 +102,29 @@
       app:layout_constraintTop_toBottomOf="@+id/revokedPermissionTv" />
 
   </androidx.constraintlayout.widget.ConstraintLayout>
+
+  <TextView android:id="@+id/twFlag"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="🇹🇼"
+    android:textSize="30sp"
+    app:layout_constraintEnd_toStartOf="@+id/jpFlag"
+    app:layout_constraintTop_toTopOf="parent" />
+
+  <TextView android:id="@+id/jpFlag"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="🇯🇵"
+    android:textSize="30sp"
+    app:layout_constraintEnd_toStartOf="@+id/usFlag"
+    app:layout_constraintTop_toTopOf="parent" />
+
+  <TextView android:id="@+id/usFlag"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="🇺🇸"
+    android:textSize="30sp"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -16,8 +16,10 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.wavein.gasmater.databinding.FragmentBleBinding
+import com.wavein.gasmater.tools.SharedEvent
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 @SuppressLint("MissingPermission")
 class BleDeviceFragment : Fragment() {
@@ -42,7 +44,9 @@ class BleDeviceFragment : Fragment() {
 
 		// vm初始化
 		bleVM.setDeviceOnClick { bleDevice ->
-			Toast.makeText(requireContext(), "選擇了 ${bleDevice.name} \nTODO 配對該設備...", Toast.LENGTH_SHORT).show()
+			lifecycleScope.launch {
+				SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("選擇了 ${bleDevice.name} \nTODO 配對該設備..."))
+			}
 			bleVM.connectBleDevice(requireContext(), bleDevice)
 		}
 

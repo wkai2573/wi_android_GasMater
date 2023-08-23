@@ -3,5 +3,5 @@
   <string name="app_name">GasMater</string>
 
   <string name="request_permission">請求權限</string>
-  <string name="DeviceConnection">Device Connection</string>
+  <string name="DeviceConnection">デバイスの接続</string>
 </resources>

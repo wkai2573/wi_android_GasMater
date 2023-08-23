@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+  <!-- 對話框樣式 -->
+  <style name="MyAlertDialogTheme" parent="@style/ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+    <item name="materialAlertDialogTitleTextStyle">@style/AlertDialog.Title.Text</item>
+    <item name="materialAlertDialogBodyTextStyle">@style/AlertDialog.Body.Text</item>
+  </style>
+  <style name="AlertDialog.Title.Text" parent="MaterialAlertDialog.MaterialComponents.Title.Text">
+    <item name="android:textSize">18sp</item>
+    <item name="android:textStyle">bold</item>
+  </style>
+  <style name="AlertDialog.Body.Text" parent="MaterialAlertDialog.MaterialComponents.Body.Text">
+    <item name="android:textColor">#0055FF</item>
+    <item name="android:textSize">30sp</item>
+    <item name="android:textStyle">bold</item>
+  </style>
+
+</resources>
