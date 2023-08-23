@@ -12,6 +12,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
+import com.wavein.gasmater.R
 import com.wavein.gasmater.databinding.FragmentMainBinding
 
 class MainFragment : Fragment() {
@@ -27,6 +29,7 @@ class MainFragment : Fragment() {
 		Manifest.permission.BLUETOOTH_SCAN,
 		Manifest.permission.ACCESS_FINE_LOCATION
 	)
+
 	private val requestPermissionLauncher:ActivityResultLauncher<Array<String>> by lazy {
 		registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissionsMap ->
 			if (permissionsMap.all { (permission, isGranted) -> isGranted }) {
@@ -64,21 +67,25 @@ class MainFragment : Fragment() {
 	// 當權限皆允許
 	private fun onPermissionsAllow() {
 		binding.revokedPermissionLayout.visibility = View.GONE
-		//...
+
+		//ui
+		binding.btn1.setOnClickListener {
+			findNavController().navigate(R.id.action_mainFragment_to_bleDeviceFragment)
+		}
+		binding.btn6.setOnClickListener {
+			findNavController().navigate(R.id.action_mainFragment_to_testFragment)
+		}
 	}
 
 	//region __________權限方法__________
 
 	// 當權限不允許
 	private fun onPermissionsNoAllow() {
-		val revokedPermissions:List<String> = getPermissionsMap()
-			.filterValues { isGranted -> !isGranted }
-			.map { (permission, isGranted) -> permission }
+		val revokedPermissions:List<String> =
+			getPermissionsMap().filterValues { isGranted -> !isGranted }.map { (permission, isGranted) -> permission }
 		val revokedPermissionsText = """
 		缺少權限: ${
-			revokedPermissions
-				.map { p -> p.replace(".+\\.".toRegex(), "") }
-				.joinToString(", ")
+			revokedPermissions.map { p -> p.replace(".+\\.".toRegex(), "") }.joinToString(", ")
 		}
 		請授予這些權限，以便應用程序正常運行。
 		Please grant all of them for the app to function properly.
@@ -87,10 +94,8 @@ class MainFragment : Fragment() {
 	}
 
 	// 是否有全部權限
-	private fun hasPermissions(
-		context:Context = requireContext(),
-		permissions:Array<String> = this.permissions,
-	):Boolean = getPermissionsMap(context, permissions).all { (permission, isGranted) -> isGranted }
+	private fun hasPermissions(context:Context = requireContext(), permissions:Array<String> = this.permissions):Boolean =
+		getPermissionsMap(context, permissions).all { (permission, isGranted) -> isGranted }
 
 	// 取得權限狀態
 	private fun getPermissionsMap(

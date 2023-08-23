@@ -9,20 +9,13 @@ import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
-import android.bluetooth.BluetoothSocket
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.ServiceConnection
-import android.content.ComponentName
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.IBinder
-import android.os.Looper
-import android.os.Message
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -37,10 +30,6 @@ import androidx.core.content.IntentCompat
 import androidx.fragment.app.activityViewModels
 import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmater.databinding.FragmentTestBinding
-import com.wavein.gasmater.service.BluetoothLeService
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
 import java.util.UUID
 import kotlin.experimental.xor
 
@@ -55,11 +44,14 @@ class TestFragment : Fragment() {
 	// 權限
 	private val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
 		arrayOf(
-			Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_FINE_LOCATION
+			Manifest.permission.BLUETOOTH_CONNECT,
+			Manifest.permission.BLUETOOTH_SCAN,
+			Manifest.permission.ACCESS_FINE_LOCATION
 		)
 	} else {
 		arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
 	}
+
 	private val requestPermissionLauncher:ActivityResultLauncher<Array<String>> by lazy {
 		registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissionsMap ->
 			if (permissionsMap.all { (permission, isGranted) -> isGranted }) {
@@ -129,10 +121,6 @@ class TestFragment : Fragment() {
 			addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
 		}
 		requireContext().registerReceiver(receiver, intentFilter)
-
-		// 藍牙服務
-		val gattServiceIntent = Intent(requireContext(), BluetoothLeService::class.java)
-		requireContext().bindService(gattServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE)
 	}
 
 	//region __________權限方法__________
@@ -152,10 +140,8 @@ class TestFragment : Fragment() {
 	}
 
 	// 是否有全部權限
-	private fun hasPermissions(
-		context:Context = requireContext(),
-		permissions:Array<String> = this.permissions,
-	):Boolean = getPermissionsMap(context, permissions).all { (permission, isGranted) -> isGranted }
+	private fun hasPermissions(context:Context = requireContext(), permissions:Array<String> = this.permissions):Boolean =
+		getPermissionsMap(context, permissions).all { (permission, isGranted) -> isGranted }
 
 	// 取得權限狀態
 	private fun getPermissionsMap(
@@ -294,7 +280,6 @@ class TestFragment : Fragment() {
 		if (btDevice == null) return
 		binding.stateTv.text = "連接母機"
 		bluetoothGatt = btDevice!!.connectGatt(requireContext(), true, gattCallback)
-		bluetoothService
 	}
 
 	private fun 傳送並接收訊息() {
@@ -328,29 +313,6 @@ class TestFragment : Fragment() {
 	private val DEVICE_ADDR:String = "E8:EB:1B:6E:49:47"
 
 	//region __________(新母機,GATT) 藍牙連接 & 資料傳送/接收處理__________
-
-	// 服務
-	private var bluetoothService:BluetoothLeService? = null
-
-	// Code to manage Service lifecycle.
-	private val serviceConnection:ServiceConnection = object : ServiceConnection {
-		override fun onServiceConnected(
-			componentName:ComponentName,
-			service:IBinder,
-		) {
-			bluetoothService = (service as BluetoothLeService.LocalBinder).getService()
-			bluetoothService?.let { bluetoothService ->
-				if (!bluetoothService.initialize(requireContext())) {
-					Log.e("@@@", "Unable to initialize Bluetooth")
-					requireActivity().finish()
-				}
-			}
-		}
-
-		override fun onServiceDisconnected(componentName:ComponentName) {
-			bluetoothService = null
-		}
-	}
 
 	private lateinit var bluetoothGatt:BluetoothGatt
 

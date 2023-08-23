@@ -1,8 +1,8 @@
 package com.wavein.gasmater.ui.bt
 
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothProfile
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -19,6 +19,7 @@ import com.wavein.gasmater.databinding.FragmentBleBinding
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
+@SuppressLint("MissingPermission")
 class BleDeviceFragment : Fragment() {
 
 	// binding & viewModel
@@ -36,12 +37,24 @@ class BleDeviceFragment : Fragment() {
 		return binding.root
 	}
 
-	@SuppressLint("MissingPermission")
 	override fun onViewCreated(view:View, savedInstanceState:Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
 
-		bleVM.init(requireContext()) {
-			Toast.makeText(requireContext(), "選擇了 ${it.name} \nTODO 配對該設備...", Toast.LENGTH_SHORT).show()
+		// vm初始化
+		bleVM.setDeviceOnClick { bleDevice ->
+			Toast.makeText(requireContext(), "選擇了 ${bleDevice.name} \nTODO 配對該設備...", Toast.LENGTH_SHORT).show()
+			bleVM.connectBleDevice(requireContext(), bleDevice)
+		}
+
+		// ui
+		binding.scanBtn.setOnClickListener {
+			bleVM.scanLeDevice()
+		}
+		binding.bleRv.apply {
+			layoutManager = LinearLayoutManager(requireContext())
+			addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
+			itemAnimator = DefaultItemAnimator()
+			adapter = bleVM.leDeviceListAdapter
 		}
 
 		// 訂閱scanning
@@ -59,7 +72,7 @@ class BleDeviceFragment : Fragment() {
 			}
 		}
 
-		// 訂閱藍牙設備更新
+		// 訂閱藍牙設備清單
 		lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				bleVM.btDeviceListStateFlow.collectLatest {
@@ -68,16 +81,19 @@ class BleDeviceFragment : Fragment() {
 			}
 		}
 
-		// ui
-		binding.scanBtn.setOnClickListener {
-			bleVM.scanLeDevice()
+		// TODO 訂閱藍牙設備連接狀態
+		lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				bleVM.bluetoothProfileStateFlow.collectLatest {
+					when (it) {
+						BluetoothProfile.STATE_CONNECTING -> {}
+						BluetoothProfile.STATE_CONNECTED -> {}
+						BluetoothProfile.STATE_DISCONNECTING -> {}
+						BluetoothProfile.STATE_DISCONNECTED -> {}
+					}
+				}
+			}
 		}
-		binding.bleRv.apply {
-			layoutManager = LinearLayoutManager(requireContext())
-			addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
-			itemAnimator = DefaultItemAnimator()
-			adapter = bleVM.leDeviceListAdapter
-		}
-	}
 
+	}
 }
