@@ -5,17 +5,14 @@ import android.content.Context
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.Gravity
-import android.view.ViewGroup
 import android.widget.Button
-import android.widget.TextView
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.navigateUp
+import androidx.navigation.ui.setupActionBarWithNavController
+import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmater.R
@@ -55,12 +52,20 @@ class MainActivity : AppCompatActivity() {
 		setContentView(binding.root)
 
 		// 上方bar
-		// setSupportActionBar(binding.toolbar)
+		setSupportActionBar(binding.toolbar)
 
 		// 導航處理
-		val navController = findNavController(R.id.nav_host_fragment_content_main)
-		appBarConfiguration = AppBarConfiguration(navController.graph)
-		// setupActionBarWithNavController(navController, appBarConfiguration)
+		val navController = findNavController(R.id.nav_host_fragment_activity_main)
+		val appBarConfiguration = AppBarConfiguration(
+			setOf(
+				R.id.nav_logoFragment,
+				R.id.nav_settingFragment,
+				R.id.nav_csvFragment,
+				R.id.nav_testFragment,
+			)
+		)
+		setupActionBarWithNavController(navController, appBarConfiguration)
+		binding.navView.setupWithNavController(navController)
 
 
 		// 訂閱斷線處理
@@ -148,10 +153,5 @@ class MainActivity : AppCompatActivity() {
 				}
 			}
 		}
-	}
-
-	override fun onSupportNavigateUp():Boolean {
-		val navController = findNavController(R.id.nav_host_fragment_content_main)
-		return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
 	}
 }

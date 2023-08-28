@@ -17,19 +17,19 @@ object AppModule {
 
 	@Provides
 	@Singleton //< 唯一實例
-	fun provideBluetoothManager(@ApplicationContext context:Context):BluetoothManager =
-		context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+	fun provideBluetoothManager(@ApplicationContext context:Context):BluetoothManager? =
+		context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
 
 
 	@Provides
 	@Singleton
-	fun provideBluetoothAdapter(bluetoothManager:BluetoothManager):BluetoothAdapter =
-		bluetoothManager.adapter
+	fun provideBluetoothAdapter(bluetoothManager:BluetoothManager?):BluetoothAdapter? =
+		bluetoothManager?.adapter
 
 
 	@Provides
 	@Singleton
-	fun provideBluetoothLeScanner(bluetoothAdapter:BluetoothAdapter):BluetoothLeScanner =
-		bluetoothAdapter.bluetoothLeScanner
+	fun provideBluetoothLeScanner(bluetoothAdapter:BluetoothAdapter?):BluetoothLeScanner? =
+		bluetoothAdapter?.bluetoothLeScanner
 
 }

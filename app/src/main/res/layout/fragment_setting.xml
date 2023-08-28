@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<FrameLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  tools:context=".ui.setting.SettingFragment">
+
+  <androidx.core.widget.NestedScrollView
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+      android:layout_width="match_parent"
+      android:layout_height="match_parent">
+
+      <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/fileTitleTv"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:text="檔案"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+      <Button
+        android:id="@+id/selectCsvBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="選擇CSV檔案"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/fileTitleTv" />
+
+      <Button
+        android:id="@+id/uploadFtpBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="上傳FTP"
+        app:layout_constraintBottom_toBottomOf="@+id/selectCsvBtn"
+        app:layout_constraintStart_toEndOf="@+id/selectCsvBtn"
+        app:layout_constraintTop_toTopOf="@+id/selectCsvBtn" />
+
+      <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/fileInfoTv"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/selectCsvBtn"
+        tools:text="檔案選擇資訊" />
+
+      <com.google.android.material.divider.MaterialDivider
+        android:id="@+id/divider1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/fileInfoTv"
+        tools:layout_height="30dp" />
+
+      <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/btTitleTv"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:text="藍牙"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/divider1" />
+
+      <Button
+        android:id="@+id/scanBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="掃描藍牙設備"
+        app:layout_constraintEnd_toStartOf="@+id/scanning"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btTitleTv" />
+
+      <com.google.android.material.progressindicator.CircularProgressIndicator
+        android:id="@+id/scanning"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/scanBtn"
+        app:layout_constraintStart_toEndOf="@+id/scanBtn"
+        app:layout_constraintTop_toTopOf="@+id/scanBtn"
+        tools:visibility="visible" />
+
+      <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/deviceRv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="64dp"
+        android:layout_marginEnd="64dp"
+        android:background="@drawable/round_border"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_max="600dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/scanBtn"
+        tools:itemCount="5"
+        tools:listitem="@layout/item_device" />
+
+      <com.google.android.material.divider.MaterialDivider
+        android:id="@+id/divider2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/deviceRv"
+        tools:layout_height="30dp" />
+
+      <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/ftpTitleTv"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:text="FTP"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/divider2" />
+
+      <Button
+        android:id="@+id/setFtpBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="設定FTP"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/ftpTitleTv" />
+
+      <Button
+        android:id="@+id/productEnableBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="產品開通"
+        app:layout_constraintBottom_toBottomOf="@+id/setFtpBtn"
+        app:layout_constraintStart_toEndOf="@+id/setFtpBtn"
+        app:layout_constraintTop_toTopOf="@+id/setFtpBtn" />
+
+      <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/ftpInfoTv"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/setFtpBtn"
+        tools:text="FTP資訊" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+  </androidx.core.widget.NestedScrollView>
+
+  <!-- 權限要求layout -->
+  <androidx.constraintlayout.widget.ConstraintLayout
+    android:id="@+id/revokedPermissionLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/cardview_light_background"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    tools:visibility="gone">
+
+    <com.google.android.material.textview.MaterialTextView
+      android:id="@+id/revokedPermissionTv"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginBottom="16dp"
+      android:gravity="center"
+      android:textSize="24sp"
+      app:layout_constraintBottom_toTopOf="@+id/requestPermissionBtn"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toTopOf="parent"
+      app:layout_constraintVertical_bias="0.45"
+      app:layout_constraintVertical_chainStyle="packed"
+      tools:text="權限未同意顯示文字" />
+
+    <com.google.android.material.button.MaterialButton
+      android:id="@+id/requestPermissionBtn"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/request_permission"
+      android:textSize="30sp"
+      app:layout_constraintBottom_toBottomOf="parent"
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintStart_toStartOf="parent"
+      app:layout_constraintTop_toBottomOf="@+id/revokedPermissionTv" />
+
+  </androidx.constraintlayout.widget.ConstraintLayout>
+
+</FrameLayout>

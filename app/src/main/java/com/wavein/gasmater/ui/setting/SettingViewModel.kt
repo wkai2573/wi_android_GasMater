@@ -1,4 +1,4 @@
-package com.wavein.gasmater.ui.bt
+package com.wavein.gasmater.ui.setting
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
@@ -13,9 +13,14 @@ import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Context
+import android.content.Intent
+import android.provider.DocumentsContract
+import androidx.activity.result.ActivityResultLauncher
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.wavein.gasmater.tools.SharedEvent
+import com.wavein.gasmater.ui.csv.ReadFileState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,15 +30,24 @@ import javax.inject.Inject
 
 @HiltViewModel
 @SuppressLint("MissingPermission")
-class BleDeviceViewModel @Inject constructor(
+class SettingViewModel @Inject constructor(
 	private val savedStateHandle:SavedStateHandle, //導航參數(hilt注入)
 	// 注入實例
-	private val bluetoothManager:BluetoothManager,
-	private val bluetoothAdapter:BluetoothAdapter,
-	private val bluetoothLeScanner: BluetoothLeScanner,
+	private val bluetoothManager:BluetoothManager?,
+	private val bluetoothAdapter:BluetoothAdapter?,
+	private val bluetoothLeScanner:BluetoothLeScanner?,
 ) : ViewModel() {
 
-	// 尋找BLE設備, https://developer.android.com/guide/topics/connectivity/bluetooth/find-ble-devices
+	init {
+		if (bluetoothAdapter == null) {
+			viewModelScope.launch {
+				SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("設備不支援藍牙", SharedEvent.SnackbarColor.Error))
+			}
+		}
+	}
+
+	// 尋找BLE設備__________________________________________________
+	// https://developer.android.com/guide/topics/connectivity/bluetooth/find-ble-devices
 
 	// 實例
 	lateinit var leDeviceListAdapter:LeDeviceListAdapter
@@ -60,13 +74,13 @@ class BleDeviceViewModel @Inject constructor(
 	fun scanLeDevice() = viewModelScope.launch {
 		if (!scanningStateFlow.value) {
 			scanningStateFlow.value = true
-			bluetoothLeScanner.startScan(scanFilters, scanSettings, leScanCallback)
+			bluetoothLeScanner?.startScan(scanFilters, scanSettings, leScanCallback)
 			delay(scanPeriod)
 			scanningStateFlow.value = false
-			bluetoothLeScanner.stopScan(leScanCallback)
+			bluetoothLeScanner?.stopScan(leScanCallback)
 		} else {
 			scanningStateFlow.value = false
-			bluetoothLeScanner.stopScan(leScanCallback)
+			bluetoothLeScanner?.stopScan(leScanCallback)
 		}
 	}
 
@@ -133,6 +147,23 @@ class BleDeviceViewModel @Inject constructor(
 				// gatt.writeCharacteristic(targetCharacteristic)
 			}
 		}
+	}
+
+	// CSV檔案__________________________________________________
+
+	val readFileStateFlow = MutableStateFlow<ReadFileState>(ReadFileState())
+	val rowsStateFlow = MutableStateFlow<List<Map<String, String>>>(emptyList())
+
+	// 選擇並讀取csv資料
+	fun selectReadCsv(filePickerLauncher:ActivityResultLauncher<Intent>) {
+		// 預設開啟位置:下載資料夾
+		val pickerInitialUri = DocumentsContract.buildDocumentUri("com.android.providers.downloads.documents", "downloads")
+		val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+			addCategory(Intent.CATEGORY_OPENABLE)
+			type = "*/*" // 檔案類型 ("text/csv"會無效)
+			putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri)
+		}
+		filePickerLauncher.launch(intent)
 	}
 
 }

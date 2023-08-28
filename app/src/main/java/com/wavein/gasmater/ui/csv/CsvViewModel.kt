@@ -31,7 +31,7 @@ class CsvViewModel @Inject constructor(
 		val pickerInitialUri = DocumentsContract.buildDocumentUri("com.android.providers.downloads.documents", "downloads")
 		val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
 			addCategory(Intent.CATEGORY_OPENABLE)
-			type = "text/csv" // 檔案類型
+			type = "*/*" // 檔案類型 ("text/csv"會無效)
 			putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri)
 		}
 		filePickerLauncher.launch(intent)

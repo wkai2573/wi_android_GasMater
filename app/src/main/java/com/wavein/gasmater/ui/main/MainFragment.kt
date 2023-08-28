@@ -1,3 +1,5 @@
+//TODO  待刪
+
 package com.wavein.gasmater.ui.main
 
 import android.Manifest
@@ -15,7 +17,6 @@ import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.wavein.gasmater.R
 import com.wavein.gasmater.databinding.FragmentMainBinding
-import com.wavein.gasmater.tools.LanguageUtil
 
 class MainFragment : Fragment() {
 
@@ -71,32 +72,14 @@ class MainFragment : Fragment() {
 
 		//ui
 		binding.btn1.setOnClickListener {
-			findNavController().navigate(R.id.action_mainFragment_to_bleDeviceFragment)
+			findNavController().navigate(R.id.nav_settingFragment)
 		}
 		binding.btn2.setOnClickListener {
-			findNavController().navigate(R.id.action_mainFragment_to_csvFragment)
-		}
-		binding.twFlag.setOnClickListener {
-			changeLanguage("zh-rTW")
-		}
-		binding.jpFlag.setOnClickListener {
-			changeLanguage("ja")
-		}
-		binding.usFlag.setOnClickListener {
-			changeLanguage("en")
+			findNavController().navigate(R.id.nav_csvFragment)
 		}
 		binding.btn6.setOnClickListener {
-			findNavController().navigate(R.id.action_mainFragment_to_testFragment)
+			findNavController().navigate(R.id.nav_testFragment)
 		}
-	}
-
-	// 切換語言
-	private fun changeLanguage(langText:String) {
-		val lang = LanguageUtil.getLocale(requireContext())
-		if (lang.language == langText) return
-		val newLang = langText
-		LanguageUtil.setLanguage(requireContext(), newLang)
-		requireActivity().recreate()
 	}
 
 	//region __________權限方法__________

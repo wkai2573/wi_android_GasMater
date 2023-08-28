@@ -9,6 +9,7 @@ import android.content.res.Configuration
 import android.content.res.Resources
 import android.os.Build
 import android.os.LocaleList
+import androidx.activity.ComponentActivity
 import androidx.annotation.RequiresApi
 import androidx.core.content.edit
 import java.util.*
@@ -20,7 +21,7 @@ object LanguageUtil {
 	 * @param context 上下文
 	 * @param lan 需要设置的语言
 	 */
-	fun setLanguage(context: Context, lan: String) {
+	fun setLanguage(context:Context, lan:String) {
 		context.getSharedPreferences("settings", 0).edit {
 			putString("language", lan)
 			this.commit()
@@ -30,7 +31,7 @@ object LanguageUtil {
 	/**
 	 * 获取应用于选择语言对话框的 checkedItem
 	 */
-	fun getCheckedItem(context: Context): Int =
+	fun getCheckedItem(context:Context):Int =
 		when (context.getSharedPreferences("settings", 0).getString("language", "")) {
 			"auto" -> 0
 			"zh-rCN" -> 1
@@ -43,7 +44,7 @@ object LanguageUtil {
 	/**
 	 * 获取当前设置的 Locale
 	 */
-	fun getLocale(context: Context): Locale =
+	fun getLocale(context:Context):Locale =
 		when (context.getSharedPreferences("settings", 0).getString("language", "")) {
 			"auto" -> getSysLocale()
 			"zh-rCN" -> Locale("zh", "CN")
@@ -56,12 +57,11 @@ object LanguageUtil {
 	/**
 	 * 获取当前系统的 Locale
 	 */
-	private fun getSysLocale(): Locale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+	private fun getSysLocale():Locale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
 		LocaleList.getDefault()[0]
 	} else {
 		Locale.getDefault()
 	}
-
 
 	// 在每一个 Activity 或者你封装好的 BaseActivity 里重写attachBaseContext方法
 	@RequiresApi(Build.VERSION_CODES.N)
@@ -82,6 +82,17 @@ object LanguageUtil {
 			mContext.createConfigurationContext(configuration)
 		}
 		return ContextWrapper(mContext)
+	}
+
+
+	// 手動切換語言
+	// 使用方式: changeLanguage("zh-rTW") "ja" "en"
+	fun changeLanguage(activity:ComponentActivity, langText:String) {
+		val lang = LanguageUtil.getLocale(activity)
+		if (lang.language == langText) return
+		val newLang = langText
+		LanguageUtil.setLanguage(activity, newLang)
+		activity.recreate()
 	}
 }
 

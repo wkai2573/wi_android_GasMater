@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--TODO  待刪-->
+
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:app="http://schemas.android.com/apk/res-auto"
   xmlns:tools="http://schemas.android.com/tools"
@@ -102,29 +104,5 @@
       app:layout_constraintTop_toBottomOf="@+id/revokedPermissionTv" />
 
   </androidx.constraintlayout.widget.ConstraintLayout>
-
-  <TextView android:id="@+id/twFlag"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="🇹🇼"
-    android:textSize="30sp"
-    app:layout_constraintEnd_toStartOf="@+id/jpFlag"
-    app:layout_constraintTop_toTopOf="parent" />
-
-  <TextView android:id="@+id/jpFlag"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="🇯🇵"
-    android:textSize="30sp"
-    app:layout_constraintEnd_toStartOf="@+id/usFlag"
-    app:layout_constraintTop_toTopOf="parent" />
-
-  <TextView android:id="@+id/usFlag"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="🇺🇸"
-    android:textSize="30sp"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

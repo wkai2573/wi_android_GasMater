@@ -1,4 +1,4 @@
-package com.wavein.gasmater.ui.bt
+package com.wavein.gasmater.ui.setting
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice

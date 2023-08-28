@@ -41,24 +41,12 @@ class TestFragment : Fragment() {
 	private val binding get() = _binding!!
 	private val testVM by activityViewModels<TestViewModel>()
 
-	// 權限
-	private val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-		arrayOf(
-			Manifest.permission.BLUETOOTH_CONNECT,
-			Manifest.permission.BLUETOOTH_SCAN,
-			Manifest.permission.ACCESS_FINE_LOCATION
-		)
-	} else {
-		arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
-	}
-
-	private val requestPermissionLauncher:ActivityResultLauncher<Array<String>> by lazy {
-		registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissionsMap ->
-			if (permissionsMap.all { (permission, isGranted) -> isGranted }) {
-				onPermissionsAllow()
-			} else {
-				onPermissionsNoAllow()
-			}
+	override fun onDestroyView() {
+		super.onDestroyView()
+		// 防止內存洩漏
+		_binding = null
+		kotlin.runCatching {
+			requireContext().unregisterReceiver(receiver)
 		}
 	}
 
@@ -77,15 +65,6 @@ class TestFragment : Fragment() {
 				requestPermissionLauncher.launch(permissions)
 			}
 			requestPermissionLauncher.launch(permissions)
-		}
-	}
-
-	override fun onDestroyView() {
-		super.onDestroyView()
-		// 防止內存洩漏
-		_binding = null
-		kotlin.runCatching {
-			requireContext().unregisterReceiver(receiver)
 		}
 	}
 
@@ -124,6 +103,26 @@ class TestFragment : Fragment() {
 	}
 
 	//region __________權限方法__________
+
+	private val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+		arrayOf(
+			Manifest.permission.BLUETOOTH_CONNECT,
+			Manifest.permission.BLUETOOTH_SCAN,
+			Manifest.permission.ACCESS_FINE_LOCATION
+		)
+	} else {
+		arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+	}
+
+	private val requestPermissionLauncher:ActivityResultLauncher<Array<String>> by lazy {
+		registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissionsMap ->
+			if (permissionsMap.all { (permission, isGranted) -> isGranted }) {
+				onPermissionsAllow()
+			} else {
+				onPermissionsNoAllow()
+			}
+		}
+	}
 
 	// 當權限不允許
 	private fun onPermissionsNoAllow() {
