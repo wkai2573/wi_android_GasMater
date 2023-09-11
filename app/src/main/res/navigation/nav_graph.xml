@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+ <navigation xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:app="http://schemas.android.com/apk/res-auto"
   xmlns:tools="http://schemas.android.com/tools"
   android:id="@+id/nav_graph"
@@ -8,10 +8,6 @@
     android:name="com.wavein.gasmater.ui.logo.LogoFragment"
     android:label="fragment_logo"
     tools:layout="@layout/fragment_logo" />
-  <fragment android:id="@+id/nav_mainFragment"
-    android:name="com.wavein.gasmater.ui.main.MainFragment"
-    android:label="fragment_main"
-    tools:layout="@layout/fragment_main"/>
   <fragment android:id="@+id/nav_testFragment"
     android:name="com.wavein.gasmater.ui.test.TestFragment"
     android:label="fragment_test"
@@ -24,4 +20,7 @@
     android:name="com.wavein.gasmater.ui.csv.CsvFragment"
     android:label="fragment_csv"
     tools:layout="@layout/fragment_csv" />
+ <fragment android:id="@+id/nav_meterBaseFragment"
+   android:name="com.wavein.gasmater.ui.meterwork.MeterBaseFragment"
+   android:label="MeterBaseFragment" />
 </navigation>

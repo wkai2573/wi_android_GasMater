@@ -74,7 +74,7 @@ class SettingFragment : Fragment() {
 		}
 
 		// UI:csv__________
-		binding.selectCsvBtn.setOnClickListener {
+		binding.selectCsvFromLocalBtn.setOnClickListener {
 			settingVM.selectReadCsv(filePickerLauncher)
 		}
 
@@ -176,6 +176,8 @@ class SettingFragment : Fragment() {
 		ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
 	}
 
+	//endregion
+
 	//region __________CSV檔案__________
 
 	// 當選擇檔案
@@ -196,4 +198,6 @@ class SettingFragment : Fragment() {
 			settingVM.readFileStateFlow.value = ReadFileState(ReadFileState.Type.ReadFailed, result.resultCode.toString())
 		}
 	}
+
+	//endregion
 }

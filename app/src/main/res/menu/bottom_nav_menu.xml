@@ -4,7 +4,12 @@
     android:id="@+id/nav_settingFragment"
     android:enabled="true"
     android:icon="@drawable/ic_bluetooth_24"
-    android:title="設定"/>
+    android:title="連線"/>
+  <item
+    android:id="@+id/nav_meterBaseFragment"
+    android:enabled="true"
+    android:icon="@drawable/ic_info_24"
+    android:title="抄表"/>
   <item
     android:id="@+id/nav_csvFragment"
     android:enabled="true"

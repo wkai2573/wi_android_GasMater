@@ -14,7 +14,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import com.wavein.gasmater.databinding.FragmentCsvBinding
-import com.wavein.gasmater.ui.main.MainViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.io.FileInputStream
@@ -25,7 +24,6 @@ class CsvFragment : Fragment() {
 	private var _binding:FragmentCsvBinding? = null
 	private val binding get() = _binding!!
 	private val csvVM by activityViewModels<CsvViewModel>()
-	private val mainVM by activityViewModels<MainViewModel>()
 
 	override fun onDestroyView() {
 		super.onDestroyView()

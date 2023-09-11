@@ -60,6 +60,8 @@ class MainActivity : AppCompatActivity() {
 			setOf(
 				R.id.nav_logoFragment,
 				R.id.nav_settingFragment,
+				R.id.nav_meterBaseFragment,
+
 				R.id.nav_csvFragment,
 				R.id.nav_testFragment,
 			)
