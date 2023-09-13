@@ -6,6 +6,7 @@ import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -287,15 +288,17 @@ class TestFragment : Fragment() {
 		clientClass.start()
 	}
 
+	@OptIn(ExperimentalUnsignedTypes::class)
 	private fun 傳送並接收訊息() {
 //		if (sendReceive == null) return
 		val text = binding.sendEt.editableText.toString()
 		if (text.isEmpty()) return
 
 		binding.msgTv.text = "🔽接收到的訊息🔽"
-		val sendByteArray = RD64H.telegramConvert(text, "+s").toByteArray()
+//		val sendByteArray = RD64H.telegramConvert(text, "+s").toByteArray()
+		val sendByteArray = ubyteArrayOf(0x82u, 0x35u, 0x03u, 0x36u).toByteArray()
 		sendReceive?.write(sendByteArray)
-		val msg = "傳送: " + sendByteArray.joinToString("") { "%02X".format(it) }
+		val msg = "傳送: " + '\n' + sendByteArray.toString()
 		Snackbar.make(requireContext(), binding.root, msg, Snackbar.LENGTH_SHORT).show()
 
 
@@ -312,12 +315,15 @@ class TestFragment : Fragment() {
 
 	// ==藍牙連線參數==
 	// 舊母機:MBH7BTZ43PANA  ADDR:E0:18:77:FC:F1:5C  PIN:5678
+//	private val DEVICE_NAME:String = "MBH7BTZ43PANA"
+//	private val DEVICE_ADDR:String = "E0:18:77:FC:F1:5C"
 	// 新母機:RD64HGL        ADDR:E8:EB:1B:6E:49:47  PIN:5893
-	private val DEVICE_NAME:String = "MBH7BTZ43PANA"
-	private val DEVICE_ADDR:String = "E0:18:77:FC:F1:5C"
+	private val DEVICE_NAME:String = "RD64HGL"
+	private val DEVICE_ADDR:String = "E8:EB:1B:6E:49:47"
 
 	// 藍牙連線
-	private val MY_UUID = UUID.fromString("8ce255c0-223a-11e0-ac64-0803450c9a66")
+	// private val MY_UUID = UUID.fromString("8ce255c0-223a-11e0-ac64-0803450c9a66")
+	private val MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 	var sendReceive:SendReceive? = null
 
 	// 電文參數
@@ -364,12 +370,7 @@ class TestFragment : Fragment() {
 
 		init {
 			try {
-				val _socket = device.createRfcommSocketToServiceRecord(MY_UUID)
-				val clazz = _socket.remoteDevice.javaClass
-				val paramTypes = arrayOf<Class<*>>(Integer.TYPE)
-				val m = clazz.getMethod("createRfcommSocket", *paramTypes)
-				val fallbackSocket = m.invoke(_socket.remoteDevice, Integer.valueOf(1)) as BluetoothSocket
-				socket = fallbackSocket
+				socket = device.createInsecureRfcommSocketToServiceRecord(MY_UUID)
 			} catch (e:IOException) {
 				e.printStackTrace()
 			}
@@ -428,7 +429,7 @@ class TestFragment : Fragment() {
 						}
 					}
 				} catch (e:IOException) {
-					Snackbar.make(requireContext(), binding.root, "接收資料時發生錯誤", Snackbar.LENGTH_SHORT).show()
+					Snackbar.make(requireContext(), binding.root, "接收資料時發生錯誤: ${e.message}", Snackbar.LENGTH_SHORT).show()
 					e.printStackTrace()
 					break
 				}
@@ -452,5 +453,6 @@ class TestFragment : Fragment() {
 	}
 
 	//endregion
+
 
 }
