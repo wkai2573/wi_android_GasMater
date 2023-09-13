@@ -6,7 +6,6 @@ import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
-import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -33,6 +32,8 @@ import androidx.fragment.app.activityViewModels
 import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmater.databinding.FragmentTestBinding
 import com.wavein.gasmater.tools.RD64H
+import com.wavein.gasmater.tools.toHexString
+import com.wavein.gasmater.tools.toText
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -93,9 +94,21 @@ class TestFragment : Fragment() {
 		binding.button6.setOnClickListener { 傳送並接收訊息() }
 		binding.button7.setOnClickListener { binding.sendEt.setText("5") }                       // ZA00000000000000D70
 		binding.button8.setOnClickListener { binding.sendEt.setText("A") }
-		binding.button9.setOnClickListener { binding.sendEt.setText("ZA00000000000101R85125") }  // G200000000000101D05000000101@@@BA@@3G13AB@I (S-18)
-		binding.button10.setOnClickListener { binding.sendEt.setText("ZA00000000000101R16") }    // ZA00000000000000D16@@9  アラーム情報(S-14頁)
-		binding.button11.setOnClickListener { binding.sendEt.setText("ZA00000000000000R84121000000000000101????00000000000102????00000000000103????00000000000104????00000000000105????00000000000106????00000000000107????00000000000108????00000000000109????00000000000110????") }
+		binding.button9.setOnClickListener {
+			binding.sendEt.setText(
+				"ZA00000000000101R85125"
+			)
+		}  // G200000000000101D05000000101@@@BA@@3G13AB@I (S-18)
+		binding.button10.setOnClickListener {
+			binding.sendEt.setText(
+				"ZA00000000000101R16"
+			)
+		}    // ZA00000000000000D16@@9  アラーム情報(S-14頁)
+		binding.button11.setOnClickListener {
+			binding.sendEt.setText(
+				"ZA00000000000000R84121000000000000101????00000000000102????00000000000103????00000000000104????00000000000105????00000000000106????00000000000107????00000000000108????00000000000109????00000000000110????"
+			)
+		}
 
 		// 註冊廣播:偵測藍牙掃描結果
 		val intentFilter = IntentFilter().apply {
@@ -164,7 +177,11 @@ class TestFragment : Fragment() {
 	private var btDevice:BluetoothDevice? = null
 
 	// 藍牙adapter
-	private val bluetoothManager:BluetoothManager by lazy { requireContext().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager }
+	private val bluetoothManager:BluetoothManager by lazy {
+		requireContext().getSystemService(
+			Context.BLUETOOTH_SERVICE
+		) as BluetoothManager
+	}
 	private val bluetoothAdapter:BluetoothAdapter by lazy { bluetoothManager.adapter }
 
 	// 藍牙配對處理(接收廣播)
@@ -288,17 +305,17 @@ class TestFragment : Fragment() {
 		clientClass.start()
 	}
 
-	@OptIn(ExperimentalUnsignedTypes::class)
 	private fun 傳送並接收訊息() {
 //		if (sendReceive == null) return
-		val text = binding.sendEt.editableText.toString()
-		if (text.isEmpty()) return
+		val sendText = binding.sendEt.editableText.toString()
+		if (sendText.isEmpty()) return
 
 		binding.msgTv.text = "🔽接收到的訊息🔽"
-//		val sendByteArray = RD64H.telegramConvert(text, "+s").toByteArray()
-		val sendByteArray = ubyteArrayOf(0x82u, 0x35u, 0x03u, 0x36u).toByteArray()
-		sendReceive?.write(sendByteArray)
-		val msg = "傳送: " + '\n' + sendByteArray.toString()
+		val sendSP = RD64H.telegramConvert(sendText, "+s+p")
+		sendReceive?.write(sendSP)
+
+
+		val msg = "傳送: $sendText [${sendSP.toHexString()}]"
 		Snackbar.make(requireContext(), binding.root, msg, Snackbar.LENGTH_SHORT).show()
 
 
@@ -354,11 +371,11 @@ class TestFragment : Fragment() {
 			STATE_CONNECTED -> binding.stateTv.text = "Connected"
 			STATE_CONNECTION_FAILED -> binding.stateTv.text = "Connection Failed"
 			STATE_MESSAGE_RECEIVED -> {
-				val readBuff = (msg.obj as ByteArray).copyOfRange(0, msg.arg1)
-				val msg = String(readBuff, 1, msg.arg1 - 3)
-				val msgByte = "[" + readBuff.joinToString(",") { it.toString() } + "]"
-				// binding.msgTv.text = "${binding.msgTv.text}\n$msgByte\n$msg"
-				binding.msgTv.text = "${binding.msgTv.text}\n$msg"
+				val readSP = (msg.obj as ByteArray).copyOfRange(0, msg.arg1)
+				val read = RD64H.telegramConvert(readSP, "-s-p")
+				val readText = read.toText()
+				val readSPHex = readSP.toHexString()
+				binding.msgTv.text = "${binding.msgTv.text}\n$readText [$readSPHex]"
 			}
 		}
 		true
@@ -412,21 +429,12 @@ class TestFragment : Fragment() {
 		}
 
 		override fun run() {
-			var totalBuffer = ByteArray(1024)
-			var totalBufferLength:Int = 0
-
 			while (true) {
-				val singleBuffer = ByteArray(50)
+				val singleBuffer = ByteArray(320)
 				try {
 					val length = inputStream!!.read(singleBuffer)
 					if (length != -1) {
-						singleBuffer.copyInto(totalBuffer, totalBufferLength, 0, length)
-						totalBufferLength += length
-						if (checkReceiveOver(totalBuffer, totalBufferLength)) {
-							bluetoothHandler.obtainMessage(STATE_MESSAGE_RECEIVED, totalBufferLength, -1, totalBuffer).sendToTarget()
-							totalBuffer = ByteArray(1024)
-							totalBufferLength = 0
-						}
+						bluetoothHandler.obtainMessage(STATE_MESSAGE_RECEIVED, length, -1, singleBuffer).sendToTarget()
 					}
 				} catch (e:IOException) {
 					Snackbar.make(requireContext(), binding.root, "接收資料時發生錯誤: ${e.message}", Snackbar.LENGTH_SHORT).show()

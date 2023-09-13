@@ -1,45 +1,39 @@
 package com.wavein.gasmater.tools
 
-import kotlin.experimental.xor
-
 // RD64H 傳輸方法
 
+@OptIn(ExperimentalUnsignedTypes::class)
 object RD64H {
 
 	private const val STX:Char = '\u0002'
 	private const val ETX:Char = '\u0003'
+	private const val STXByte:UByte = 0x2u
+	private const val ETXByte:UByte = 0x3u
 
-	private fun getBCC(code:String):Char {
-		var bcc = 0
-		for (i in code.indices) {
-			bcc = bcc.xor(code[i].code)
-		}
-		return bcc.toChar()
+	private fun getBCC(bytes:UByteArray):UByte {
+		var bcc:UByte = 0u
+		bytes.forEach { byte -> bcc = bcc xor byte }
+		return bcc
 	}
 
-	private fun addEvenParityChar(char:Char):Char {
-		val parity = getEvenParity(char)
-		val charValue = char.code
-		val binaryString = "${parity}${charValue.toString(2).padStart(7, '0')}"
-		val evenParityAddedValue = Integer.parseInt(binaryString, 2)
-		return evenParityAddedValue.toChar()
+	private fun addEvenParityChar(byte:UByte):UByte {
+		val charValue = byte.toInt()
+		val parityByte = getEvenParityByte(charValue)
+		return byte.xor(parityByte)
 	}
 
-	private fun getEvenParity(char:Char):Int {
-		val charValue = char.code
+	private fun getEvenParityByte(charValue:Int):UByte {
 		var parity = 0
 		for (i in 0 until 8) {
-			if ((charValue shr i) and 1 == 1) {
+			if ((charValue ushr i) and 1 == 1) {
 				parity = parity.xor(1)
 			}
 		}
-		return parity
+		return if (parity == 1) 0x80u else 0u
 	}
 
-	private fun removeEvenParityChar(char:Char):Char {
-		val charValue = char.code
-		val evenParityRemovedValue = charValue and 0x7f
-		return evenParityRemovedValue.toChar()
+	private fun removeEvenParityChar(byte:UByte):UByte {
+		return byte.and(0x7fu)
 	}
 
 	private fun hexToAscii(hex:String):String {
@@ -51,36 +45,55 @@ object RD64H {
 
 	/** 電文轉換
 	 *
-	 * @param {string} inputText 輸入字串
+	 * @param {string | ByteArray | UByteArray} inputText 輸入字串
 	 * @param {string} flag 特殊處理,包含以下字元則做指定處理
-	 *  +h: 輸入 TEXT 輸出 HEX(無分隔字串,每字元2位數)
-	 *  -h: 輸入 HEX 輸出 TEXT
 	 *  +s: 補上STX,ETX,BCC
 	 *  -s: 移除STX,ETX,BCC
 	 *  +p: 每個字元補上偶數校驗碼
 	 *  -p: 每個字元移除偶數校驗碼
 	 * @returns {string} 轉換後的結果
 	 */
-	fun telegramConvert(inputText:String, flag:String):String {
+	fun telegramConvert(inputText:String, flag:String):ByteArray {
+		return telegramConvert(inputText.toUByteArray(), flag)
+	}
+
+	fun telegramConvert(inputText:ByteArray, flag:String):ByteArray {
+		return telegramConvert(inputText.toUByteArray(), flag)
+	}
+
+	fun telegramConvert(inputText:UByteArray, flag:String):ByteArray {
 		var output = inputText
-		if (flag.contains("-h")) {
-			output = hexToAscii(output)
-		}
 		if (flag.contains("+s")) {
-			output = STX + output + ETX + getBCC(output + ETX)
+			val bcc = getBCC(output + ETXByte)
+			output = ubyteArrayOf(STXByte) + output + ETXByte + bcc
 		}
 		if (flag.contains("+p")) {
-			output = output.map { addEvenParityChar(it) }.joinToString("")
+			output = output.map { addEvenParityChar(it) }.toUByteArray()
 		}
 		if (flag.contains("-p")) {
-			output = output.map { removeEvenParityChar(it) }.joinToString("")
+			output = output.map { removeEvenParityChar(it) }.toUByteArray()
 		}
 		if (flag.contains("-s")) {
-			output = output.replace("^\\x02(.*)\\x03.$".toRegex(), "$1")
+			if (output[0] == STXByte && output[output.size - 2] == ETXByte) {
+				output = output.copyOfRange(1, output.size - 2)
+			}
 		}
-		if (flag.contains("+h")) {
-			return output.toByteArray().joinToString("") { "%02X".format(it) }
-		}
-		return output
+		return output.toByteArray()
 	}
+}
+
+@OptIn(ExperimentalUnsignedTypes::class)
+private fun String.toUByteArray():UByteArray {
+	return this.map { it.code.toUByte() }.toUByteArray()
+}
+
+// 轉成HEX方便看
+@OptIn(ExperimentalUnsignedTypes::class)
+fun ByteArray.toHexString(separator:String = ""):String {
+	return this.toUByteArray().joinToString(separator) { it.toInt().toString(16).padStart(2, '0').uppercase() }
+}
+
+// 轉成TEXT方便看
+fun ByteArray.toText():String {
+	return String(this, Charsets.UTF_8)
 }
