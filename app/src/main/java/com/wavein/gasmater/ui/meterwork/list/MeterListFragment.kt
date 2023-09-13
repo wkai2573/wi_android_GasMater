@@ -6,18 +6,16 @@ import android.os.Bundle
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
-import androidx.core.widget.addTextChangedListener
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import com.wavein.gasmater.R
 import com.wavein.gasmater.databinding.FragmentMeterListBinding
 
-@Suppress("UNNECESSARY_SAFE_CALL")
+
 class MeterListFragment : Fragment() {
 
 	// binding & viewModel
@@ -47,39 +45,86 @@ class MeterListFragment : Fragment() {
 		binding.doneBtn.isChecked = true
 
 
-		val items = arrayOf("Item 1", "Item 2", "Item 3", "Item 4")
-//		val adapter = ArrayAdapter(requireContext(), R.layout.combo_groups, items)
-//		binding.groupsListTv.setAdapter(adapter)
-
-		val customAdapter = CustomArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, items)
-		binding.groupsListTv.setAdapter(customAdapter)
-
-
-		//...
+		val groups = listOf(
+			MeterGroup(
+				"Group1", listOf(
+					Meter("0001", null),
+					Meter("0002", null),
+					Meter("0003", 3.5f),
+					Meter("0004", null),
+					Meter("0005", 128.456f),
+				)
+			),
+			MeterGroup(
+				"Group2", listOf(
+					Meter("0001", null),
+					Meter("0002", null),
+				)
+			),
+			MeterGroup(
+				"Group3", listOf(
+					Meter("0001", 4.5f),
+					Meter("0002", 77.7f),
+				)
+			),
+		)
+		val meterComboAdapter = MeterComboAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, groups)
+		binding.groupsCombo.listTv.setAdapter(meterComboAdapter)
+		binding.groupsCombo.listTv.setOnItemClickListener { parent, view, position, id ->
+			val group = meterComboAdapter.getItem(position)
+			group?.let {
+				binding.groupsCombo.subTitleTv.text = it.tip
+				binding.groupsCombo.subTitleTv.setTextColor(it.tipColor)
+			}
+		}
 	}
 
 }
 
 
+// 群組ComboAdapter
+class MeterComboAdapter(context:Context, resource:Int, groups:List<MeterGroup>) :
+	ArrayAdapter<MeterGroup>(context, resource, groups) {
 
-
-// todo 待修改
-class CustomArrayAdapter(context:Context, resource: Int, objects: Array<String>) :
-	ArrayAdapter<String>(context, resource, objects) {
-
-	override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+	// 提示未抄表數量 & 未完成顏色
+	override fun getView(position:Int, convertView:View?, parent:ViewGroup):View {
 		val view:TextView = super.getView(position, convertView, parent) as TextView
-		val text = getItem(position)
+		val group:MeterGroup = getItem(position)!!
+		view.text = group.spannable
+		return view
+	}
+}
 
-		// 这里假设数字始终在文本的最后，所以找到最后一个空格并将其后面的文本设置为红色
-		val lastSpaceIndex = text?.lastIndexOf(" ")
-		if (lastSpaceIndex != null && lastSpaceIndex >= 0) {
-			val spannable = SpannableString(text)
-			val redColor = ForegroundColorSpan(Color.RED)
-			spannable.setSpan(redColor, lastSpaceIndex + 1, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-			view.text = spannable
+data class CsvRawRow(private val data:Map<String, String>)
+
+
+data class Meter(
+	private val id:String,
+	private val degree:Float?,
+) {
+	val read:Boolean get() = degree != null
+}
+
+
+data class MeterGroup(
+	val title:String,
+	private val meterList:List<Meter>,
+) {
+	private val totalCount:Int get() = meterList.count()
+	private val readCount:Int get() = meterList.count { it.read }
+	val tip:String get() = "(${readCount}/${totalCount})"
+	val tipColor:Int get() = if (readCount == totalCount) Color.parseColor("#ff4a973b") else Color.RED
+
+	val spannable:SpannableString
+		get() {
+			val allText = "$title $tip"
+			val spannable = SpannableString(allText)
+			val color = ForegroundColorSpan(tipColor)
+			spannable.setSpan(color, title.length + 1, allText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+			return spannable
 		}
 
-		return view
+	override fun toString():String {
+		return this.title
 	}
 }

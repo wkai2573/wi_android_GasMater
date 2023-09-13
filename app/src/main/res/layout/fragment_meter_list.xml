@@ -32,23 +32,14 @@
       android:text="全部顯示" />
   </com.google.android.material.button.MaterialButtonToggleGroup>
 
-  <com.google.android.material.textfield.TextInputLayout
-    android:id="@+id/groupsList"
-    style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+  <include
+    android:id="@+id/groups_combo"
+    layout="@layout/combo_subtitle"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="8dp"
-    android:layout_marginEnd="8dp"
-    android:hint="群組號">
-
-    <com.google.android.material.textfield.MaterialAutoCompleteTextView
-      android:id="@+id/groupsListTv"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:inputType="none"
-      android:textAppearance="?attr/textAppearanceBodyLarge" />
-
-  </com.google.android.material.textfield.TextInputLayout>
+    android:layout_marginTop="8dp"
+    android:layout_marginEnd="8dp" />
 
   <androidx.recyclerview.widget.RecyclerView
     android:layout_width="match_parent"
