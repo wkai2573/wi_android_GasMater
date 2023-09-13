@@ -5,10 +5,8 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothManager
-import android.bluetooth.BluetoothProfile
+import android.bluetooth.BluetoothSocket
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -16,6 +14,9 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -30,6 +31,10 @@ import androidx.core.content.IntentCompat
 import androidx.fragment.app.activityViewModels
 import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmater.databinding.FragmentTestBinding
+import com.wavein.gasmater.tools.RD64H
+import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import java.util.UUID
 import kotlin.experimental.xor
 
@@ -277,8 +282,9 @@ class TestFragment : Fragment() {
 
 	private fun 連接母機() {
 		if (btDevice == null) return
-		binding.stateTv.text = "連接母機"
-		bluetoothGatt = btDevice!!.connectGatt(requireContext(), true, gattCallback)
+		binding.stateTv.text = "連接母機中"
+		val clientClass = ClientClass(btDevice!!)
+		clientClass.start()
 	}
 
 	private fun 傳送並接收訊息() {
@@ -287,16 +293,11 @@ class TestFragment : Fragment() {
 		if (text.isEmpty()) return
 
 		binding.msgTv.text = "🔽接收到的訊息🔽"
-		val asciiCodeList = text.toCharArray().map { it.code.toByte() }
-		var bytes = byteArrayOf(STX) + asciiCodeList.toByteArray() + byteArrayOf(ETX)
-		bytes += getBcc(bytes)
-		printByteArrayAsBinary(bytes)
-//		bytes = convertbitComposition(bytes)
-//		printByteArrayAsBinary(bytes)
-//		sendReceive!!.write(bytes)
-
-		val msg = "傳送: " + bytes.joinToString(" ") { /*"0x%02x"*/"%d".format(it) }
+		val sendByteArray = RD64H.telegramConvert(text, "+s").toByteArray()
+		sendReceive?.write(sendByteArray)
+		val msg = "傳送: " + sendByteArray.joinToString("") { "%02X".format(it) }
 		Snackbar.make(requireContext(), binding.root, msg, Snackbar.LENGTH_SHORT).show()
+
 
 		// 關閉軟鍵盤
 		val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
@@ -305,57 +306,19 @@ class TestFragment : Fragment() {
 
 	//endregion
 
+
+	//region __________藍牙連接 & 資料傳送/接收處理__________
+	// 藍牙連接參考 https://www.youtube.com/watch?v=5M4o5dGigbY&ab_channel=SarthiTechnology
+
 	// ==藍牙連線參數==
 	// 舊母機:MBH7BTZ43PANA  ADDR:E0:18:77:FC:F1:5C  PIN:5678
 	// 新母機:RD64HGL        ADDR:E8:EB:1B:6E:49:47  PIN:5893
-	private val DEVICE_NAME:String = "RD64HGL"
-	private val DEVICE_ADDR:String = "E8:EB:1B:6E:49:47"
+	private val DEVICE_NAME:String = "MBH7BTZ43PANA"
+	private val DEVICE_ADDR:String = "E0:18:77:FC:F1:5C"
 
-	//region __________(新母機,GATT) 藍牙連接 & 資料傳送/接收處理__________
-
-	private lateinit var bluetoothGatt:BluetoothGatt
-
-	// 設定您的服務和特性 UUID
-	val serviceUuid = UUID.fromString("49535343-FE7D-4AE5-8FA9-9FAFD205E455")
-	val characteristicUuid = UUID.fromString("49535343-1E4D-4BD9-BA61-23C647249616")
-
-	val gattCallback = object : BluetoothGattCallback() {
-		override fun onConnectionStateChange(gatt:BluetoothGatt, status:Int, newState:Int) {
-			when (newState) {
-				BluetoothProfile.STATE_CONNECTED -> {
-					// 成功連接，開始發現服務
-					binding.stateTv.text = "STATE_CONNECTED"
-					gatt.discoverServices()
-				}
-
-				BluetoothProfile.STATE_CONNECTING -> {
-					binding.stateTv.text = "STATE_CONNECTING"
-				}
-
-				BluetoothProfile.STATE_DISCONNECTING -> {
-					binding.stateTv.text = "STATE_DISCONNECTING"
-				}
-
-				BluetoothProfile.STATE_DISCONNECTED -> {
-					binding.stateTv.text = "STATE_DISCONNECTED"
-				}
-			}
-		}
-
-		override fun onServicesDiscovered(gatt:BluetoothGatt, status:Int) {
-			// 發現 BLE 服務後，找到目標特性並進行相應操作
-			val service = gatt.getService(serviceUuid)
-			val characteristic = service?.getCharacteristic(characteristicUuid)
-
-			if (characteristic != null) {
-				// 在這裡進行您的特性操作，例如讀取或寫入數據
-				// gatt.readCharacteristic(targetCharacteristic)
-				// gatt.writeCharacteristic(targetCharacteristic)
-			}
-		}
-	}
-
-	//endregion
+	// 藍牙連線
+	private val MY_UUID = UUID.fromString("8ce255c0-223a-11e0-ac64-0803450c9a66")
+	var sendReceive:SendReceive? = null
 
 	// 電文參數
 	private val STX = 0x02.toByte()
@@ -371,16 +334,123 @@ class TestFragment : Fragment() {
 		return bcc
 	}
 
-	// 除錯: 印出byteArray二進位
-	private fun printByteArrayAsBinary(byteArray:ByteArray):List<String> {
-		val binaryList:MutableList<String> = mutableListOf()
-		for (byte in byteArray) {
-			val binaryString = Integer.toBinaryString(byte.toInt() and 0xFF)
-			val paddedBinaryString = binaryString.padStart(8, '0')
-			binaryList.add(paddedBinaryString)
+	val STATE_LISTENING = 1
+	val STATE_CONNECTING = 2
+	val STATE_CONNECTED = 3
+	val STATE_CONNECTION_FAILED = 4
+	val STATE_MESSAGE_RECEIVED = 5
+
+	// 藍牙連線與資料處理
+	var bluetoothHandler:Handler = Handler(Looper.getMainLooper()) { msg ->
+		when (msg.what) {
+			STATE_LISTENING -> binding.stateTv.text = "Listening"
+			STATE_CONNECTING -> binding.stateTv.text = "Connecting"
+			STATE_CONNECTED -> binding.stateTv.text = "Connected"
+			STATE_CONNECTION_FAILED -> binding.stateTv.text = "Connection Failed"
+			STATE_MESSAGE_RECEIVED -> {
+				val readBuff = (msg.obj as ByteArray).copyOfRange(0, msg.arg1)
+				val msg = String(readBuff, 1, msg.arg1 - 3)
+				val msgByte = "[" + readBuff.joinToString(",") { it.toString() } + "]"
+				// binding.msgTv.text = "${binding.msgTv.text}\n$msgByte\n$msg"
+				binding.msgTv.text = "${binding.msgTv.text}\n$msg"
+			}
 		}
-		Log.e("@@@", binaryList.toString())
-		return binaryList
+		true
 	}
+
+	// 連接device用
+	private inner class ClientClass(private val device:BluetoothDevice) : Thread() {
+		private var socket:BluetoothSocket? = null
+
+		init {
+			try {
+				val _socket = device.createRfcommSocketToServiceRecord(MY_UUID)
+				val clazz = _socket.remoteDevice.javaClass
+				val paramTypes = arrayOf<Class<*>>(Integer.TYPE)
+				val m = clazz.getMethod("createRfcommSocket", *paramTypes)
+				val fallbackSocket = m.invoke(_socket.remoteDevice, Integer.valueOf(1)) as BluetoothSocket
+				socket = fallbackSocket
+			} catch (e:IOException) {
+				e.printStackTrace()
+			}
+		}
+
+		override fun run() {
+			try {
+				socket!!.connect()
+				val message:Message = Message.obtain()
+				message.what = STATE_CONNECTED
+				bluetoothHandler.sendMessage(message)
+				sendReceive = SendReceive(socket)
+				sendReceive!!.start()
+			} catch (e:IOException) {
+				e.printStackTrace()
+				val message:Message = Message.obtain()
+				message.what = STATE_CONNECTION_FAILED
+				bluetoothHandler.sendMessage(message)
+			}
+		}
+	}
+
+	// 傳送與接收資料用
+	inner class SendReceive(private val bluetoothSocket:BluetoothSocket?) : Thread() {
+		private val inputStream:InputStream?
+		private val outputStream:OutputStream?
+
+		init {
+			var tempIn:InputStream? = null
+			var tempOut:OutputStream? = null
+			try {
+				tempIn = bluetoothSocket!!.inputStream
+				tempOut = bluetoothSocket.outputStream
+			} catch (e:IOException) {
+				e.printStackTrace()
+			}
+			inputStream = tempIn
+			outputStream = tempOut
+		}
+
+		override fun run() {
+			var totalBuffer = ByteArray(1024)
+			var totalBufferLength:Int = 0
+
+			while (true) {
+				val singleBuffer = ByteArray(50)
+				try {
+					val length = inputStream!!.read(singleBuffer)
+					if (length != -1) {
+						singleBuffer.copyInto(totalBuffer, totalBufferLength, 0, length)
+						totalBufferLength += length
+						if (checkReceiveOver(totalBuffer, totalBufferLength)) {
+							bluetoothHandler.obtainMessage(STATE_MESSAGE_RECEIVED, totalBufferLength, -1, totalBuffer).sendToTarget()
+							totalBuffer = ByteArray(1024)
+							totalBufferLength = 0
+						}
+					}
+				} catch (e:IOException) {
+					Snackbar.make(requireContext(), binding.root, "接收資料時發生錯誤", Snackbar.LENGTH_SHORT).show()
+					e.printStackTrace()
+					break
+				}
+			}
+		}
+
+		// 檢查是否接收結束(結尾是ETX & BCC)
+		private fun checkReceiveOver(bytes:ByteArray, length:Int):Boolean {
+			if (length <= 3) return false
+			val bcc = bytes[length - 1]
+			return bytes[length - 2] == ETX && bcc == getBcc(bytes.copyOfRange(0, length - 1))
+		}
+
+		fun write(bytes:ByteArray) {
+			try {
+				outputStream!!.write(bytes)
+			} catch (e:IOException) {
+				e.printStackTrace()
+			}
+		}
+	}
+
+	//endregion
 
 }
