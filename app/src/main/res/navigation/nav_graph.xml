@@ -3,15 +3,12 @@
   xmlns:app="http://schemas.android.com/apk/res-auto"
   xmlns:tools="http://schemas.android.com/tools"
   android:id="@+id/nav_graph"
-  app:startDestination="@id/nav_testFragment">
+  app:startDestination="@id/nav_nccFragment">
+
   <fragment android:id="@+id/nav_logoFragment"
     android:name="com.wavein.gasmater.ui.logo.LogoFragment"
     android:label="fragment_logo"
     tools:layout="@layout/fragment_logo" />
-  <fragment android:id="@+id/nav_testFragment"
-    android:name="com.wavein.gasmater.ui.test.TestFragment"
-    android:label="fragment_test"
-    tools:layout="@layout/fragment_test" />
   <fragment android:id="@+id/nav_settingFragment"
     android:name="com.wavein.gasmater.ui.setting.SettingFragment"
     android:label="fragment_bt"
@@ -23,4 +20,12 @@
   <fragment android:id="@+id/nav_meterBaseFragment"
     android:name="com.wavein.gasmater.ui.meterwork.MeterBaseFragment"
     android:label="MeterBaseFragment" />
+  <fragment android:id="@+id/nav_testFragment"
+    android:name="com.wavein.gasmater.ui.test.TestFragment"
+    android:label="fragment_test"
+    tools:layout="@layout/fragment_test" />
+  <fragment android:id="@+id/nav_nccFragment"
+    android:name="com.wavein.gasmater.ui.test.NccFragment"
+    android:label="fragment_ncc"
+    tools:layout="@layout/fragment_ncc" />
 </navigation>

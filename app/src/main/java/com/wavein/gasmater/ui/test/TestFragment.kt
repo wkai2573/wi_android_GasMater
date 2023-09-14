@@ -68,7 +68,7 @@ class TestFragment : Fragment() {
 		if (hasPermissions()) {
 			onPermissionsAllow()
 		} else {
-			binding.requestPermissionBtn.setOnClickListener {
+			binding.permission.requestBtn.setOnClickListener {
 				requestPermissionLauncher.launch(permissions)
 			}
 			requestPermissionLauncher.launch(permissions)
@@ -77,7 +77,7 @@ class TestFragment : Fragment() {
 
 	// 當權限皆允許
 	private fun onPermissionsAllow() {
-		binding.revokedPermissionLayout.visibility = View.GONE
+		binding.permission.layout.visibility = View.GONE
 
 		binding.button.setOnClickListener { 檢查藍牙並開啟 { 掃描設備() } }
 		binding.button2.setOnClickListener { 藍牙配對() }
@@ -154,7 +154,7 @@ class TestFragment : Fragment() {
 		請授予這些權限，以便應用程序正常運行。
 		Please grant all of them for the app to function properly.
 		""".trimIndent()
-		binding.revokedPermissionTv.text = revokedPermissionsText
+		binding.permission.revokedTv.text = revokedPermissionsText
 	}
 
 	// 是否有全部權限
@@ -442,13 +442,6 @@ class TestFragment : Fragment() {
 					break
 				}
 			}
-		}
-
-		// 檢查是否接收結束(結尾是ETX & BCC)
-		private fun checkReceiveOver(bytes:ByteArray, length:Int):Boolean {
-			if (length <= 3) return false
-			val bcc = bytes[length - 1]
-			return bytes[length - 2] == ETX && bcc == getBcc(bytes.copyOfRange(0, length - 1))
 		}
 
 		fun write(bytes:ByteArray) {

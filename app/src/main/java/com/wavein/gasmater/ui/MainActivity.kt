@@ -64,6 +64,7 @@ class MainActivity : AppCompatActivity() {
 
 				R.id.nav_csvFragment,
 				R.id.nav_testFragment,
+				R.id.nav_nccFragment,
 			)
 		)
 		setupActionBarWithNavController(navController, appBarConfiguration)

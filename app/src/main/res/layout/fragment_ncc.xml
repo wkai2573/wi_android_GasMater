@@ -5,7 +5,7 @@
   android:id="@+id/frameLayout"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
-  tools:context=".ui.test.TestFragment">
+  tools:context=".ui.test.NccFragment">
 
   <!-- 權限要求layout -->
   <include
@@ -17,7 +17,6 @@
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintTop_toTopOf="parent" />
-
 
   <androidx.core.widget.NestedScrollView
     android:id="@+id/nestedScrollView2"
@@ -146,8 +145,10 @@
     android:scrollbars="vertical"
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintHorizontal_bias="0.0"
     app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toBottomOf="@+id/sendInputLayout">
+    app:layout_constraintTop_toBottomOf="@+id/sendInputLayout"
+    app:layout_constraintVertical_bias="0.0">
 
     <LinearLayout
       android:layout_width="match_parent"

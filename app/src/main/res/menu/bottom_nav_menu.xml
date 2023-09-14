@@ -20,4 +20,9 @@
     android:enabled="true"
     android:icon="@drawable/ic_info_24"
     android:title="TEST"/>
+  <item
+    android:id="@+id/nav_nccFragment"
+    android:enabled="true"
+    android:icon="@drawable/ic_info_24"
+    android:title="NCC"/>
 </menu>
