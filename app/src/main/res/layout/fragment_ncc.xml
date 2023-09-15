@@ -1,11 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:app="http://schemas.android.com/apk/res-auto"
   xmlns:tools="http://schemas.android.com/tools"
   android:id="@+id/frameLayout"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
   tools:context=".ui.test.NccFragment">
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="bottom"
+    android:orientation="vertical">
+
+    <ListView
+      android:id="@+id/logList"
+      android:layout_width="match_parent"
+      android:layout_height="0dp"
+      android:layout_weight="1"
+      android:divider="@android:color/transparent"
+      android:dividerHeight="0dp"
+      android:stackFromBottom="true" />
+
+    <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
+
+      <Button
+        android:id="@+id/btSelectBtn"
+        style="?attr/materialButtonOutlinedStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="選擇設備"
+        app:icon="@drawable/ic_bluetooth_24" />
+
+      <Button
+        android:id="@+id/action1Btn"
+        style="?attr/materialButtonOutlinedStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="個別抄表" />
+
+      <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+      <Button
+        android:id="@+id/clearBtn"
+        style="?attr/materialButtonOutlinedStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="清空訊息"
+        app:icon="@drawable/ic_delete_24" />
+
+    </LinearLayout>
+
+    <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:gravity="center">
+
+      <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/sendInputLayout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:hint="訊息"
+        android:inputType="text|textMultiLine">
+
+        <com.google.android.material.textfield.TextInputEditText
+          android:id="@+id/sendEt"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:text="5" />
+      </com.google.android.material.textfield.TextInputLayout>
+
+      <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/sendBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:backgroundTint="?attr/colorPrimaryContainer"
+        android:src="@drawable/ic_send_24"
+        android:tint="?attr/colorPrimary" />
+    </LinearLayout>
+
+  </LinearLayout>
 
   <!-- 權限要求layout -->
   <include
@@ -16,163 +97,8 @@
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent" />
+    app:layout_constraintTop_toTopOf="parent"
+    tools:visibility="invisible" />
 
-  <androidx.core.widget.NestedScrollView
-    android:id="@+id/nestedScrollView2"
-    android:layout_width="0dp"
-    android:layout_height="145dp"
-    android:fadeScrollbars="false"
-    android:fillViewport="true"
-    android:scrollbarSize="20dp"
-    android:scrollbars="vertical"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toTopOf="parent">
+</FrameLayout>
 
-    <LinearLayout
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content">
-
-      <LinearLayout
-        android:id="@+id/linearLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <Button
-          android:id="@+id/button"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:text="掃描設備" />
-
-        <Button
-          android:id="@+id/button2"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:text="藍芽配對" />
-
-        <Button
-          android:id="@+id/button3"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:text="已配對的藍牙裝置" />
-
-        <Button
-          android:id="@+id/button4"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:text="檢查配對Azbil母機" />
-
-        <Button
-          android:id="@+id/button5"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:text="連接母機" />
-
-        <Button
-          android:id="@+id/button6"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:text="傳送並接收訊息" />
-
-      </LinearLayout>
-
-      <LinearLayout
-        android:id="@+id/linearLayout2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <Button
-          android:id="@+id/button7"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:text="啟動5" />
-
-        <Button
-          android:id="@+id/button8"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:text="終了A" />
-
-        <Button
-          android:id="@+id/button9"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:text="個別檢針R85" />
-
-        <Button
-          android:id="@+id/button10"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:text="個別檢針R16" />
-
-        <Button
-          android:id="@+id/button11"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:text="群組抄表R84" />
-      </LinearLayout>
-
-    </LinearLayout>
-  </androidx.core.widget.NestedScrollView>
-
-  <com.google.android.material.textfield.TextInputLayout
-    android:id="@+id/sendInputLayout"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:hint="傳送訊息"
-    android:inputType="text|textMultiLine"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toBottomOf="@+id/nestedScrollView2">
-
-    <com.google.android.material.textfield.TextInputEditText
-      android:id="@+id/sendEt"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:text="5" />
-
-  </com.google.android.material.textfield.TextInputLayout>
-
-  <androidx.core.widget.NestedScrollView
-    android:id="@+id/nestedScrollView"
-    android:layout_width="0dp"
-    android:layout_height="0dp"
-    android:fillViewport="true"
-    android:scrollbarSize="20dp"
-    android:scrollbars="vertical"
-    app:layout_constraintBottom_toBottomOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    app:layout_constraintHorizontal_bias="0.0"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintTop_toBottomOf="@+id/sendInputLayout"
-    app:layout_constraintVertical_bias="0.0">
-
-    <LinearLayout
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:orientation="vertical">
-
-      <TextView
-        android:id="@+id/devicesTv"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="裝置" />
-
-      <TextView
-        android:id="@+id/stateTv"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="狀態" />
-
-      <TextView
-        android:id="@+id/msgTv"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="🔽接收到的訊息🔽" />
-
-    </LinearLayout>
-  </androidx.core.widget.NestedScrollView>
-</androidx.constraintlayout.widget.ConstraintLayout>

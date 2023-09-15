@@ -9,17 +9,16 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.wavein.gasmater.databinding.ItemDeviceBinding
 
-class LeDeviceListAdapter(
-	private val onClick:(BluetoothDevice) -> Unit,
-) : ListAdapter<BluetoothDevice, LeDeviceListAdapter.ViewHolder>(DiffCallback()) {
+class DeviceListAdapter(private val onClick:(BluetoothDevice) -> Unit) :
+	ListAdapter<BluetoothDevice, DeviceListAdapter.ViewHolder>(DiffCallback()) {
 
-	override fun onCreateViewHolder(parent:ViewGroup, viewType:Int):LeDeviceListAdapter.ViewHolder {
+	override fun onCreateViewHolder(parent:ViewGroup, viewType:Int):DeviceListAdapter.ViewHolder {
 		val binding = ItemDeviceBinding.inflate(LayoutInflater.from(parent.context), parent, false)
 		return ViewHolder(binding)
 	}
 
 	@SuppressLint("MissingPermission")
-	override fun onBindViewHolder(holder:LeDeviceListAdapter.ViewHolder, position:Int) {
+	override fun onBindViewHolder(holder:DeviceListAdapter.ViewHolder, position:Int) {
 		val btDevice = getItem(position)
 		holder.bind(btDevice)
 	}
@@ -33,7 +32,9 @@ class LeDeviceListAdapter(
 
 		@SuppressLint("MissingPermission")
 		fun bind(item:BluetoothDevice) {
-			binding.btInfoTv.text = "${item.name}🏀${item.address}🏀${item.uuids}"
+			val showText = "${item.name}\n${item.address}"
+			binding.btInfoTv.text = showText
+//			binding.btInfoTv.text = "${item.name}🏀${item.address}🏀${item.uuids}"
 		}
 	}
 

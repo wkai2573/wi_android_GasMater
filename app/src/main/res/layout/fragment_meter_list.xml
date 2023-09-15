@@ -5,7 +5,7 @@
   android:layout_width="match_parent"
   android:layout_height="match_parent"
   android:orientation="vertical"
-  tools:context=".ui.meterwork.groups.MeterGroupsFragment">
+  tools:context=".ui.meterwork.list.MeterListFragment">
 
   <com.google.android.material.button.MaterialButtonToggleGroup
     android:id="@+id/doneAllToggleBtn"

@@ -1,26 +1,41 @@
 package com.wavein.gasmater.ui.test
 
 import android.Manifest
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-import android.content.BroadcastReceiver
 import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
-import androidx.fragment.app.Fragment
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
+import android.widget.ArrayAdapter
+import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
-import androidx.core.content.IntentCompat
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.viewModelScope
+import com.wavein.gasmater.R
 import com.wavein.gasmater.databinding.FragmentNccBinding
+import com.wavein.gasmater.ui.bt.BtDialogFragment
+import com.wavein.gasmater.ui.setting.BlueToothViewModel
+import com.wavein.gasmater.ui.setting.ConnectEvent
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class NccFragment : Fragment() {
 
@@ -28,16 +43,16 @@ class NccFragment : Fragment() {
 	private var _binding:FragmentNccBinding? = null
 	private val binding get() = _binding!!
 	private val nccVM by activityViewModels<NccViewModel>()
+	private val blVM by activityViewModels<BlueToothViewModel>()
 
-	private lateinit var viewModel:NccViewModel
+	// adapter
+	private var logItems = mutableListOf<LogMsg>()
+	private lateinit var logAdapter:LogAdapter
 
 	override fun onDestroyView() {
 		super.onDestroyView()
 		// 防止內存洩漏
 		_binding = null
-		kotlin.runCatching {
-			requireContext().unregisterReceiver(receiver)
-		}
 	}
 
 	override fun onCreateView(inflater:LayoutInflater, container:ViewGroup?, savedInstanceState:Bundle?):View {
@@ -62,44 +77,61 @@ class NccFragment : Fragment() {
 	private fun onPermissionsAllow() {
 		binding.permission.layout.visibility = View.GONE
 
-		// 註冊廣播:偵測藍牙掃描結果
-		val intentFilter = IntentFilter().apply {
-			addAction("android.bluetooth.devicepicker.action.DEVICE_SELECTED")
-			addAction(BluetoothDevice.ACTION_FOUND)
-			addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
-			addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED)
-			addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
-		}
-		requireContext().registerReceiver(receiver, intentFilter)
-	}
-
-	// 藍牙配對處理(接收廣播)
-	private val receiver:BroadcastReceiver = object : BroadcastReceiver() {
-		override fun onReceive(context:Context, intent:Intent) {
-			when (intent.action) {
-				// 當藍牙配對改變
-				BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
-					Log.i("@@@", "ACTION_BOND_STATE_CHANGED")
-				}
-
-				BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
-					Log.i("@@@", "ACTION_DISCOVERY_STARTED")
-					binding.stateTv.text = "掃描中..."
-				}
-
-				BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
-					Log.i("@@@", "ACTION_DISCOVERY_FINISHED")
-					binding.stateTv.text = "掃描結束"
-				}
-
-				BluetoothDevice.ACTION_FOUND -> {
-					Log.i("@@@", "ACTION_FOUND")
-					val scannedDevice = IntentCompat.getParcelableExtra(intent, BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
-
+		// 註冊藍牙事件
+		lifecycleScope.launch {
+			repeatOnLifecycle(Lifecycle.State.STARTED) {
+				blVM.connectEventFlow.asSharedFlow().collectLatest { event ->
+					when (event) {
+						ConnectEvent.Connecting -> addMsg("連接中...", LogMsgType.System)
+						ConnectEvent.Connected -> addMsg("已連接", LogMsgType.System)
+						ConnectEvent.ConnectionFailed -> addMsg("連接失敗", LogMsgType.System)
+						ConnectEvent.Listening -> addMsg("監聽中...", LogMsgType.System)
+						ConnectEvent.ConnectionLost -> addMsg("連接中斷", LogMsgType.System)
+						is ConnectEvent.TextReceived -> {
+							addMsg(event.text, LogMsgType.Resp)
+						}
+						else -> {}
+					}
 				}
 			}
 		}
+
+		// UI: 藍牙按鈕
+		binding.btSelectBtn.setOnClickListener {
+			val supportFragmentManager = (activity as FragmentActivity).supportFragmentManager
+			val dialog = BtDialogFragment()
+			dialog.show(supportFragmentManager, "BtDialogFragment")
+		}
+
+		// UI: Log相關
+		logItems = mutableListOf<LogMsg>()
+		logAdapter = LogAdapter(requireContext(), R.layout.item_logmsg, logItems)
+		binding.logList.adapter = logAdapter
+		binding.sendBtn.setOnClickListener { sendMsg(binding.sendEt.text.toString()) }
+		binding.clearBtn.setOnClickListener { clearMsg() }
 	}
+
+	private fun sendMsg(text:String) {
+		blVM.sendTextToDevice(text)
+		val hexString = blVM.sendTextToDevice(text) ?: return
+		val showText = "$text [$hexString]"
+		addMsg(showText)
+		// 關閉軟鍵盤
+		val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+		imm?.hideSoftInputFromWindow(binding.sendEt.windowToken, 0)
+	}
+
+	private fun addMsg(text:String, type:LogMsgType = LogMsgType.Send) {
+		val newItem = LogMsg(text, type)
+		logItems.add(newItem)
+		logAdapter.notifyDataSetChanged()
+	}
+
+	private fun clearMsg() {
+		logItems.clear()
+		logAdapter.notifyDataSetChanged()
+	}
+
 
 	//region __________權限方法__________
 
@@ -152,3 +184,43 @@ class NccFragment : Fragment() {
 	//endregion
 
 }
+
+
+class LogAdapter(context:Context, resource:Int, groups:List<LogMsg>) : ArrayAdapter<LogMsg>(context, resource, groups) {
+	override fun getView(position:Int, convertView:View?, parent:ViewGroup):View {
+		val view:TextView = super.getView(position, convertView, parent) as TextView
+		val logMsg:LogMsg = getItem(position)!!
+		view.text = logMsg.spannable
+		return view
+	}
+}
+
+enum class LogMsgType { Send, Resp, System }
+
+data class LogMsg(val text:String, val type:LogMsgType = LogMsgType.Send) {
+
+	val color:Int
+		get() = when (type) {
+			LogMsgType.Send -> Color.BLUE
+			LogMsgType.Resp -> Color.parseColor("#ff4a973b")
+			else -> Color.parseColor("#ffd68b00")
+		}
+	var spannable:SpannableString
+
+	private fun getTime():String {
+		val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+		val date = Date()
+		return dateFormat.format(date)
+	}
+
+	init {
+		val time = getTime()
+		val logText = "$time $text"
+		spannable = SpannableString(logText)
+		val color = ForegroundColorSpan(color)
+		spannable.setSpan(color, time.length + 1, logText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+	}
+
+}
+
+

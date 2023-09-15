@@ -36,6 +36,7 @@ class SettingFragment : Fragment() {
 	// binding & viewModel
 	private var _binding:FragmentSettingBinding? = null
 	private val binding get() = _binding!!
+	private val blVM by activityViewModels<BlueToothViewModel>()
 	private val settingVM by activityViewModels<SettingViewModel>()
 
 	override fun onDestroyView() {
@@ -66,66 +67,18 @@ class SettingFragment : Fragment() {
 		binding.revokedPermissionLayout.visibility = View.GONE
 
 		// vm初始化
-		settingVM.setDeviceOnClick { bleDevice ->
-			lifecycleScope.launch {
-				SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("選擇了 ${bleDevice.name} \nTODO 配對該設備..."))
-			}
-			settingVM.connectBleDevice(requireContext(), bleDevice)
-		}
+		// blVM.setDeviceOnClick { bleDevice ->
+		// 	lifecycleScope.launch {
+		// 		SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("選擇了 ${bleDevice.name} \nTODO 配對該設備..."))
+		// 	}
+		// 	blVM.connectBleDevice(requireContext(), bleDevice)
+		// }
 
 		// UI:csv__________
 		binding.selectCsvFromLocalBtn.setOnClickListener {
 			settingVM.selectReadCsv(filePickerLauncher)
 		}
 
-		// UI:藍牙__________
-		binding.scanBtn.setOnClickListener {
-			settingVM.scanLeDevice()
-		}
-		binding.deviceRv.apply {
-			layoutManager = LinearLayoutManager(requireContext())
-			addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
-			itemAnimator = DefaultItemAnimator()
-			adapter = settingVM.leDeviceListAdapter
-		}
-
-		// 訂閱scanning
-		lifecycleScope.launch {
-			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-				settingVM.scanningStateFlow.collectLatest { scanning ->
-					if (scanning) {
-						binding.scanBtn.text = "STOP"
-						binding.scanning.visibility = View.VISIBLE
-					} else {
-						binding.scanBtn.text = "SCAN"
-						binding.scanning.visibility = View.GONE
-					}
-				}
-			}
-		}
-
-		// 訂閱藍牙設備清單
-		lifecycleScope.launch {
-			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-				settingVM.btDeviceListStateFlow.collectLatest {
-					settingVM.leDeviceListAdapter.submitList(it)
-				}
-			}
-		}
-
-		// TODO 訂閱藍牙設備連接狀態
-		lifecycleScope.launch {
-			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-				settingVM.bluetoothProfileStateFlow.collectLatest {
-					when (it) {
-						BluetoothProfile.STATE_CONNECTING -> {}
-						BluetoothProfile.STATE_CONNECTED -> {}
-						BluetoothProfile.STATE_DISCONNECTING -> {}
-						BluetoothProfile.STATE_DISCONNECTED -> {}
-					}
-				}
-			}
-		}
 	}
 
 	//region __________權限__________

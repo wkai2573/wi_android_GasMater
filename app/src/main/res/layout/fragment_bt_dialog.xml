@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:orientation="vertical"
+  android:paddingVertical="16dp"
+  tools:context=".ui.bt.BtDialogFragment">
+
+  <TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="24dp"
+    android:layout_marginVertical="8dp"
+    android:text="選擇藍牙裝置"
+    android:textColor="?attr/colorOnBackground"
+    android:textSize="30sp" />
+
+  <TextView
+    android:id="@+id/bondedDeviceTv"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="24dp"
+    android:layout_marginVertical="8dp"
+    android:text="先前連結的裝置"
+    android:textColor="?attr/colorPrimary"
+    android:textSize="16sp" />
+
+  <androidx.recyclerview.widget.RecyclerView
+    android:id="@+id/bondedDeviceRv"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="24dp"
+    tools:itemCount="1"
+    tools:listitem="@layout/item_device" />
+
+  <com.google.android.material.divider.MaterialDivider
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginVertical="8dp" />
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="30dp"
+    android:layout_marginHorizontal="24dp"
+    android:layout_marginVertical="8dp"
+    android:gravity="center">
+
+    <TextView
+      android:id="@+id/scanDeviceTv"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_weight="1"
+      android:clickable="true"
+      android:text="掃描設備"
+      android:textColor="?attr/colorPrimary"
+      android:textSize="16sp" />
+
+    <ProgressBar
+      android:id="@+id/scanProgressBar"
+      style="?android:attr/progressBarStyle"
+      android:layout_width="30dp"
+      android:layout_height="match_parent" />
+  </LinearLayout>
+
+  <Button
+    android:id="@+id/scanBtn"
+    style="?attr/materialButtonOutlinedStyle"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="24dp"
+    android:layout_marginBottom="8dp"
+    android:text="開始掃描" />
+
+  <androidx.recyclerview.widget.RecyclerView
+    android:id="@+id/scannedDeviceRv"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="24dp"
+    android:layout_marginVertical="8dp"
+    tools:itemCount="3"
+    tools:listitem="@layout/item_device" />
+
+</LinearLayout>
