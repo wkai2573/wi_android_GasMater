@@ -32,7 +32,7 @@ class LogoFragment : Fragment() {
 	override fun onViewCreated(view:View, savedInstanceState:Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
 
-		lifecycleScope.launch {
+		viewLifecycleOwner.lifecycleScope.launch {
 			delay(500)
 			findNavController().navigate(R.id.nav_settingFragment)
 		}

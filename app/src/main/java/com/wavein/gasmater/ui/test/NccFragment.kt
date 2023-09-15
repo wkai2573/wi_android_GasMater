@@ -15,6 +15,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
@@ -30,8 +31,10 @@ import com.wavein.gasmater.databinding.FragmentNccBinding
 import com.wavein.gasmater.ui.bt.BtDialogFragment
 import com.wavein.gasmater.ui.setting.BlueToothViewModel
 import com.wavein.gasmater.ui.setting.ConnectEvent
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -42,8 +45,8 @@ class NccFragment : Fragment() {
 	// binding & viewModel
 	private var _binding:FragmentNccBinding? = null
 	private val binding get() = _binding!!
-	private val nccVM by activityViewModels<NccViewModel>()
 	private val blVM by activityViewModels<BlueToothViewModel>()
+	private var jobs:MutableList<Job> = mutableListOf()
 
 	// adapter
 	private var logItems = mutableListOf<LogMsg>()
@@ -51,6 +54,8 @@ class NccFragment : Fragment() {
 
 	override fun onDestroyView() {
 		super.onDestroyView()
+		jobs.forEach { it.cancel() }
+		jobs.clear()
 		// 防止內存洩漏
 		_binding = null
 	}
@@ -78,8 +83,8 @@ class NccFragment : Fragment() {
 		binding.permission.layout.visibility = View.GONE
 
 		// 註冊藍牙事件
-		lifecycleScope.launch {
-			repeatOnLifecycle(Lifecycle.State.STARTED) {
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.connectEventFlow.asSharedFlow().collectLatest { event ->
 					when (event) {
 						ConnectEvent.Connecting -> addMsg("連接中...", LogMsgType.System)
@@ -90,6 +95,7 @@ class NccFragment : Fragment() {
 						is ConnectEvent.TextReceived -> {
 							addMsg(event.text, LogMsgType.Resp)
 						}
+
 						else -> {}
 					}
 				}

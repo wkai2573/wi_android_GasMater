@@ -68,7 +68,7 @@ class SettingFragment : Fragment() {
 
 		// vm初始化
 		// blVM.setDeviceOnClick { bleDevice ->
-		// 	lifecycleScope.launch {
+		// 	viewLifecycleOwner.lifecycleScope.launch {
 		// 		SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("選擇了 ${bleDevice.name} \nTODO 配對該設備..."))
 		// 	}
 		// 	blVM.connectBleDevice(requireContext(), bleDevice)

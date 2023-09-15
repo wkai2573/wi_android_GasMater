@@ -46,7 +46,7 @@ class CsvFragment : Fragment() {
 		}
 
 		// 訂閱readFileState
-		lifecycleScope.launch {
+		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				csvVM.readFileStateFlow.collectLatest { readFileState ->
 					when(readFileState.type) {
