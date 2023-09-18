@@ -4,18 +4,15 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
-import android.content.Context
-import android.util.Log
-import android.view.inputmethod.InputMethodManager
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmater.tools.RD64H
 import com.wavein.gasmater.tools.SharedEvent
 import com.wavein.gasmater.tools.toHexString
 import com.wavein.gasmater.tools.toText
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -24,6 +21,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.util.UUID
 import javax.inject.Inject
+
 
 @HiltViewModel
 @SuppressLint("MissingPermission")
@@ -41,7 +39,7 @@ class BlueToothViewModel @Inject constructor(
 		}
 	}
 
-	// 藍牙相關(經典藍牙)__________________________________________________
+	//region 藍牙相關(經典藍牙)__________________________________________________
 
 	// 常數
 	val deviceName = "RD64HGL"
@@ -76,17 +74,9 @@ class BlueToothViewModel @Inject constructor(
 		val clientClass = ParentDeviceClient(device)
 		clientClass.start()
 	}
+	//endregion
 
-	// 傳送Text給母機, 回傳實際傳送HEX字串
-	fun sendTextToDevice(text:String):String? {
-		if (text.isEmpty()) return null
-		if (transceiver == null) return null
-		val sendSP = RD64H.telegramConvert(text, "+s+p")
-		transceiver?.write(sendSP)
-		return sendSP.toHexString()
-	}
-
-	// 藍牙資料收發__________________________________________________
+	//region 藍牙資料收發__________________________________________________
 
 	// 常數 & 實例
 	private val MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
@@ -186,11 +176,155 @@ class BlueToothViewModel @Inject constructor(
 			}
 		}
 	}
+	//endregion
+
+	//region 傳送接收訊息邏輯&UI層處理__________________________________________________
+
+	// 傳送Text給母機, 回傳實際傳送HEX字串
+	// fun sendTextToDevice(toSendText:String):String? {
+	// 	if (toSendText.isEmpty()) return null
+	// 	if (transceiver == null) return null
+	// 	val sendSP = RD64H.telegramConvert(toSendText, "+s+p")
+	// 	transceiver?.write(sendSP)
+	// 	return sendSP.toHexString()
+	// }
+
+	// 相關屬性
+	val commStateFlow = MutableStateFlow<CommState>(CommState.Idle)
+	val commTextStateFlow = MutableStateFlow("")
+	val commEndSharedEvent = MutableSharedFlow<CommEndEvent>()
+	var commResult:MutableMap<String, Any> = mutableMapOf()
+
+	var sendSteps = mutableListOf<Map<String, Any>>()
+	var receiveSteps = mutableListOf<Map<String, Any>>()
+	var totalStep = 0
+
+	private fun onCommEnd() = viewModelScope.launch {
+		commStateFlow.value = CommState.Idle
+		if (commResult.containsKey("Error")) {
+			commEndSharedEvent.emit(CommEndEvent.Error(commResult))
+		} else {
+			commEndSharedEvent.emit(CommEndEvent.Ok(commResult))
+		}
+	}
+
+	fun sendSingleTelegram(toSendText:String) = viewModelScope.launch {
+		if (transceiver == null) return@launch
+		if (commStateFlow.value != CommState.Idle) return@launch
+		commStateFlow.value = CommState.Communicating
+		commResult = mutableMapOf()
+
+		sendSteps = mutableListOf(
+			mapOf("op" to "single", "text" to toSendText)
+		)
+		receiveSteps = mutableListOf(
+			mapOf("op" to "single")
+		)
+		totalStep = receiveSteps.size
+		sendByStep()
+	}
+
+	fun sendR80Telegram(meterIds:List<String>) = viewModelScope.launch {
+
+	}
+
+	// 依步驟傳送電文
+	private suspend fun sendByStep() {
+		if (sendSteps.isEmpty()) {
+			onCommEnd()
+			return
+		}
+		val sendStep = sendSteps.removeAt(0)
+		when (sendStep["op"]) {
+			"single" -> {
+				val sendSP = RD64H.telegramConvert(sendStep["text"] as String, "+s+p")
+				transceiver?.write(sendSP)
+			}
+
+			"5" -> {
+				commTextStateFlow.value = "步驟:5_D70 (${receiveSteps.size} / $totalStep)"
+				val sendSP = RD64H.telegramConvert("5", "+s+p")
+				transceiver?.write(sendSP)
+			}
+
+			"R80" -> {
+				commTextStateFlow.value = "步驟:R80_D05 (${receiveSteps.size} / $totalStep)"
+				// write(telegramConvert(createR80Text(btParentId, sendStep.meterIds), "+h+s+p"))
+			}
+
+			"A" -> {
+				val sendSP = RD64H.telegramConvert("A", "+s+p")
+				transceiver?.write(sendSP)
+				delay(1000)
+				onCommEnd()
+			}
+
+			else -> {
+				throw Error("奇怪的OP: ${sendStep["op"]}")
+			}
+		}
+	}
+
+	// 依步驟接收電文
+	fun onReceiveByStep(respSp:String) = viewModelScope.launch {
+		try {
+			if (receiveSteps.isEmpty()) throw Exception("無receiveSteps")
+			var continueSend = false
+			val receiveStep = receiveSteps[0]
+			val respBytes = RD64H.telegramConvert(respSp, "-s-p")
+			val respText = respBytes.toText()
+
+			when (receiveStep["op"]) {
+				"single" -> {
+					commResult["single"] = respText
+					receiveSteps.removeAt(0)
+					continueSend = true
+				}
+
+				"D70" -> {
+					// val D70Info = getD70Info(respText)
+					// if (D70Info == null) throw Exception(respText)
+					commResult["D70"] = respText
+					// commResult["btParentId"] = D70Info.btParentId
+					receiveSteps.removeAt(0)
+					continueSend = true
+				}
+
+				"D05" -> {
+					// val D05Info = getD05Info(respText)
+					// if (D05Info == null) throw Exception(respText)
+					if (commResult["D05"] == null) commResult["D05"] = mutableListOf<String>()
+					if (commResult["D05Info"] == null) commResult["D05Info"] = mutableListOf<String>()
+					(commResult["D05"] as MutableList<String>).add(respText)
+					// (commResult["D05Info"] as MutableList<D05InfoType>).add(D05Info)
+					if ((commResult["D05"] as List<*>).size == receiveStep["count"]) {
+						receiveSteps.removeAt(0)
+						continueSend = true
+					}
+				}
+			}
+
+			if (continueSend) sendByStep()
+		} catch (error:Exception) {
+			errHandle(error.message ?: "")
+		}
+	}
+
+	// 错误处理
+	fun errHandle(respText:String) {
+		commResult["Error"] = "Err: $respText"
+		// commResult["D16Info"] = getD16Info(respText)
+		onCommEnd()
+	}
+
+
+	//endregion
 }
 
-
+// 掃瞄狀態
 enum class ScanState { Idle, Scanning, Error }
 
+// 連接事件
 sealed class ConnectEvent {
 	object Listening : ConnectEvent()
 	object Connecting : ConnectEvent()
@@ -201,3 +335,15 @@ sealed class ConnectEvent {
 	data class TextReceived(val text:String) : ConnectEvent()
 }
 
+// 溝通狀態
+sealed class CommState {
+	object Idle : CommState()
+	object Communicating : CommState()
+//	data class End(val commResult:Any?) : CommState()
+}
+
+// 溝通結束事件
+sealed class CommEndEvent {
+	data class Ok(val commResult:Map<String, Any>) : CommEndEvent()
+	data class Error(val commResult:Map<String, Any>) : CommEndEvent()
+}

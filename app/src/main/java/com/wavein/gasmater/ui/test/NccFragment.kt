@@ -15,7 +15,6 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
@@ -25,16 +24,17 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.lifecycle.viewModelScope
 import com.wavein.gasmater.R
 import com.wavein.gasmater.databinding.FragmentNccBinding
+import com.wavein.gasmater.tools.RD64H
+import com.wavein.gasmater.tools.toHexString
 import com.wavein.gasmater.ui.bt.BtDialogFragment
 import com.wavein.gasmater.ui.setting.BlueToothViewModel
+import com.wavein.gasmater.ui.setting.CommEndEvent
 import com.wavein.gasmater.ui.setting.ConnectEvent
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -95,21 +95,43 @@ class NccFragment : Fragment() {
 						is ConnectEvent.TextReceived -> {
 							addMsg(event.text, LogMsgType.Resp)
 						}
-
 						else -> {}
 					}
 				}
 			}
 		}
 
-		// UI: 藍牙按鈕
+		//TODO 註冊溝通結束事件
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				blVM.commEndSharedEvent.asSharedFlow().collectLatest { event ->
+					when (event) {
+						is CommEndEvent.Ok -> {
+							addMsg(event.commResult.toString(), LogMsgType.Resp)
+						}
+						is CommEndEvent.Error -> {
+							addMsg(event.commResult.toString(), LogMsgType.Error)
+						}
+					}
+				}
+			}
+		}
+
+
+
+		// UI: 選擇設備按鈕
 		binding.btSelectBtn.setOnClickListener {
 			val supportFragmentManager = (activity as FragmentActivity).supportFragmentManager
 			val dialog = BtDialogFragment()
 			dialog.show(supportFragmentManager, "BtDialogFragment")
 		}
 
-		// UI: Log相關
+		// UI: R80抄表按鈕
+		binding.action1Btn.setOnClickListener {
+			blVM.sendR80Telegram(listOf("00000002306003"))
+		}
+
+		// UI: LogRv & 傳送/清空按鈕
 		logItems = mutableListOf<LogMsg>()
 		logAdapter = LogAdapter(requireContext(), R.layout.item_logmsg, logItems)
 		binding.logList.adapter = logAdapter
@@ -117,10 +139,10 @@ class NccFragment : Fragment() {
 		binding.clearBtn.setOnClickListener { clearMsg() }
 	}
 
-	private fun sendMsg(text:String) {
-		blVM.sendTextToDevice(text)
-		val hexString = blVM.sendTextToDevice(text) ?: return
-		val showText = "$text [$hexString]"
+	private fun sendMsg(toSendText:String) {
+		blVM.sendSingleTelegram(toSendText)
+		val textSp = RD64H.telegramConvert(toSendText, "+s+p")
+		val showText = "$toSendText [${textSp.toHexString()}]"
 		addMsg(showText)
 		// 關閉軟鍵盤
 		val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
@@ -201,7 +223,7 @@ class LogAdapter(context:Context, resource:Int, groups:List<LogMsg>) : ArrayAdap
 	}
 }
 
-enum class LogMsgType { Send, Resp, System }
+enum class LogMsgType { Send, Resp, Error, System }
 
 data class LogMsg(val text:String, val type:LogMsgType = LogMsgType.Send) {
 
@@ -209,6 +231,7 @@ data class LogMsg(val text:String, val type:LogMsgType = LogMsgType.Send) {
 		get() = when (type) {
 			LogMsgType.Send -> Color.BLUE
 			LogMsgType.Resp -> Color.parseColor("#ff4a973b")
+			LogMsgType.Error -> Color.parseColor("#ffCC0000")
 			else -> Color.parseColor("#ffd68b00")
 		}
 	var spannable:SpannableString
