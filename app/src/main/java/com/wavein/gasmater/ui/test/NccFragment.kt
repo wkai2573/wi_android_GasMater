@@ -36,6 +36,7 @@ import com.wavein.gasmater.ui.setting.CommEndEvent
 import com.wavein.gasmater.ui.setting.CommState
 import com.wavein.gasmater.ui.setting.ConnectEvent
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -57,6 +58,7 @@ class NccFragment : Fragment() {
 	private lateinit var logAdapter:LogAdapter
 
 	// cb
+	private var onConnectionFailed:(() -> Unit)? = null
 	private var onConnected:(() -> Unit)? = null
 
 	override fun onDestroyView() {
@@ -96,7 +98,12 @@ class NccFragment : Fragment() {
 					when (event) {
 						ConnectEvent.Connecting -> addMsg("連接中...", LogMsgType.System)
 						ConnectEvent.Connected -> addMsg("已連接", LogMsgType.System)
-						ConnectEvent.ConnectionFailed -> addMsg("連接失敗", LogMsgType.System)
+						ConnectEvent.ConnectionFailed -> {
+							addMsg("連接失敗", LogMsgType.System)
+							onConnectionFailed?.invoke()
+							onConnectionFailed = null
+						}
+
 						ConnectEvent.Listening -> {}
 						ConnectEvent.ConnectionLost -> addMsg("連接中斷", LogMsgType.System)
 						is ConnectEvent.BytesSent -> {
@@ -129,9 +136,11 @@ class NccFragment : Fragment() {
 						CommState.NotConnected -> {
 							binding.progressBar.visibility = View.GONE
 						}
+
 						CommState.Communicating, CommState.Connecting -> {
 							binding.progressBar.visibility = View.VISIBLE
 						}
+
 						CommState.ReadyCommunicate -> {
 							binding.progressBar.visibility = View.GONE
 							onConnected?.invoke()
@@ -159,7 +168,7 @@ class NccFragment : Fragment() {
 			}
 		}
 
-		//TODO 註冊通信中 進度文字
+		//todo 註冊通信中 進度文字
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.commTextStateFlow.asStateFlow().collectLatest {
@@ -182,9 +191,7 @@ class NccFragment : Fragment() {
 
 		// UI: 選擇設備按鈕
 		binding.btSelectBtn.setOnClickListener {
-			val supportFragmentManager = (activity as FragmentActivity).supportFragmentManager
-			BtDialogFragment().show(supportFragmentManager, "BtDialogFragment")
-			this.onConnected = null
+			openBtDialog()
 		}
 		binding.btDisconnectBtn.setOnClickListener {
 			blVM.disconnectDevice()
@@ -192,11 +199,12 @@ class NccFragment : Fragment() {
 
 		// UI: 發送按鈕
 		binding.sendBtn.setOnClickListener {
-			val toSendText = binding.sendEt.text.toString()
-			checkReadyCommunicate { blVM.sendSingleTelegram(toSendText) }
 			// 關閉軟鍵盤
 			val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
 			imm?.hideSoftInputFromWindow(binding.sendEt.windowToken, 0)
+			// 發送
+			val toSendText = binding.sendEt.text.toString()
+			checkReadyCommunicate { blVM.sendSingleTelegram(toSendText) }
 		}
 
 		// UI: R80個別抄表按鈕
@@ -213,9 +221,7 @@ class NccFragment : Fragment() {
 	private fun checkReadyCommunicate(onConnected:() -> Unit) {
 		when (blVM.commStateFlow.value) {
 			CommState.NotConnected -> {
-				val supportFragmentManager = (activity as FragmentActivity).supportFragmentManager
-				BtDialogFragment().show(supportFragmentManager, "BtDialogFragment")
-				this.onConnected = onConnected
+				connectAutoDevice(onConnected)
 			}
 
 			CommState.ReadyCommunicate -> onConnected.invoke()
@@ -229,12 +235,32 @@ class NccFragment : Fragment() {
 		}
 	}
 
+	// 如果有連線過的設備,直接嘗試連線
+	private fun connectAutoDevice(onConnected:() -> Unit) {
+		if (blVM.autoConnectDevice != null) {
+			this.onConnectionFailed = { openBtDialog(onConnected) }
+			this.onConnected = onConnected
+			blVM.connectDevice()
+		} else {
+			openBtDialog(onConnected)
+		}
+	}
+
+	// 開啟選擇bt視窗頁
+	private fun openBtDialog(onConnected:(() -> Unit)? = null) {
+		val supportFragmentManager = (activity as FragmentActivity).supportFragmentManager
+		BtDialogFragment().show(supportFragmentManager, "BtDialogFragment")
+		this.onConnected = onConnected
+	}
 
 	private fun addMsg(text:String, type:LogMsgType = LogMsgType.Send) {
 		val newItem = LogMsg(text, type)
 		logItems.add(newItem)
 		logAdapter.notifyDataSetChanged()
-		binding.logList.setSelection(logAdapter.count - 1)
+		lifecycleScope.launch {
+			delay(100L)
+			binding.logList.setSelection(logAdapter.count - 1)
+		}
 	}
 
 	private fun clearMsg() {

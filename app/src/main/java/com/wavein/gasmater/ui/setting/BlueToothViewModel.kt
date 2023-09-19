@@ -47,6 +47,9 @@ class BlueToothViewModel @Inject constructor(
 	// 實例
 	private var parentDeviceClient:ParentDeviceClient? = null
 
+	// 變數
+	var autoConnectDevice:BluetoothDevice? = null
+
 	// 可觀察變數
 	val scanStateFlow = MutableStateFlow(ScanState.Idle)
 	val scannedDeviceListStateFlow = MutableStateFlow(emptyList<BluetoothDevice>())
@@ -72,8 +75,15 @@ class BlueToothViewModel @Inject constructor(
 		bluetoothAdapter?.cancelDiscovery()
 	}
 
+	// 選定為自動連結的設備
+	private fun setAutoConnectBluetoothDevice(device:BluetoothDevice) {
+		autoConnectDevice = device
+	}
+
 	// 連接藍牙設備
-	fun connectDevice(device:BluetoothDevice) {
+	fun connectDevice(device:BluetoothDevice? = autoConnectDevice) {
+		if (device == null) return
+		setAutoConnectBluetoothDevice(device)
 		parentDeviceClient = ParentDeviceClient(device)
 		parentDeviceClient?.start()
 	}
