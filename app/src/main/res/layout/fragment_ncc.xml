@@ -8,11 +8,38 @@
   android:layout_height="match_parent"
   tools:context=".ui.test.NccFragment">
 
+
   <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="bottom"
     android:orientation="vertical">
+
+    <TextView
+      android:id="@+id/tipTv"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      tools:text="顏色說明" />
+
+    <com.google.android.material.divider.MaterialDivider
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" />
+
+    <TextView
+      android:id="@+id/commTv"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      tools:text="通信狀態" />
+
+    <com.google.android.material.divider.MaterialDivider
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" />
+
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+      android:id="@+id/progressBar"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:indeterminate="true" />
 
     <ListView
       android:id="@+id/logList"
@@ -22,6 +49,30 @@
       android:divider="@android:color/transparent"
       android:dividerHeight="0dp"
       android:stackFromBottom="true" />
+
+    <com.google.android.material.divider.MaterialDivider
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" />
+
+    <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
+
+      <Button
+        android:id="@+id/action1Btn"
+        style="?attr/materialButtonOutlinedStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="R80個別抄表" />
+
+      <Button
+        android:id="@+id/action2Btn"
+        style="?attr/materialButtonOutlinedStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="R80群組抄表" />
+
+    </LinearLayout>
 
     <LinearLayout
       android:layout_width="match_parent"
@@ -36,11 +87,12 @@
         app:icon="@drawable/ic_bluetooth_24" />
 
       <Button
-        android:id="@+id/action1Btn"
+        android:id="@+id/btDisconnectBtn"
         style="?attr/materialButtonOutlinedStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="個別抄表" />
+        android:text="中斷"
+        app:icon="@drawable/ic_bluetooth_disabled_24" />
 
       <View
         android:layout_width="0dp"
@@ -54,7 +106,6 @@
         android:layout_height="wrap_content"
         android:text="清空訊息"
         app:icon="@drawable/ic_delete_24" />
-
     </LinearLayout>
 
     <LinearLayout
@@ -67,13 +118,14 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:hint="訊息"
+        android:hint="指定電文"
         android:inputType="text|textMultiLine">
 
         <com.google.android.material.textfield.TextInputEditText
           android:id="@+id/sendEt"
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
+          android:layout_marginBottom="4dp"
           android:text="5" />
       </com.google.android.material.textfield.TextInputLayout>
 
@@ -88,6 +140,16 @@
 
   </LinearLayout>
 
+  <ImageView
+    android:layout_width="64dp"
+    android:layout_height="wrap_content"
+    android:layout_gravity="end|top"
+    android:background="?attr/colorOnPrimary"
+    android:contentDescription="logo_azbil"
+    android:paddingTop="4dp"
+    android:paddingEnd="4dp"
+    app:srcCompat="@drawable/logo_azbil_64x22" />
+
   <!-- 權限要求layout -->
   <include
     android:id="@+id/permission"
@@ -98,7 +160,7 @@
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintTop_toTopOf="parent"
-    tools:visibility="invisible" />
+    tools:visibility="gone" />
 
 </FrameLayout>
 

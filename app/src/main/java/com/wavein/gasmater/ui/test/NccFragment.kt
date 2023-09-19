@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.text.Html
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
@@ -28,12 +29,15 @@ import com.wavein.gasmater.R
 import com.wavein.gasmater.databinding.FragmentNccBinding
 import com.wavein.gasmater.tools.RD64H
 import com.wavein.gasmater.tools.toHexString
+import com.wavein.gasmater.tools.toText
 import com.wavein.gasmater.ui.bt.BtDialogFragment
 import com.wavein.gasmater.ui.setting.BlueToothViewModel
 import com.wavein.gasmater.ui.setting.CommEndEvent
+import com.wavein.gasmater.ui.setting.CommState
 import com.wavein.gasmater.ui.setting.ConnectEvent
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -51,6 +55,9 @@ class NccFragment : Fragment() {
 	// adapter
 	private var logItems = mutableListOf<LogMsg>()
 	private lateinit var logAdapter:LogAdapter
+
+	// cb
+	private var onConnected:(() -> Unit)? = null
 
 	override fun onDestroyView() {
 		super.onDestroyView()
@@ -90,25 +97,60 @@ class NccFragment : Fragment() {
 						ConnectEvent.Connecting -> addMsg("連接中...", LogMsgType.System)
 						ConnectEvent.Connected -> addMsg("已連接", LogMsgType.System)
 						ConnectEvent.ConnectionFailed -> addMsg("連接失敗", LogMsgType.System)
-						ConnectEvent.Listening -> addMsg("監聽中...", LogMsgType.System)
+						ConnectEvent.Listening -> {}
 						ConnectEvent.ConnectionLost -> addMsg("連接中斷", LogMsgType.System)
-						is ConnectEvent.TextReceived -> {
-							addMsg(event.text, LogMsgType.Resp)
+						is ConnectEvent.BytesSent -> {
+							val sendSP = event.byteArray
+							val send = RD64H.telegramConvert(sendSP, "-s-p")
+							val sendText = send.toText()
+							val sendSPHex = sendSP.toHexString()
+							val showText = "$sendText [$sendSPHex]"
+							addMsg(showText, LogMsgType.Send)
 						}
-						else -> {}
+
+						is ConnectEvent.BytesReceived -> {
+							val readSP = event.byteArray
+							val read = RD64H.telegramConvert(readSP, "-s-p")
+							val readText = read.toText()
+							val readSPHex = readSP.toHexString()
+							val showText = "$readText [$readSPHex]"
+							addMsg(showText, LogMsgType.Resp)
+						}
 					}
 				}
 			}
 		}
 
-		//TODO 註冊溝通結束事件
+		// 註冊溝通狀態
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				blVM.commStateFlow.asStateFlow().collectLatest { state ->
+					when (state) {
+						CommState.NotConnected -> {
+							binding.progressBar.visibility = View.GONE
+						}
+						CommState.Communicating, CommState.Connecting -> {
+							binding.progressBar.visibility = View.VISIBLE
+						}
+						CommState.ReadyCommunicate -> {
+							binding.progressBar.visibility = View.GONE
+							onConnected?.invoke()
+							onConnected = null
+						}
+					}
+				}
+			}
+		}
+
+		// 註冊溝通結束事件
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.commEndSharedEvent.asSharedFlow().collectLatest { event ->
 					when (event) {
-						is CommEndEvent.Ok -> {
-							addMsg(event.commResult.toString(), LogMsgType.Resp)
+						is CommEndEvent.Success -> {
+							addMsg(event.commResult.toString(), LogMsgType.Result)
 						}
+
 						is CommEndEvent.Error -> {
 							addMsg(event.commResult.toString(), LogMsgType.Error)
 						}
@@ -117,42 +159,82 @@ class NccFragment : Fragment() {
 			}
 		}
 
+		//TODO 註冊通信中 進度文字
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				blVM.commTextStateFlow.asStateFlow().collectLatest {
+					val text = "通信狀態🔹 $it"
+					binding.commTv.text = text
+				}
+			}
+		}
 
+		// UI: 提示文字
+		val htmlText = "顏色說明🔹 <font color='#d68b00'>系統</font> <font color='#0000ff'>傳送</font>" +
+				" <font color='#4a973b'>接收</font> <font color='#ff3fa4'>分析結果</font> <font color='#ff0000'>錯誤</font>"
+		binding.tipTv.text = Html.fromHtml(htmlText, Html.FROM_HTML_MODE_COMPACT)
+
+		// UI: LogRv & 清空按鈕
+		logItems = mutableListOf()
+		logAdapter = LogAdapter(requireContext(), R.layout.item_logmsg, logItems)
+		binding.logList.adapter = logAdapter
+		binding.clearBtn.setOnClickListener { clearMsg() }
 
 		// UI: 選擇設備按鈕
 		binding.btSelectBtn.setOnClickListener {
 			val supportFragmentManager = (activity as FragmentActivity).supportFragmentManager
-			val dialog = BtDialogFragment()
-			dialog.show(supportFragmentManager, "BtDialogFragment")
+			BtDialogFragment().show(supportFragmentManager, "BtDialogFragment")
+			this.onConnected = null
+		}
+		binding.btDisconnectBtn.setOnClickListener {
+			blVM.disconnectDevice()
 		}
 
-		// UI: R80抄表按鈕
+		// UI: 發送按鈕
+		binding.sendBtn.setOnClickListener {
+			val toSendText = binding.sendEt.text.toString()
+			checkReadyCommunicate { blVM.sendSingleTelegram(toSendText) }
+			// 關閉軟鍵盤
+			val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+			imm?.hideSoftInputFromWindow(binding.sendEt.windowToken, 0)
+		}
+
+		// UI: R80個別抄表按鈕
 		binding.action1Btn.setOnClickListener {
-			blVM.sendR80Telegram(listOf("00000002306003"))
+			checkReadyCommunicate { blVM.sendR80Telegram(listOf("00000002306003")) }
 		}
-
-		// UI: LogRv & 傳送/清空按鈕
-		logItems = mutableListOf<LogMsg>()
-		logAdapter = LogAdapter(requireContext(), R.layout.item_logmsg, logItems)
-		binding.logList.adapter = logAdapter
-		binding.sendBtn.setOnClickListener { sendMsg(binding.sendEt.text.toString()) }
-		binding.clearBtn.setOnClickListener { clearMsg() }
+		// UI: R80群組抄表按鈕
+		binding.action2Btn.setOnClickListener {
+			checkReadyCommunicate { blVM.sendR80Telegram(listOf("00000002306003", "00000002306004")) }
+		}
 	}
 
-	private fun sendMsg(toSendText:String) {
-		blVM.sendSingleTelegram(toSendText)
-		val textSp = RD64H.telegramConvert(toSendText, "+s+p")
-		val showText = "$toSendText [${textSp.toHexString()}]"
-		addMsg(showText)
-		// 關閉軟鍵盤
-		val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-		imm?.hideSoftInputFromWindow(binding.sendEt.windowToken, 0)
+	// 檢查能不能進行通信
+	private fun checkReadyCommunicate(onConnected:() -> Unit) {
+		when (blVM.commStateFlow.value) {
+			CommState.NotConnected -> {
+				val supportFragmentManager = (activity as FragmentActivity).supportFragmentManager
+				BtDialogFragment().show(supportFragmentManager, "BtDialogFragment")
+				this.onConnected = onConnected
+			}
+
+			CommState.ReadyCommunicate -> onConnected.invoke()
+			CommState.Connecting -> {
+				addMsg("連接中，不可進行其他通信", LogMsgType.System)
+			}
+
+			CommState.Communicating -> {
+				addMsg("通信中，不可進行其他通信", LogMsgType.System)
+			}
+		}
 	}
+
 
 	private fun addMsg(text:String, type:LogMsgType = LogMsgType.Send) {
 		val newItem = LogMsg(text, type)
 		logItems.add(newItem)
 		logAdapter.notifyDataSetChanged()
+		binding.logList.setSelection(logAdapter.count - 1)
 	}
 
 	private fun clearMsg() {
@@ -223,7 +305,7 @@ class LogAdapter(context:Context, resource:Int, groups:List<LogMsg>) : ArrayAdap
 	}
 }
 
-enum class LogMsgType { Send, Resp, Error, System }
+enum class LogMsgType { Send, Resp, Result, Error, System }
 
 data class LogMsg(val text:String, val type:LogMsgType = LogMsgType.Send) {
 
@@ -231,7 +313,8 @@ data class LogMsg(val text:String, val type:LogMsgType = LogMsgType.Send) {
 		get() = when (type) {
 			LogMsgType.Send -> Color.BLUE
 			LogMsgType.Resp -> Color.parseColor("#ff4a973b")
-			LogMsgType.Error -> Color.parseColor("#ffCC0000")
+			LogMsgType.Result -> Color.parseColor("#ffff3fa4")
+			LogMsgType.Error -> Color.RED
 			else -> Color.parseColor("#ffd68b00")
 		}
 	var spannable:SpannableString

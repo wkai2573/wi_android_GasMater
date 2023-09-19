@@ -3,10 +3,12 @@ package com.wavein.gasmater.ui.bt
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.Dialog
+import android.app.KeyguardManager.KeyguardDismissCallback
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
@@ -30,7 +32,9 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @SuppressLint("MissingPermission")
-class BtDialogFragment : DialogFragment() {
+class BtDialogFragment(
+	val onDismissCallback:(dialog:DialogInterface) -> Unit = {},
+) : DialogFragment() {
 
 	private var dialog:AlertDialog? = null
 
@@ -43,8 +47,8 @@ class BtDialogFragment : DialogFragment() {
 	private lateinit var bondedDeviceListAdapter:DeviceListAdapter
 	private lateinit var scannedDeviceListAdapter:DeviceListAdapter
 
-	override fun onDestroyView() {
-		super.onDestroyView()
+	override fun onDismiss(dialog:DialogInterface) {
+		super.onDismiss(dialog)
 		// 停止掃描
 		blVM.stopDiscovery()
 		blVM.scanStateFlow.value = ScanState.Idle
@@ -52,6 +56,8 @@ class BtDialogFragment : DialogFragment() {
 		kotlin.runCatching {
 			requireContext().unregisterReceiver(receiver)
 		}
+		// cb
+		onDismissCallback(dialog)
 		_binding = null
 	}
 
