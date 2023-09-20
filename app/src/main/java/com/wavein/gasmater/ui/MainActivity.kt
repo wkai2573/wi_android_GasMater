@@ -5,7 +5,9 @@ import android.content.Context
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
+import androidx.activity.OnBackPressedCallback
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -54,14 +56,23 @@ class MainActivity : AppCompatActivity() {
 		// 上方bar
 		setSupportActionBar(binding.toolbar)
 
-		// 導航處理
+		// 下方navBar
 		val navController = findNavController(R.id.nav_host_fragment_activity_main)
+		navController.addOnDestinationChangedListener { _, destination, _ ->
+			binding.navView.visibility = when (destination.id) {
+				R.id.nav_logoFragment, R.id.nav_nccFragment -> View.GONE
+				else -> View.VISIBLE
+			}
+			when (destination.id) {
+				R.id.nav_logoFragment -> {}
+				else -> setBackPressedDispatcherAppToBack()
+			}
+		}
 		val appBarConfiguration = AppBarConfiguration(
-			setOf(
+			setOf( // 可用的fragment, bottomNav顯示的項目在menu.xml設定
 				R.id.nav_logoFragment,
 				R.id.nav_settingFragment,
 				R.id.nav_meterBaseFragment,
-
 				R.id.nav_csvFragment,
 				R.id.nav_testFragment,
 				R.id.nav_nccFragment,
@@ -69,7 +80,6 @@ class MainActivity : AppCompatActivity() {
 		)
 		setupActionBarWithNavController(navController, appBarConfiguration)
 		binding.navView.setupWithNavController(navController)
-
 
 		// 訂閱斷線處理
 		lifecycleScope.launch {
@@ -157,4 +167,16 @@ class MainActivity : AppCompatActivity() {
 			}
 		}
 	}
+
+	// 按back縮小app
+	private fun setBackPressedDispatcherAppToBack() {
+		val callback = object : OnBackPressedCallback(true) {
+			override fun handleOnBackPressed() {
+				moveTaskToBack(true) // 縮小app
+				// this.onBackPressed() // 預設的返回操作 (會回logo頁)
+			}
+		}
+		this.onBackPressedDispatcher.addCallback(this, callback)
+	}
+
 }

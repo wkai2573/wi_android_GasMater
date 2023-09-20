@@ -3,7 +3,6 @@ package com.wavein.gasmater.ui.bt
 import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.app.Dialog
-import android.app.KeyguardManager.KeyguardDismissCallback
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
@@ -191,5 +190,12 @@ class BtDialogFragment(
 		}
 	}
 
+	companion object {
+		// 開啟選擇bt視窗頁
+		fun open(context:Context) {
+			val supportFragmentManager = (context as FragmentActivity).supportFragmentManager
+			BtDialogFragment().show(supportFragmentManager, "BtDialogFragment")
+		}
+	}
 
 }

@@ -3,12 +3,13 @@
   xmlns:app="http://schemas.android.com/apk/res-auto"
   xmlns:tools="http://schemas.android.com/tools"
   android:id="@+id/nav_graph"
-  app:startDestination="@id/nav_nccFragment">
+  app:startDestination="@id/nav_logoFragment">
 
   <fragment android:id="@+id/nav_logoFragment"
     android:name="com.wavein.gasmater.ui.logo.LogoFragment"
     android:label="fragment_logo"
-    tools:layout="@layout/fragment_logo" />
+    tools:layout="@layout/fragment_logo"/>
+
   <fragment android:id="@+id/nav_settingFragment"
     android:name="com.wavein.gasmater.ui.setting.SettingFragment"
     android:label="fragment_bt"

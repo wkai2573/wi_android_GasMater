@@ -20,7 +20,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -168,7 +167,7 @@ class NccFragment : Fragment() {
 			}
 		}
 
-		//todo 註冊通信中 進度文字
+		// 註冊通信中 進度文字
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.commTextStateFlow.asStateFlow().collectLatest {
@@ -187,70 +186,68 @@ class NccFragment : Fragment() {
 		logItems = mutableListOf()
 		logAdapter = LogAdapter(requireContext(), R.layout.item_logmsg, logItems)
 		binding.logList.adapter = logAdapter
-		binding.clearBtn.setOnClickListener { clearMsg() }
+		binding.clearBtn.setOnClickListener {
+			onResume()
+			clearMsg()
+		}
 
 		// UI: 選擇設備按鈕
 		binding.btSelectBtn.setOnClickListener {
-			openBtDialog()
+			onResume()
+			BtDialogFragment.open(requireContext())
 		}
 		binding.btDisconnectBtn.setOnClickListener {
+			onResume()
 			blVM.disconnectDevice()
 		}
 
 		// UI: 發送按鈕
 		binding.sendBtn.setOnClickListener {
-			// 關閉軟鍵盤
-			val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-			imm?.hideSoftInputFromWindow(binding.sendEt.windowToken, 0)
-			// 發送
+			onResume()
 			val toSendText = binding.sendEt.text.toString()
 			checkReadyCommunicate { blVM.sendSingleTelegram(toSendText) }
 		}
 
 		// UI: R80個別抄表按鈕
 		binding.action1Btn.setOnClickListener {
+			onResume()
 			checkReadyCommunicate { blVM.sendR80Telegram(listOf("00000002306003")) }
 		}
 		// UI: R80群組抄表按鈕
 		binding.action2Btn.setOnClickListener {
+			onResume()
 			checkReadyCommunicate { blVM.sendR80Telegram(listOf("00000002306003", "00000002306004")) }
 		}
+	}
+
+	override fun onResume() {
+		super.onResume()
+		// 關閉軟鍵盤
+		val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+		imm?.hideSoftInputFromWindow(binding.sendEt.windowToken, 0)
+		binding.sendEt.clearFocus()
 	}
 
 	// 檢查能不能進行通信
 	private fun checkReadyCommunicate(onConnected:() -> Unit) {
 		when (blVM.commStateFlow.value) {
-			CommState.NotConnected -> {
-				connectAutoDevice(onConnected)
-			}
-
+			CommState.NotConnected -> autoConnectDevice(onConnected)
 			CommState.ReadyCommunicate -> onConnected.invoke()
-			CommState.Connecting -> {
-				addMsg("連接中，不可進行其他通信", LogMsgType.System)
-			}
-
-			CommState.Communicating -> {
-				addMsg("通信中，不可進行其他通信", LogMsgType.System)
-			}
+			CommState.Connecting -> addMsg("連接中，不可進行其他通信", LogMsgType.System)
+			CommState.Communicating -> addMsg("通信中，不可進行其他通信", LogMsgType.System)
 		}
 	}
 
-	// 如果有連線過的設備,直接嘗試連線
-	private fun connectAutoDevice(onConnected:() -> Unit) {
+	// 如果有連線過的設備,直接嘗試連線, 沒有若連線失敗則開藍牙窗
+	private fun autoConnectDevice(onConnected:() -> Unit) {
 		if (blVM.autoConnectDevice != null) {
-			this.onConnectionFailed = { openBtDialog(onConnected) }
+			this.onConnectionFailed = { BtDialogFragment.open(requireContext()) }
 			this.onConnected = onConnected
 			blVM.connectDevice()
 		} else {
-			openBtDialog(onConnected)
+			this.onConnected = onConnected
+			BtDialogFragment.open(requireContext())
 		}
-	}
-
-	// 開啟選擇bt視窗頁
-	private fun openBtDialog(onConnected:(() -> Unit)? = null) {
-		val supportFragmentManager = (activity as FragmentActivity).supportFragmentManager
-		BtDialogFragment().show(supportFragmentManager, "BtDialogFragment")
-		this.onConnected = onConnected
 	}
 
 	private fun addMsg(text:String, type:LogMsgType = LogMsgType.Send) {
@@ -318,7 +315,6 @@ class NccFragment : Fragment() {
 	}
 
 	//endregion
-
 }
 
 

@@ -1,15 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
   xmlns:tools="http://schemas.android.com/tools"
+  android:id="@+id/linearLayout3"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
+  android:gravity="center"
   tools:context=".ui.logo.LogoFragment">
 
-  <!-- TODO: Update blank fragment layout -->
   <TextView
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:textSize="50sp"
-    android:text="LOGO頁" />
+    android:id="@+id/titleTv"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="16dp"
+    android:text="@string/app_name"
+    android:textSize="34sp"
+    app:layout_constraintBottom_toTopOf="@+id/detailTv"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintHorizontal_bias="0.0"
+    app:layout_constraintStart_toStartOf="@+id/logoIv"
+    app:layout_constraintTop_toBottomOf="@+id/logoIv" />
 
-</FrameLayout>
+  <ImageView
+    android:id="@+id/logoIv"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:contentDescription="Logo Azbil"
+    app:layout_constraintBottom_toTopOf="@+id/titleTv"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintHorizontal_bias="0.504"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintVertical_chainStyle="packed"
+    app:srcCompat="@drawable/logo_azbil_300x103" />
+
+  <TextView
+    android:id="@+id/detailTv"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="32dp"
+    android:layout_marginBottom="32dp"
+    android:textSize="20sp"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintHorizontal_bias="0.0"
+    app:layout_constraintStart_toStartOf="@+id/logoIv"
+    app:layout_constraintTop_toBottomOf="@+id/titleTv"
+    tools:text="產品已開通\n產品序號: 123456\nUUID: 1FE9f78x" />
+
+  <TextView
+    android:id="@+id/verTv"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="16dp"
+    android:textColor="?attr/colorOutline"
+    android:textSize="20sp"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    tools:text="ver 1.0" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

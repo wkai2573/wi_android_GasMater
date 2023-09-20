@@ -23,4 +23,6 @@ object AppManager {
 		initUniqueCode(application)
 	}
 
+	var firstEnterApp = true
+
 }
