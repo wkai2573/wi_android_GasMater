@@ -91,7 +91,7 @@ class BtDialogFragment(
 		// 已配對的設備
 		binding.bondedDeviceRv.apply {
 			layoutManager = LinearLayoutManager(requireContext())
-			addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
+			// addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)) //分隔線
 			itemAnimator = DefaultItemAnimator()
 			adapter = bondedDeviceListAdapter
 		}
@@ -119,7 +119,7 @@ class BtDialogFragment(
 		scannedDeviceListAdapter = DeviceListAdapter { connectDevice(it) }
 		binding.scannedDeviceRv.apply {
 			layoutManager = LinearLayoutManager(requireContext())
-			addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
+			// addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)) //分隔線
 			itemAnimator = DefaultItemAnimator()
 			adapter = scannedDeviceListAdapter
 		}
