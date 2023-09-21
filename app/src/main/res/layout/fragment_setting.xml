@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:app="http://schemas.android.com/apk/res-auto"
   xmlns:tools="http://schemas.android.com/tools"
@@ -7,283 +6,289 @@
   android:layout_height="match_parent"
   tools:context=".ui.setting.SettingFragment">
 
-  <!-- 權限要求layout -->
-  <androidx.core.widget.NestedScrollView
+  <androidx.coordinatorlayout.widget.CoordinatorLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <androidx.appcompat.widget.LinearLayoutCompat
+    <com.google.android.material.appbar.AppBarLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
+
+      <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:layout_scrollEffect="compress"
+        app:layout_scrollFlags="scroll|enterAlways|snap"
+        app:liftOnScroll="true"
+        app:navigationIcon="@drawable/ic_bluetooth_24"
+        app:title="連線與設定" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+      android:id="@+id/nestedScrollView3"
       android:layout_width="match_parent"
       android:layout_height="match_parent"
-      android:orientation="vertical">
+      app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-      <androidx.constraintlayout.widget.ConstraintLayout
+      <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <androidx.appcompat.widget.AppCompatTextView
-          android:id="@+id/btTitleTv"
-          android:layout_width="0dp"
-          android:layout_height="match_parent"
-          android:text="設備連線"
-          app:layout_constraintEnd_toEndOf="parent"
-          app:layout_constraintStart_toStartOf="parent"
-          app:layout_constraintTop_toTopOf="parent" />
+        <!-- 連線頁的內容從這開始 -->
 
-        <Button
-          android:id="@+id/scanBtn"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="掃描藍牙設備"
-          app:layout_constraintEnd_toStartOf="@+id/scanning"
-          app:layout_constraintHorizontal_bias="0.5"
-          app:layout_constraintHorizontal_chainStyle="packed"
-          app:layout_constraintStart_toStartOf="parent"
-          app:layout_constraintTop_toBottomOf="@+id/btTitleTv" />
-
-        <com.google.android.material.progressindicator.CircularProgressIndicator
-          android:id="@+id/scanning"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:indeterminate="true"
-          android:visibility="gone"
-          app:layout_constraintBottom_toBottomOf="@+id/scanBtn"
-          app:layout_constraintStart_toEndOf="@+id/scanBtn"
-          app:layout_constraintTop_toTopOf="@+id/scanBtn"
-          tools:visibility="visible" />
-
-        <androidx.recyclerview.widget.RecyclerView
-          android:id="@+id/deviceRv"
+        <TextView
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
-          android:layout_marginStart="64dp"
-          android:layout_marginEnd="64dp"
-          android:background="@drawable/round_border"
-          app:layout_constraintEnd_toEndOf="parent"
-          app:layout_constraintHeight_max="600dp"
-          app:layout_constraintStart_toStartOf="parent"
-          app:layout_constraintTop_toBottomOf="@+id/scanBtn"
-          tools:itemCount="5"
-          tools:listitem="@layout/item_device" />
+          android:layout_marginHorizontal="24dp"
+          android:layout_marginVertical="8dp"
+          android:text="藍牙裝置"
+          android:textColor="?attr/colorPrimary"
+          android:textSize="16sp" />
 
+        <include
+          android:id="@+id/selectedDevice"
+          layout="@layout/item_device"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginHorizontal="24dp"
+          android:layout_marginVertical="8dp" />
 
-      </androidx.constraintlayout.widget.ConstraintLayout>
+        <Button
+          android:id="@+id/btSelectBtn"
+          style="?attr/materialButtonOutlinedStyle"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginHorizontal="24dp"
+          android:layout_marginVertical="8dp"
+          android:text="選擇裝置"
+          app:icon="@drawable/ic_bluetooth_24" />
 
-      <com.google.android.material.divider.MaterialDivider
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        tools:layout_height="30dp" />
+        <com.google.android.material.divider.MaterialDivider
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginVertical="16dp" />
 
-      <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        <TextView
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginHorizontal="24dp"
+          android:layout_marginVertical="8dp"
+          android:text="檔案管理"
+          android:textColor="?attr/colorPrimary"
+          android:textSize="16sp" />
 
-        <androidx.appcompat.widget.AppCompatTextView
-          android:id="@+id/fileTitleTv"
-          android:layout_width="0dp"
-          android:layout_height="match_parent"
-          android:text="讀取CSV"
-          app:layout_constraintEnd_toEndOf="parent"
-          app:layout_constraintStart_toStartOf="parent"
-          app:layout_constraintTop_toTopOf="parent" />
+        <include
+          android:id="@+id/selectedCsv"
+          layout="@layout/item_csv"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginHorizontal="24dp"
+          android:layout_marginVertical="8dp" />
 
         <Button
           android:id="@+id/selectCsvFromLocalBtn"
+          style="@style/Widget.Material3.Button.OutlinedButton"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
-          android:text="載入CSV(本地)"
-          app:layout_constraintStart_toStartOf="parent"
-          app:layout_constraintTop_toBottomOf="@+id/fileTitleTv" />
+          android:layout_marginHorizontal="24dp"
+          android:layout_marginVertical="8dp"
+          android:text="選擇CSV"
+          app:icon="@drawable/ic_insert_drive_file_24" />
 
-        <Button
-          android:id="@+id/selectCsvFromFtpBtn"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:layout_marginTop="24dp"
-          android:text="載入CSV(從FTP)"
-          app:layout_constraintStart_toStartOf="parent"
-          app:layout_constraintTop_toBottomOf="@+id/selectCsvFromLocalBtn" />
-
-        <Button
-          android:id="@+id/downloadFtpSetBtn"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="FTP下載設定"
-          app:layout_constraintStart_toEndOf="@+id/selectCsvFromFtpBtn"
-          app:layout_constraintTop_toTopOf="@+id/selectCsvFromFtpBtn" />
-
-        <Button
-          android:id="@+id/uploadToFtpBtn"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:layout_marginTop="32dp"
-          android:text="上傳至FTP"
-          app:layout_constraintStart_toStartOf="parent"
-          app:layout_constraintTop_toBottomOf="@+id/selectCsvFromFtpBtn" />
-
-        <Button
-          android:id="@+id/uploadFtpSetBtn"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="FTP上傳設定"
-          app:layout_constraintStart_toEndOf="@+id/uploadToFtpBtn"
-          app:layout_constraintTop_toTopOf="@+id/uploadToFtpBtn" />
-
-        <androidx.appcompat.widget.AppCompatTextView
-          android:id="@+id/fileInfoTv"
+        <LinearLayout
           android:layout_width="match_parent"
-          android:layout_height="match_parent"
-          android:layout_marginTop="32dp"
-          app:layout_constraintBottom_toBottomOf="parent"
-          app:layout_constraintEnd_toEndOf="parent"
-          app:layout_constraintHorizontal_bias="0.0"
-          app:layout_constraintStart_toStartOf="parent"
-          app:layout_constraintTop_toBottomOf="@+id/uploadToFtpBtn"
-          tools:text="檔案選擇資訊" />
-      </androidx.constraintlayout.widget.ConstraintLayout>
-
-      <com.google.android.material.divider.MaterialDivider
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        tools:layout_height="30dp" />
-
-      <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <androidx.appcompat.widget.AppCompatTextView
-          android:id="@+id/ftpTitleTv"
-          android:layout_width="0dp"
-          android:layout_height="match_parent"
-          android:text="FTP"
-          app:layout_constraintEnd_toEndOf="parent"
-          app:layout_constraintStart_toStartOf="parent"
-          app:layout_constraintTop_toTopOf="parent" />
-
-        <Button
-          android:id="@+id/setFtpBtn"
-          android:layout_width="wrap_content"
           android:layout_height="wrap_content"
-          android:text="設定FTP"
-          app:layout_constraintStart_toStartOf="parent"
-          app:layout_constraintTop_toBottomOf="@id/ftpTitleTv" />
+          android:layout_marginHorizontal="24dp"
+          android:layout_marginVertical="8dp"
+          android:gravity="center">
 
-        <Button
-          android:id="@+id/productEnableBtn"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:text="產品開通"
-          app:layout_constraintBottom_toBottomOf="@+id/setFtpBtn"
-          app:layout_constraintStart_toEndOf="@+id/setFtpBtn"
-          app:layout_constraintTop_toTopOf="@+id/setFtpBtn" />
+          <Button
+            android:id="@+id/downloadCsvFromFtpBtn"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:text="下載CSV"
+            app:icon="@drawable/ic_download_24" />
 
-        <androidx.appcompat.widget.AppCompatTextView
-          android:id="@+id/ftpInfoTv"
+          <Button
+            android:id="@+id/downloadSettingBtn"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="下載設定"
+            app:icon="@drawable/ic_settings_24" />
+        </LinearLayout>
+
+        <LinearLayout
           android:layout_width="match_parent"
-          android:layout_height="match_parent"
-          app:layout_constraintEnd_toEndOf="parent"
-          app:layout_constraintStart_toStartOf="parent"
-          app:layout_constraintTop_toBottomOf="@+id/setFtpBtn"
-          tools:text="FTP資訊" />
-      </androidx.constraintlayout.widget.ConstraintLayout>
+          android:layout_height="wrap_content"
+          android:layout_marginHorizontal="24dp"
+          android:layout_marginVertical="8dp"
+          android:gravity="center">
 
-      <com.google.android.material.divider.MaterialDivider
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        tools:layout_height="30dp" />
+          <Button
+            android:id="@+id/selectCsvFromFtpBtn"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:text="上傳CSV"
+            app:icon="@drawable/ic_upload_24" />
 
-      <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+          <Button
+            android:id="@+id/downloadFtpSettingBtn"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="上傳設定"
+            app:icon="@drawable/ic_settings_24" />
+        </LinearLayout>
 
-        <androidx.appcompat.widget.AppCompatTextView
-          android:id="@+id/keyTitle"
-          android:layout_width="0dp"
-          android:layout_height="match_parent"
-          android:text="產品註冊"
-          app:layout_constraintEnd_toEndOf="parent"
-          app:layout_constraintStart_toStartOf="parent"
-          app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.divider.MaterialDivider
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginVertical="16dp" />
 
         <Button
-          android:id="@+id/enterKeyBtn"
+          style="@style/Widget.Material3.Button.OutlinedButton"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
-          android:text="輸入序號"
-          app:layout_constraintStart_toStartOf="parent"
-          app:layout_constraintTop_toBottomOf="@id/keyTitle" />
-
-      </androidx.constraintlayout.widget.ConstraintLayout>
-
-      <com.google.android.material.divider.MaterialDivider
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        tools:layout_height="30dp" />
-
-      <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <androidx.appcompat.widget.AppCompatTextView
-          android:id="@+id/logTitle"
-          android:layout_width="0dp"
-          android:layout_height="match_parent"
-          android:text="LOG設定"
-          app:layout_constraintEnd_toEndOf="parent"
-          app:layout_constraintStart_toStartOf="parent"
-          app:layout_constraintTop_toTopOf="parent" />
+          android:text="btn" />
 
         <Button
-          android:id="@+id/logFtpSetBtn"
+          style="@style/Widget.Material3.Button.OutlinedButton"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
-          android:text="LOG FTP設定"
-          app:layout_constraintStart_toStartOf="parent"
-          app:layout_constraintTop_toBottomOf="@id/logTitle" />
+          android:text="btn" />
 
-      </androidx.constraintlayout.widget.ConstraintLayout>
+        <Button
+          style="@style/Widget.Material3.Button.OutlinedButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="btn" />
 
-    </androidx.appcompat.widget.LinearLayoutCompat>
+        <Button
+          style="@style/Widget.Material3.Button.OutlinedButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="btn" />
 
-  </androidx.core.widget.NestedScrollView>
+        <Button
+          style="@style/Widget.Material3.Button.OutlinedButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="btn" />
 
-  <androidx.constraintlayout.widget.ConstraintLayout
-    android:id="@+id/revokedPermissionLayout"
+        <Button
+          style="@style/Widget.Material3.Button.OutlinedButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="btn" />
+
+        <Button
+          style="@style/Widget.Material3.Button.OutlinedButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="btn" />
+
+        <Button
+          style="@style/Widget.Material3.Button.OutlinedButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="btn" />
+
+        <Button
+          style="@style/Widget.Material3.Button.OutlinedButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="btn" />
+
+        <Button
+          style="@style/Widget.Material3.Button.OutlinedButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="btn" />
+
+        <Button
+          style="@style/Widget.Material3.Button.OutlinedButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="btn" />
+
+        <Button
+          style="@style/Widget.Material3.Button.OutlinedButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="btn" />
+
+        <Button
+          style="@style/Widget.Material3.Button.OutlinedButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="btn" />
+
+        <Button
+          style="@style/Widget.Material3.Button.OutlinedButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="btn" />
+
+        <Button
+          style="@style/Widget.Material3.Button.OutlinedButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="btn" />
+
+        <Button
+          style="@style/Widget.Material3.Button.OutlinedButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="btn" />
+
+        <Button
+          style="@style/Widget.Material3.Button.OutlinedButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="btn" />
+
+        <Button
+          style="@style/Widget.Material3.Button.OutlinedButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="btn" />
+
+        <Button
+          style="@style/Widget.Material3.Button.OutlinedButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="btn" />
+
+        <Button
+          style="@style/Widget.Material3.Button.OutlinedButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="btn" />
+
+      </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+  </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+  <!-- 權限要求layout -->
+  <include
+    android:id="@+id/permission"
+    layout="@layout/layout_permission"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/cardview_light_background"
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintTop_toTopOf="parent"
-    tools:visibility="gone">
-
-    <com.google.android.material.textview.MaterialTextView
-      android:id="@+id/revokedPermissionTv"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_marginBottom="16dp"
-      android:gravity="center"
-      android:textSize="24sp"
-      app:layout_constraintBottom_toTopOf="@+id/requestPermissionBtn"
-      app:layout_constraintEnd_toEndOf="parent"
-      app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toTopOf="parent"
-      app:layout_constraintVertical_bias="0.45"
-      app:layout_constraintVertical_chainStyle="packed"
-      tools:text="權限未同意顯示文字" />
-
-    <com.google.android.material.button.MaterialButton
-      android:id="@+id/requestPermissionBtn"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:text="@string/request_permission"
-      android:textSize="30sp"
-      app:layout_constraintBottom_toBottomOf="parent"
-      app:layout_constraintEnd_toEndOf="parent"
-      app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintTop_toBottomOf="@+id/revokedPermissionTv" />
-
-  </androidx.constraintlayout.widget.ConstraintLayout>
+    tools:visibility="gone" />
 
 </FrameLayout>

@@ -11,11 +11,6 @@
     android:icon="@drawable/ic_info_24"
     android:title="抄表"/>
   <item
-    android:id="@+id/nav_csvFragment"
-    android:enabled="true"
-    android:icon="@drawable/ic_info_24"
-    android:title="CSV"/>
-  <item
     android:id="@+id/nav_testFragment"
     android:enabled="true"
     android:icon="@drawable/ic_info_24"

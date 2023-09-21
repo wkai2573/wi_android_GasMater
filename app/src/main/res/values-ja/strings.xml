@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="app_name">GasMater</string>
+  <string name="app_name">GasMeter</string>
 
   <string name="request_permission">請求權限</string>
   <string name="DeviceConnection">デバイスの接続</string>
