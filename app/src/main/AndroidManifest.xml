@@ -28,7 +28,7 @@
     android:label="@string/app_name"
     android:roundIcon="@mipmap/ic_launcher"
     android:supportsRtl="true"
-    android:theme="@style/Theme.GasMater"
+    android:theme="@style/Theme.GasMeter"
     tools:targetApi="31">
     <activity android:name=".ui.MainActivity" android:exported="true">
       <intent-filter>

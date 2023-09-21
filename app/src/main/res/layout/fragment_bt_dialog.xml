@@ -6,7 +6,7 @@
   android:layout_height="match_parent"
   android:orientation="vertical"
   android:paddingVertical="16dp"
-  tools:context=".ui.bt.BtDialogFragment">
+  tools:context=".ui.bluetooth.BtDialogFragment">
 
   <TextView
     android:layout_width="match_parent"

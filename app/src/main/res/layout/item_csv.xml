@@ -11,26 +11,26 @@
   <androidx.cardview.widget.CardView
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:backgroundTint="?attr/colorTertiaryContainer"
+    android:backgroundTint="?attr/colorPrimaryContainer"
     android:layout_margin="4dp"
     app:cardCornerRadius="100dp">
 
     <ImageView
       android:layout_width="40dp"
       android:layout_height="40dp"
-      android:src="@drawable/ic_bluetooth_24"
-      app:tint="?attr/colorTertiary"
+      android:src="@drawable/ic_insert_drive_file_24"
+      app:tint="?attr/colorPrimary"
       android:padding="4dp"
-      android:contentDescription="bluetooth" />
+      android:contentDescription="file" />
 
   </androidx.cardview.widget.CardView>
 
   <TextView
-    android:id="@+id/btInfoTv"
+    android:id="@+id/infoTv"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:textSize="18sp"
     android:layout_marginStart="8dp"
-    tools:text="藍牙裝置名稱 [MAC]" />
+    tools:text="檔案" />
 
 </LinearLayout>

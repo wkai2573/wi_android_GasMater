@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace 'com.wavein.gasmater'
+    namespace 'com.wavein.gasmeter'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.wavein.gasmater"
+        applicationId "com.wavein.gasmeter"
         minSdk 29
         targetSdk 33
         versionCode 1
