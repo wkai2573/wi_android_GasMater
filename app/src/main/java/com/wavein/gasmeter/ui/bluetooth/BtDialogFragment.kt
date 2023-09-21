@@ -36,7 +36,7 @@ class BtDialogFragment(
 	// binding & viewModel
 	private var _binding:FragmentBtDialogBinding? = null
 	private val binding get() = _binding!!
-	private val blVM by activityViewModels<BlueToothViewModel>()
+	private val blVM by activityViewModels<BluetoothViewModel>()
 
 	// adapter
 	private lateinit var bondedDeviceListAdapter:DeviceListAdapter

@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
+import android.content.Intent
+import androidx.activity.result.ActivityResultLauncher
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,7 +27,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 @SuppressLint("MissingPermission")
-class BlueToothViewModel @Inject constructor(
+class BluetoothViewModel @Inject constructor(
 	private val savedStateHandle:SavedStateHandle, //導航參數(hilt注入)
 	// 注入實例
 	private val bluetoothAdapter:BluetoothAdapter?,
@@ -38,6 +40,41 @@ class BlueToothViewModel @Inject constructor(
 			}
 		}
 	}
+
+	//region 開啟藍牙相關__________________________________________________
+
+	// is藍牙開啟
+	fun isBluetoothOn():Boolean {
+		return bluetoothAdapter?.isEnabled ?: false
+	}
+
+	// 藍牙未開啟提示
+	private suspend fun bluetoothOffTip():Boolean {
+		if (!isBluetoothOn()) {
+			SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("請開啟藍牙", SharedEvent.SnackbarColor.Error))
+			return true
+		}
+		return false
+	}
+
+	// 檢查藍牙並請求開啟
+	fun checkBluetoothOn(bluetoothRequestLauncher:ActivityResultLauncher<Intent>) = viewModelScope.launch {
+		if (bluetoothAdapter == null) {
+			SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("此裝置不支援藍牙", SharedEvent.SnackbarColor.Error))
+			return@launch
+		}
+		if (!bluetoothAdapter.isEnabled) {
+			requestBluetooth(bluetoothRequestLauncher)
+		}
+	}
+
+	// 請求開啟藍牙
+	private fun requestBluetooth(bluetoothRequestLauncher:ActivityResultLauncher<Intent>) {
+		val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+		bluetoothRequestLauncher.launch(enableBtIntent)
+	}
+
+	//endregion
 
 	//region 藍牙相關(經典藍牙)__________________________________________________
 
@@ -59,8 +96,12 @@ class BlueToothViewModel @Inject constructor(
 	}
 
 	// 開始掃描
-	fun toggleDiscovery() {
-		if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) return
+	fun toggleDiscovery() = viewModelScope.launch {
+		if (!isBluetoothOn()) {
+			SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("請開啟藍牙", SharedEvent.SnackbarColor.Error))
+			return@launch
+		}
+		if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) return@launch
 		if (bluetoothAdapter.isDiscovering) {
 			stopDiscovery()
 		} else {
@@ -79,8 +120,9 @@ class BlueToothViewModel @Inject constructor(
 	}
 
 	// 連接藍牙設備
-	fun connectDevice(device:BluetoothDevice? = autoConnectDeviceStateFlow.value) {
-		if (device == null) return
+	fun connectDevice(device:BluetoothDevice? = autoConnectDeviceStateFlow.value) = viewModelScope.launch {
+		if (bluetoothOffTip()) return@launch
+		if (device == null) return@launch
 		setAutoConnectBluetoothDevice(device)
 		parentDeviceClient = ParentDeviceClient(device)
 		parentDeviceClient?.start()

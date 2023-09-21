@@ -1,6 +1,7 @@
 package com.wavein.gasmeter.ui.ncc
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -31,7 +32,7 @@ import com.wavein.gasmeter.tools.RD64H
 import com.wavein.gasmeter.tools.toHexString
 import com.wavein.gasmeter.tools.toText
 import com.wavein.gasmeter.ui.bluetooth.BtDialogFragment
-import com.wavein.gasmeter.ui.bluetooth.BlueToothViewModel
+import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.bluetooth.CommEndEvent
 import com.wavein.gasmeter.ui.bluetooth.CommState
 import com.wavein.gasmeter.ui.bluetooth.ConnectEvent
@@ -50,7 +51,7 @@ class NccFragment : Fragment() {
 	// binding & viewModel
 	private var _binding:FragmentNccBinding? = null
 	private val binding get() = _binding!!
-	private val blVM by activityViewModels<BlueToothViewModel>()
+	private val blVM by activityViewModels<BluetoothViewModel>()
 	private var jobs:MutableList<Job> = mutableListOf()
 
 	// adapter
@@ -58,8 +59,9 @@ class NccFragment : Fragment() {
 	private lateinit var logAdapter:LogAdapter
 
 	// cb
-	private var onConnectionFailed:(() -> Unit)? = null
+	private var onBluetoothOn:(() -> Unit)? = null
 	private var onConnected:(() -> Unit)? = null
+	private var onConnectionFailed:(() -> Unit)? = null
 
 	override fun onDestroyView() {
 		super.onDestroyView()
@@ -206,7 +208,7 @@ class NccFragment : Fragment() {
 		binding.sendBtn.setOnClickListener {
 			onResume()
 			val toSendText = binding.sendEt.text.toString()
-			checkReadyCommunicate { blVM.sendSingleTelegram(toSendText) }
+			checkBluetoothOn { blVM.sendSingleTelegram(toSendText) }
 		}
 
 		// UI: R80個別抄表按鈕
@@ -215,12 +217,12 @@ class NccFragment : Fragment() {
 			onResume()
 			val meterId = binding.meterEt.text.toString()
 			Preference[Preference.NCC_METER_ID] = meterId //紀錄本次輸入
-			checkReadyCommunicate { blVM.sendR80Telegram(listOf(meterId)) }
+			checkBluetoothOn { blVM.sendR80Telegram(listOf(meterId)) }
 		}
 		// UI: R80群組抄表按鈕
 		binding.action2Btn.setOnClickListener {
 			onResume()
-			checkReadyCommunicate { blVM.sendR80Telegram(listOf("00000002306003", "00000002306004")) }
+			checkBluetoothOn { blVM.sendR80Telegram(listOf("00000002306003", "00000002306004")) }
 		}
 	}
 
@@ -230,6 +232,26 @@ class NccFragment : Fragment() {
 		val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
 		imm?.hideSoftInputFromWindow(binding.sendEt.windowToken, 0)
 		binding.sendEt.clearFocus()
+	}
+
+	// 藍牙請求器
+	private val bluetoothRequestLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+		if (result.resultCode == Activity.RESULT_OK) {
+			this.onBluetoothOn?.invoke()
+			this.onBluetoothOn = null
+		}
+		this.onBluetoothOn = null
+	}
+
+	// 檢查藍牙是否開啟
+	private fun checkBluetoothOn(onConnected:() -> Unit) {
+		this.onBluetoothOn = { checkReadyCommunicate(onConnected) }
+		if (!blVM.isBluetoothOn()) {
+			blVM.checkBluetoothOn(bluetoothRequestLauncher)
+		} else {
+			onBluetoothOn?.invoke()
+			onBluetoothOn = null
+		}
 	}
 
 	// 檢查能不能進行通信
