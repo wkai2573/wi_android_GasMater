@@ -36,7 +36,7 @@ class BluetoothViewModel @Inject constructor(
 	init {
 		if (bluetoothAdapter == null) {
 			viewModelScope.launch {
-				SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("設備不支援藍牙", SharedEvent.SnackbarColor.Error))
+				SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("此裝置不支援藍牙", SharedEvent.SnackbarColor.Error))
 			}
 		}
 	}
@@ -444,7 +444,7 @@ class BluetoothViewModel @Inject constructor(
 	//endregion
 }
 
-// 掃瞄狀態
+// 掃描狀態
 enum class ScanState { Idle, Scanning, Error }
 
 // 連接事件

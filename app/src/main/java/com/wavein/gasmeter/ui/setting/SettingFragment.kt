@@ -3,16 +3,20 @@ package com.wavein.gasmeter.ui.setting
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.os.Environment
+import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -23,6 +27,7 @@ import com.wavein.gasmeter.ui.bluetooth.BtDialogFragment
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+
 
 @SuppressLint("MissingPermission")
 class SettingFragment : Fragment() {
@@ -46,19 +51,11 @@ class SettingFragment : Fragment() {
 
 	override fun onViewCreated(view:View, savedInstanceState:Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
-		// 檢查權限，沒權限則請求權限
-		if (hasPermissions()) {
-			onPermissionsAllow()
-		} else {
-			binding.permission.requestBtn.setOnClickListener {
-				requestPermissionLauncher.launch(permissions)
-			}
-			requestPermissionLauncher.launch(permissions)
-		}
+		checkPermissionAndInitUi()
 	}
 
-	// 當權限皆允許
-	private fun onPermissionsAllow() {
+	// 當所有權限皆允許
+	private fun onAllPermissionAllow() {
 		binding.permission.layout.visibility = View.GONE
 
 		// 藍牙裝置__________
@@ -82,7 +79,6 @@ class SettingFragment : Fragment() {
 		binding.btSelectBtn.setOnClickListener {
 			BtDialogFragment.open(requireContext())
 		}
-
 
 		// 檔案管理__________
 
@@ -113,53 +109,105 @@ class SettingFragment : Fragment() {
 		csvVM.readCsv(requireContext(), result)
 	}
 
-
 	//region __________權限方法__________
 
-	private val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-		arrayOf(
-			Manifest.permission.BLUETOOTH_CONNECT,
-			Manifest.permission.BLUETOOTH_SCAN,
-			Manifest.permission.ACCESS_FINE_LOCATION
-		)
-	} else {
-		arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+	// 檢查權限並重置UI
+	private fun checkPermissionAndInitUi() {
+		if (hasPermissions() && hasExternalStorageManagerPermission()) {
+			onAllPermissionAllow()
+			return
+		}
+		// 有權限不同意
+		onAnyPermissionNoAllow()
 	}
 
+	// 通常權限
+	private val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+		arrayOf(
+			// 藍牙需要
+			Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_FINE_LOCATION,
+		)
+	} else {
+		arrayOf(
+			Manifest.permission.ACCESS_FINE_LOCATION,
+		)
+	}
+
+	// 通常權限_通常權限請求器
 	private val requestPermissionLauncher:ActivityResultLauncher<Array<String>> by lazy {
 		registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissionsMap ->
-			if (permissionsMap.all { (permission, isGranted) -> isGranted }) {
-				onPermissionsAllow()
+			if (!hasExternalStorageManagerPermission()) {
+				requestExternalStorageManagerPermission()
 			} else {
-				onPermissionsNoAllow()
+				checkPermissionAndInitUi()
 			}
 		}
 	}
 
-	// 當權限不允許
-	private fun onPermissionsNoAllow() {
-		val revokedPermissions:List<String> =
-			getPermissionsMap().filterValues { isGranted -> !isGranted }.map { (permission, isGranted) -> permission }
-		val revokedPermissionsText = """
-		缺少權限: ${
-			revokedPermissions.map { p -> p.replace(".+\\.".toRegex(), "") }.joinToString(", ")
-		}
-		請授予這些權限，以便應用程序正常運行。
-		Please grant all of them for the app to function properly.
-		""".trimIndent()
-		binding.permission.revokedTv.text = revokedPermissionsText
-	}
-
-	// 是否有全部權限
+	// 通常權限_是否有通常權限
 	private fun hasPermissions(context:Context = requireContext(), permissions:Array<String> = this.permissions):Boolean =
 		getPermissionsMap(context, permissions).all { (permission, isGranted) -> isGranted }
 
-	// 取得權限狀態
+	// 通常權限_取得通常權限狀態
 	private fun getPermissionsMap(
 		context:Context = requireContext(),
 		permissions:Array<String> = this.permissions,
 	):Map<String, Boolean> = permissions.associateWith {
 		ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+	}
+
+	// 外部存儲_請求外部存儲管理權限
+	private fun requestExternalStorageManagerPermission() {
+		if (!hasExternalStorageManagerPermission()) {
+			val intent = Intent().apply {
+				action = ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
+				data = Uri.fromParts("package", requireContext().packageName, null)
+			}
+			requestExternalStorageManagerPermissionLauncher.launch(intent)
+		}
+	}
+
+	// 外部存儲_外部存儲管理權限請求器
+	private val requestExternalStorageManagerPermissionLauncher:ActivityResultLauncher<Intent> =
+		registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+			checkPermissionAndInitUi()
+		}
+
+	// 外部存儲_是否有外部存儲管理權限
+	private fun hasExternalStorageManagerPermission() =
+		Build.VERSION.SDK_INT < Build.VERSION_CODES.R
+				|| Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Environment.isExternalStorageManager()
+
+	// 首次要求權限
+	private var firstRequestPermission = true
+
+	// 當有權限不允許
+	private fun onAnyPermissionNoAllow() {
+		// 權限提示文字
+		val revokedPermissions:List<String> = getPermissionsMap().filterValues { isGranted -> !isGranted }.map { (permission, isGranted) -> permission }
+		val permission1Warning = if (revokedPermissions.isEmpty()) "" else
+			"缺少權限: ${revokedPermissions.map { p -> p.replace(".+\\.".toRegex(), "") }.joinToString(", ")}"
+		val permission2Warning = if (hasExternalStorageManagerPermission()) "" else "缺少外部存儲權限"
+		val revokedPermissionsText = """
+		$permission1Warning
+		$permission2Warning
+		請授予這些權限，以便應用程序正常運行。
+		Please grant all of them for the app to function properly.
+		""".trimIndent()
+		binding.permission.revokedTv.text = revokedPermissionsText
+
+		// 權限請求按鈕
+		var requestPermissionHandle = {}
+		if (!hasPermissions()) {
+			requestPermissionHandle = { requestPermissionLauncher.launch(permissions) }
+		} else if (!hasExternalStorageManagerPermission()) {
+			requestPermissionHandle = { requestExternalStorageManagerPermission() }
+		}
+		binding.permission.requestBtn.setOnClickListener { requestPermissionHandle() }
+		if (firstRequestPermission) {
+			firstRequestPermission = false
+			requestPermissionHandle()
+		}
 	}
 
 	//endregion
