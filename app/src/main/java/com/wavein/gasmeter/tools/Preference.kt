@@ -9,6 +9,7 @@ import androidx.security.crypto.MasterKey
 object Preference {
 
 	// 外部使用的key
+	const val NCC_METER_ID = "nccMeterId"
 	const val APP_ENV = "appEnv"
 	const val APP_KEY = "appKey"
 	const val TITLE = "title"

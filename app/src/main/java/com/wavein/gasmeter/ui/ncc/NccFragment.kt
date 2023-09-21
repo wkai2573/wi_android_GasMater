@@ -26,6 +26,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.FragmentNccBinding
+import com.wavein.gasmeter.tools.Preference
 import com.wavein.gasmeter.tools.RD64H
 import com.wavein.gasmeter.tools.toHexString
 import com.wavein.gasmeter.tools.toText
@@ -209,9 +210,12 @@ class NccFragment : Fragment() {
 		}
 
 		// UI: R80個別抄表按鈕
+		binding.meterEt.setText(Preference[Preference.NCC_METER_ID, "00000002306003"]) //讀取上次輸入
 		binding.action1Btn.setOnClickListener {
 			onResume()
-			checkReadyCommunicate { blVM.sendR80Telegram(listOf("00000002306003")) }
+			val meterId = binding.meterEt.text.toString()
+			Preference[Preference.NCC_METER_ID] = meterId //紀錄本次輸入
+			checkReadyCommunicate { blVM.sendR80Telegram(listOf(meterId)) }
 		}
 		// UI: R80群組抄表按鈕
 		binding.action2Btn.setOnClickListener {

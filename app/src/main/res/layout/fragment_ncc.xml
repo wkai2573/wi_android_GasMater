@@ -56,12 +56,44 @@
       android:layout_width="match_parent"
       android:layout_height="wrap_content">
 
-      <Button
-        android:id="@+id/action1Btn"
-        style="?attr/materialButtonOutlinedStyle"
-        android:layout_width="wrap_content"
+      <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/meterInputLayout"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="個別抄表" />
+        android:layout_weight="1"
+        android:hint="個別抄表_表號"
+        android:inputType="text|textMultiLine">
+
+        <com.google.android.material.textfield.TextInputEditText
+          android:id="@+id/meterEt"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginBottom="4dp"
+          tools:text="00000002306003" />
+      </com.google.android.material.textfield.TextInputLayout>
+
+      <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/action1Btn"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:backgroundTint="?attr/colorPrimaryContainer"
+        android:src="@drawable/ic_send_24"
+        android:tint="?attr/colorPrimary" />
+
+      <androidx.appcompat.widget.AppCompatImageButton
+        android:id="@+id/clearBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:backgroundTint="?attr/colorPrimaryContainer"
+        android:src="@drawable/ic_delete_24"
+        android:tint="?attr/colorPrimary" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:visibility="gone"
+      tools:visibility="visible">
 
       <Button
         android:id="@+id/action2Btn"
@@ -69,26 +101,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="群組抄表" />
-
-      <View
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
-      <Button
-        android:id="@+id/clearBtn"
-        style="?attr/materialButtonOutlinedStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="清空"
-        app:icon="@drawable/ic_delete_24" />
-    </LinearLayout>
-
-    <LinearLayout
-      android:visibility="gone"
-      tools:visibility="visible"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content">
 
       <Button
         android:id="@+id/btSelectBtn"
@@ -108,11 +120,11 @@
     </LinearLayout>
 
     <LinearLayout
-      android:visibility="gone"
-      tools:visibility="visible"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:gravity="center">
+      android:gravity="center"
+      android:visibility="gone"
+      tools:visibility="visible">
 
       <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/sendInputLayout"

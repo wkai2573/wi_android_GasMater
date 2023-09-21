@@ -68,8 +68,8 @@ class LogoFragment : Fragment() {
 		super.onResume()
 		viewLifecycleOwner.lifecycleScope.launch {
 			delay(1400)
-			findNavController().navigate(R.id.nav_settingFragment)
-//			findNavController().navigate(R.id.nav_nccFragment)
+//			findNavController().navigate(R.id.nav_settingFragment)
+			findNavController().navigate(R.id.nav_nccFragment)
 		}
 	}
 }
