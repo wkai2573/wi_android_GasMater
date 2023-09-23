@@ -2,6 +2,7 @@ package com.wavein.gasmeter.ui.setting
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -13,17 +14,25 @@ import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.FragmentSettingBinding
+import com.wavein.gasmeter.tools.Preference
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.bluetooth.BtDialogFragment
+import com.wavein.gasmeter.ui.ftp.AppState
+import com.wavein.gasmeter.ui.ftp.FtpViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -37,7 +46,11 @@ class SettingFragment : Fragment() {
 	private val binding get() = _binding!!
 	private val blVM by activityViewModels<BluetoothViewModel>()
 	private val csvVM by activityViewModels<CsvViewModel>()
+	private val ftpVM by activityViewModels<FtpViewModel>()
 	private val settingVM by activityViewModels<SettingViewModel>()
+
+	// cb
+	private var onBluetoothOn:(() -> Unit)? = null
 
 	override fun onDestroyView() {
 		super.onDestroyView()
@@ -77,7 +90,7 @@ class SettingFragment : Fragment() {
 			}
 		}
 		binding.btSelectBtn.setOnClickListener {
-			BtDialogFragment.open(requireContext())
+			checkBluetoothOn { BtDialogFragment.open(requireContext()) }
 		}
 
 		// 檔案管理__________
@@ -102,6 +115,101 @@ class SettingFragment : Fragment() {
 			csvVM.selectCsv(filePickerLauncher)
 		}
 
+		binding.downloadCsvBtn.setOnClickListener {
+
+		}
+
+		binding.uploadCsvBtn.setOnClickListener {
+
+		}
+
+		// 產品註冊__________
+
+		// ui
+		ftpVM.view = binding.coordinator
+		val savedAppKey = Preference[Preference.APP_KEY, ""]!!
+		binding.appKeyEt.setText(savedAppKey)
+		binding.appActivateBtn.setOnClickListener {
+			val uuid = settingVM.uuidStateFlow.value
+			val appKey = binding.appKeyEt.text.toString()
+			ftpVM.checkAppActivate(uuid, appKey)
+			// 關閉軟鍵盤
+			val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+			imm?.hideSoftInputFromWindow(binding.appKeyEt.windowToken, 0)
+		}
+
+		/*
+					開啟APP
+						無網路，無開通 {
+							狀態 = 未開通
+						}
+						無網路，有開通 {
+							狀態 = 開通
+							正常使用
+						}
+						有網路，無開通 {
+								狀態 = 未開通
+						}
+						有網路，有開通 {
+							狀態 = 未檢查
+							檢查後 {
+								狀態 = 正常使用 | 未開通
+							}
+						}
+		*/
+
+		// 註冊開通狀態
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				ftpVM.appStateFlow.asStateFlow().collectLatest {
+					when (it) {
+						AppState.NotChecked -> {
+							binding.appActivatedTv.text = "產品未開通"
+							binding.appActivatedTv.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.md_theme_light_error))
+							binding.appKeyLayout.visibility = View.VISIBLE
+							binding.appActivateBtn.isEnabled = true
+							binding.appActivateBtn.callOnClick()
+						}
+
+						AppState.Checking -> {
+							binding.appActivateBtn.isEnabled = false
+						}
+
+						AppState.Inactivated -> {
+							binding.appActivatedTv.text = "產品未開通"
+							binding.appActivatedTv.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.md_theme_light_error))
+							binding.appKeyLayout.visibility = View.VISIBLE
+							binding.appActivateBtn.isEnabled = true
+						}
+
+						AppState.Activated -> {
+							binding.appActivatedTv.text = "產品已開通"
+							binding.appActivatedTv.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.md_theme_light_tertiary))
+							binding.appKeyLayout.visibility = View.GONE
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// 檢查藍牙是否開啟
+	private fun checkBluetoothOn(onBluetoothOn:() -> Unit) {
+		this.onBluetoothOn = onBluetoothOn
+		if (!blVM.isBluetoothOn()) {
+			blVM.checkBluetoothOn(bluetoothRequestLauncher)
+		} else {
+			onBluetoothOn.invoke()
+		}
+	}
+
+	// 藍牙請求器
+	private val bluetoothRequestLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+		if (result.resultCode == Activity.RESULT_OK) {
+			this.onBluetoothOn?.invoke()
+			this.onBluetoothOn = null
+		}
+		this.onBluetoothOn = null
 	}
 
 	// 選擇檔案Launcher

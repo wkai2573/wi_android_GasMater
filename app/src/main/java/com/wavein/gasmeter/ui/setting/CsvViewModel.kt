@@ -13,9 +13,13 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
+import com.wavein.gasmeter.tools.SharedEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import java.io.FileDescriptor
 import java.io.FileInputStream
 import javax.inject.Inject
 
@@ -43,7 +47,7 @@ class CsvViewModel @Inject constructor(
 	}
 
 	// 讀取csv檔案
-	fun readCsv(context:Context, result:ActivityResult) {
+	fun readCsv(context:Context, result:ActivityResult) = viewModelScope.launch {
 		readFileStateFlow.value = ReadFileState(ReadFileState.Type.Reading)
 		if (result.resultCode == Activity.RESULT_OK) {
 			kotlin.runCatching {
@@ -55,7 +59,8 @@ class CsvViewModel @Inject constructor(
 				rowsStateFlow.value = rows
 				setFileState(context, uri)
 			}.onFailure {
-				readFileStateFlow.value = ReadFileState(ReadFileState.Type.ReadFailed, it.message)
+//				readFileStateFlow.value = ReadFileState(ReadFileState.Type.ReadFailed, it.message)
+				SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar(it.message ?: "", SharedEvent.SnackbarColor.Error))
 			}
 		} else {
 			readFileStateFlow.value = ReadFileState(ReadFileState.Type.ReadFailed, result.resultCode.toString())
@@ -76,13 +81,13 @@ class CsvViewModel @Inject constructor(
 				it.close()
 			}
 		}
-		val fileState = FileState(path = filePath, name = fileName, size = size)
+		val fileState = FileState(uri = uri, path = filePath, name = fileName, size = size)
 		selectedFileStateFlow.value = fileState
 	}
 }
 
-data class FileState(val path:String = "", val name:String = "", val size:Long = 0L) {
-	val isOpened get() = path.isNotEmpty()
+data class FileState(val uri:Uri? = null, val path:String = "", val name:String = "", val size:Long = 0L) {
+	val isOpened get() = uri != null && path.isNotEmpty()
 	private val extension:String
 		get() {
 			if (!name.contains(".")) return ""
@@ -94,3 +99,7 @@ data class FileState(val path:String = "", val name:String = "", val size:Long =
 data class ReadFileState(val type:Type = Type.Idle, val message:String? = null) {
 	enum class Type { Idle, Reading, ReadFailed }
 }
+
+// Uri 轉 FileDescriptor
+fun Uri.toFileDescriptor(context:Context):FileDescriptor? =
+	context.contentResolver.openFileDescriptor(this, "r")?.fileDescriptor

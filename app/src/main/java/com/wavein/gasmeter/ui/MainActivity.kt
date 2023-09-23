@@ -4,6 +4,7 @@ import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
 import android.widget.Button
 import androidx.activity.OnBackPressedCallback
@@ -12,7 +13,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
@@ -58,8 +59,10 @@ class MainActivity : AppCompatActivity() {
 		// 上方bar
 		setSupportActionBar(binding.toolbar)
 
+
 		// 下方navBar
-		val navController = findNavController(R.id.nav_host_fragment_activity_main)
+		val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main) as NavHostFragment
+		val navController = navHostFragment.navController
 		navController.addOnDestinationChangedListener { _, destination, _ ->
 			binding.navView.visibility = when (destination.id) {
 				R.id.nav_logoFragment, R.id.nav_nccFragment -> View.GONE
@@ -113,30 +116,32 @@ class MainActivity : AppCompatActivity() {
 					when (event) {
 						// 小吃
 						is SharedEvent.ShowSnackbar -> {
+							val view = event.view ?: binding.root
 							val snackbar = when (event.color) {
 								SharedEvent.SnackbarColor.Normal -> {
-									Snackbar.make(binding.root, event.message, event.duration)
+									Snackbar.make(view, event.message, event.duration)
 								}
 
 								SharedEvent.SnackbarColor.Error -> {
-									Snackbar.make(binding.root, event.message, event.duration)
+									Snackbar.make(view, event.message, event.duration)
 										.setBackgroundTint(Color.parseColor("#FFDAD6"))
 										.setTextColor(Color.parseColor("#BA1A1A"))
 								}
 
 								SharedEvent.SnackbarColor.Success -> {
-									Snackbar.make(binding.root, event.message, event.duration)
+									Snackbar.make(view, event.message, event.duration)
 										.setBackgroundTint(Color.parseColor("#D0FF9A"))
 										.setTextColor(Color.parseColor("#004705"))
 								}
 
 								SharedEvent.SnackbarColor.Info -> {
-									Snackbar.make(binding.root, event.message, event.duration)
+									Snackbar.make(view, event.message, event.duration)
 										.setBackgroundTint(Color.parseColor("#DEE0FF"))
 										.setTextColor(Color.parseColor("#4456B6"))
 								}
 							}
-							displaySnackBarWithBottomMargin(snackbar, marginBottom = 200)
+							// displaySnackBarWithBottomMargin(snackbar, marginBottom = 250)
+							// displaySnackBarTop(snackbar)
 							snackbar.show()
 						}
 						// 訊息對話框
@@ -169,11 +174,22 @@ class MainActivity : AppCompatActivity() {
 
 	// 小吃margin, https://stackoverflow.com/questions/36588881/snackbar-behind-navigation-bar
 	private fun displaySnackBarWithBottomMargin(snackbar:Snackbar, sideMargin:Int = 0, marginBottom:Int = 0) {
-		val snackBarView = snackbar.view
-		val params = snackBarView.layoutParams as CoordinatorLayout.LayoutParams
-		params.setMargins(params.leftMargin + sideMargin, params.topMargin, params.rightMargin + sideMargin, params.bottomMargin + marginBottom)
-		snackBarView.layoutParams = params
-		snackbar.show()
+		kotlin.runCatching {
+			val snackBarView = snackbar.view
+			val params = snackBarView.layoutParams as CoordinatorLayout.LayoutParams
+			params.setMargins(params.leftMargin + sideMargin, params.topMargin, params.rightMargin + sideMargin, params.bottomMargin + marginBottom)
+			snackBarView.layoutParams = params
+		}
+	}
+
+	// 小吃show top
+	private fun displaySnackBarTop(snackbar:Snackbar) {
+		kotlin.runCatching {
+			val snackBarView = snackbar.view
+			val params = snackBarView.layoutParams as CoordinatorLayout.LayoutParams
+			params.gravity = Gravity.TOP
+			snackBarView.layoutParams = params
+		}
 	}
 
 	// 按back縮小app

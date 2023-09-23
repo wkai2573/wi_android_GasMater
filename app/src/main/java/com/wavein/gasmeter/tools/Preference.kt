@@ -10,11 +10,20 @@ object Preference {
 
 	// 外部使用的key
 	const val NCC_METER_ID = "nccMeterId"
-	const val APP_ENV = "appEnv"
-	const val APP_KEY = "appKey"
-	const val TITLE = "title"
-	const val LOGO_URL = "logoUrl"
-	const val DATE_EXPIRED = "dateExpired"
+	const val APP_KEY = "AppKey"
+	const val APP_ACTIVATED = "AppActivated"
+	const val FTP_DOWNLOAD_HOST = "ftpDownloadHost"
+	const val FTP_DOWNLOAD_USERNAME = "ftpDownloadUsername"
+	const val FTP_DOWNLOAD_PASSWORD = "ftpDownloadPassword"
+	const val FTP_DOWNLOAD_ROOT = "ftpDownloadRoot"
+	const val FTP_UPLOAD_HOST = "ftpUploadHost"
+	const val FTP_UPLOAD_USERNAME = "ftpUploadUsername"
+	const val FTP_UPLOAD_PASSWORD = "ftpUploadPassword"
+	const val FTP_UPLOAD_ROOT = "ftpUploadRoot"
+	const val FTP_SYSTEM_HOST = "ftpSystemHost"
+	const val FTP_SYSTEM_USERNAME = "ftpSystemUsername"
+	const val FTP_SYSTEM_PASSWORD = "ftpSystemPassword"
+	const val FTP_SYSTEM_ROOT = "ftpSystemRoot"
 
 	private const val SHARED_PREF_NAME = "secret_shared_prefs_webrtc"
 

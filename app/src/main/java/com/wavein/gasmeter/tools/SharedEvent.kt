@@ -1,6 +1,7 @@
 package com.wavein.gasmeter.tools
 
 import android.content.DialogInterface
+import android.view.View
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -14,6 +15,7 @@ sealed class SharedEvent {
 		val message:String,
 		val color:SnackbarColor = SnackbarColor.Normal,
 		val duration:Int = Snackbar.LENGTH_SHORT,
+		val view:View? = null,
 	) : SharedEvent()
 
 	data class ShowDialog(

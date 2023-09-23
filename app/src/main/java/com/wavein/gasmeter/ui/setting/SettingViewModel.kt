@@ -56,7 +56,7 @@ class SettingViewModel @Inject constructor(
 				}
 				reader.close()
 
-				val fileContent = stringBuilder.toString()
+				val fileContent = stringBuilder.toString().trimEnd('\n')
 				fileContent
 			} else {
 				null // File does not exist.
@@ -69,7 +69,7 @@ class SettingViewModel @Inject constructor(
 
 	// 產生UUID檔案並儲存至文件資料夾
 	private fun createUuidFileSaveToExternalStorage():String? {
-		val uuid = UUID.randomUUID().toString()
+		val uuid = UUID.randomUUID().toString().substring(0, 8)
 		val directoryType = Environment.DIRECTORY_DOCUMENTS
 
 		try {

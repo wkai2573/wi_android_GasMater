@@ -80,5 +80,6 @@ dependencies {
     implementation 'com.github.doyaaaaaken:kotlin-csv-jvm:1.9.2' // for JVM platform
 //    implementation 'com.github.doyaaaaaken:kotlin-csv-js:1.9.2' // for Kotlin JS platform
 
-
+    //==FTP==
+    implementation 'commons-net:commons-net:3.9.0'
 }
