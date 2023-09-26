@@ -5,7 +5,6 @@ import android.os.Environment
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.tools.SharedEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,7 +34,7 @@ class SettingViewModel @Inject constructor(
 	private fun initUuid() = viewModelScope.launch {
 		val uuid = readDocumentFileContent() ?: createUuidFileSaveToExternalStorage()
 		if (uuid == null) {
-			SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("無法生成UUID", SharedEvent.SnackbarColor.Error))
+			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("無法生成UUID", SharedEvent.SnackbarColor.Error))
 		} else {
 			uuidStateFlow.value = uuid
 		}

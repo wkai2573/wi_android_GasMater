@@ -60,7 +60,7 @@ class CsvViewModel @Inject constructor(
 				setFileState(context, uri)
 			}.onFailure {
 //				readFileStateFlow.value = ReadFileState(ReadFileState.Type.ReadFailed, it.message)
-				SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar(it.message ?: "", SharedEvent.SnackbarColor.Error))
+				SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(it.message ?: "", SharedEvent.SnackbarColor.Error))
 			}
 		} else {
 			readFileStateFlow.value = ReadFileState(ReadFileState.Type.ReadFailed, result.resultCode.toString())

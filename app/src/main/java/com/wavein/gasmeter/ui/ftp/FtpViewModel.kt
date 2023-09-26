@@ -1,7 +1,6 @@
 package com.wavein.gasmeter.ui.ftp
 
 import android.annotation.SuppressLint
-import android.view.View
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -28,7 +27,7 @@ class FtpViewModel @Inject constructor(
 ) : ViewModel() {
 
 	// 可觀察變數
-	val appStateFlow = MutableStateFlow(if (Preference[Preference.APP_ACTIVATED, false]!!) AppState.Activated else AppState.NotChecked)
+	val appStateFlow = MutableStateFlow(AppState.NotChecked)
 
 	// 變數
 	@SuppressLint("StaticFieldLeak")
@@ -57,8 +56,8 @@ class FtpViewModel @Inject constructor(
 	 * ftp連線到結束
 	 * @param ftpState FTP連線資訊
 	 * @param path 進入目錄
-	 * @param ftpLoginError 當連結失敗時的處理，return true 顯示原因
-	 * @param ftpHandle 連線FTP後要做的事
+	 * @param ftpLoginError 當連結失敗時的處理，return true 顯示原因小吃
+	 * @param ftpHandle 連線FTP中要做的事
 	 */
 	private fun ftpProcess(
 		ftpState:FtpState,
@@ -71,29 +70,33 @@ class FtpViewModel @Inject constructor(
 			try {
 				ftpClient.connect(ftpState.host)
 				if (!ftpClient.login(ftpState.username, ftpState.password)) {
-					if (ftpLoginError()) SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("無法登入FTP", SharedEvent.SnackbarColor.Error, view = view))
+					if (ftpLoginError()) SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("無法登入FTP", SharedEvent.SnackbarColor.Error, view = view))
 					return@launch
 				}
 				ftpClient.enterLocalPassiveMode()
 				if (ftpState.root.isNotEmpty() && !ftpClient.makeAndChangeDirectory(ftpState.root)) {
-					if (ftpLoginError()) SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("${ftpState.root} 目錄無法開啟", SharedEvent.SnackbarColor.Error, view = view))
+					if (ftpLoginError()) SharedEvent.eventFlow.emit(
+						SharedEvent.ShowSnackbar("${ftpState.root} 目錄無法開啟", SharedEvent.SnackbarColor.Error, view = view)
+					)
 					return@launch
 				}
 				if (path.isNotEmpty() && !ftpClient.makeAndChangeDirectory(path)) {
-					if (ftpLoginError()) SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("$path 目錄無法開啟", SharedEvent.SnackbarColor.Error, view = view))
+					if (ftpLoginError()) SharedEvent.eventFlow.emit(
+						SharedEvent.ShowSnackbar("$path 目錄無法開啟", SharedEvent.SnackbarColor.Error, view = view)
+					)
 					return@launch
 				}
 				ftpHandle(ftpClient)
 				ftpClient.logout()
 				ftpClient.disconnect()
 			} catch (e:SocketException) {
-				if (ftpLoginError()) SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("FTP連線逾時", SharedEvent.SnackbarColor.Error, view = view))
+				if (ftpLoginError()) SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("FTP連線逾時", SharedEvent.SnackbarColor.Error, view = view))
 			} catch (e:java.net.UnknownHostException) {
-				if (ftpLoginError()) SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("host解析錯誤", SharedEvent.SnackbarColor.Error, view = view))
+				if (ftpLoginError()) SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("host解析錯誤", SharedEvent.SnackbarColor.Error, view = view))
 			} catch (e:FTPConnectionClosedException) {
-				if (ftpLoginError()) SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("FTP連線被中斷", SharedEvent.SnackbarColor.Error, view = view))
+				if (ftpLoginError()) SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("FTP連線被中斷", SharedEvent.SnackbarColor.Error, view = view))
 			} catch (e:IOException) {
-				if (ftpLoginError()) SharedEvent._eventFlow.emit(SharedEvent.ShowDialog("FTP Error", e.message.toString()))
+				if (ftpLoginError()) SharedEvent.eventFlow.emit(SharedEvent.ShowDialog("FTP Error", e.message.toString()))
 			}
 		}
 	}
@@ -124,19 +127,16 @@ class FtpViewModel @Inject constructor(
 	}
 
 	// SYSTEM: 檢查產品開通
-	fun checkAppActivate(uuid:String, appKey:String) {
+	fun checkAppActivate(uuid:String, appkey:String) {
 		if (appStateFlow.value in listOf(AppState.Checking, AppState.Activated)) return
 		appStateFlow.value = AppState.Checking
-		if (uuid.isEmpty() || appKey.isEmpty()) {
+		if (uuid.isEmpty() || appkey.isEmpty()) {
 			appStateFlow.value = AppState.Inactivated
 			return
 		}
 		ftpProcess(systemFtpState, "key", ftpLoginError = { false }) { ftpClient ->
-			if (!ftpClient.changeWorkingDirectory(appKey)) {
-				viewModelScope.launch {
-					SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("序號錯誤", SharedEvent.SnackbarColor.Error, view = view))
-				}
-				appStateFlow.value = AppState.Inactivated
+			if (!ftpClient.changeWorkingDirectory(appkey)) {
+				onAppkeyVerifyFail("序號錯誤")
 				return@ftpProcess
 			}
 			val uuidFilename = "$uuid.uuid"
@@ -147,32 +147,39 @@ class FtpViewModel @Inject constructor(
 					ftpClient.setFileType(FTP.ASCII_FILE_TYPE)
 					val emptyInputStream = "".byteInputStream()
 					if (ftpClient.storeFile(uuidFilename, emptyInputStream)) {
-						viewModelScope.launch {
-							SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("產品開通成功", SharedEvent.SnackbarColor.Success, view = view))
-						}
-						Preference[Preference.APP_KEY, appKey]
-						Preference[Preference.APP_ACTIVATED, true]
-						appStateFlow.value = AppState.Activated
+						onAppkeyVerifySuccess("產品開通成功", appkey)
 					} else {
-						viewModelScope.launch {
-							SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("產品開通失敗", SharedEvent.SnackbarColor.Error, view = view))
-						}
-						appStateFlow.value = AppState.Inactivated
+						onAppkeyVerifyFail("產品開通失敗 (無法建立uuid檔案於FTP)")
 					}
 				}
 				// 檢查序號正確
 				files[0].name == uuidFilename -> {
+					Preference[Preference.APP_KEY] = appkey
+					Preference[Preference.APP_ACTIVATED] = true
 					appStateFlow.value = AppState.Activated
 				}
 				// 檢查序號錯誤，該序號已被其他裝置綁定
-				else -> {
-					viewModelScope.launch {
-						SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("此序號已被其他裝置註冊", SharedEvent.SnackbarColor.Error, view = view))
-					}
-					appStateFlow.value = AppState.Inactivated
-				}
+				else -> onAppkeyVerifyFail("此序號已被其他裝置註冊")
 			}
 		}
+	}
+
+	private inline fun onAppkeyVerifySuccess(msg:String, appkey:String) {
+		viewModelScope.launch {
+			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(msg, SharedEvent.SnackbarColor.Success, view = view))
+		}
+		Preference[Preference.APP_KEY] = appkey
+		Preference[Preference.APP_ACTIVATED] = true
+		appStateFlow.value = AppState.Activated
+	}
+
+	private inline fun onAppkeyVerifyFail(msg:String) {
+		viewModelScope.launch {
+			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(msg, SharedEvent.SnackbarColor.Error, view = view))
+		}
+		Preference[Preference.APP_KEY] = ""
+		Preference[Preference.APP_ACTIVATED] = false
+		appStateFlow.value = AppState.Inactivated
 	}
 
 	// todo 問chatGPT用

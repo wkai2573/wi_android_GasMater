@@ -10,7 +10,7 @@ object Preference {
 
 	// 外部使用的key
 	const val NCC_METER_ID = "nccMeterId"
-	const val APP_KEY = "AppKey"
+	const val APP_KEY = "Appkey"
 	const val APP_ACTIVATED = "AppActivated"
 	const val FTP_DOWNLOAD_HOST = "ftpDownloadHost"
 	const val FTP_DOWNLOAD_USERNAME = "ftpDownloadUsername"

@@ -16,8 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 object NetworkInfo {
 
 	// 網路狀態 & rssi
-	val _state = MutableStateFlow(NetworkState.Available)
-	val state:StateFlow<NetworkState> = _state
+	val networkStateFlow = MutableStateFlow(NetworkState.Available)
 	var savedRssi:Int? = null
 
 	enum class NetworkState { Available, Connecting, Lost }
@@ -26,18 +25,18 @@ object NetworkInfo {
 	fun initDetectionNetwork(context:Context) {
 		//初始目前網路連線, 沒連線則執行未連線fun
 		val isAvailable = isConnected(context)
-		_state.value = if (isAvailable) NetworkState.Available else NetworkState.Lost
+		networkStateFlow.value = if (isAvailable) NetworkState.Available else NetworkState.Lost
 		//偵測網路改變
 		val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 		connectivityManager.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
 			override fun onAvailable(network:Network) {
-				if (state.value == NetworkState.Lost) {
-					_state.value = NetworkState.Connecting
+				if (networkStateFlow.value == NetworkState.Lost) {
+					networkStateFlow.value = NetworkState.Connecting
 				}
 			}
 
 			override fun onLost(network:Network) {
-				_state.value = NetworkState.Lost
+				networkStateFlow.value = NetworkState.Lost
 			}
 
 			@RequiresApi(Build.VERSION_CODES.Q)

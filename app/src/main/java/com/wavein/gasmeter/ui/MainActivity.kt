@@ -4,6 +4,7 @@ import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
@@ -26,6 +27,8 @@ import com.wavein.gasmeter.tools.LanguageUtil
 import com.wavein.gasmeter.tools.NetworkInfo
 import com.wavein.gasmeter.tools.SharedEvent
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -59,7 +62,6 @@ class MainActivity : AppCompatActivity() {
 		// 上方bar
 		setSupportActionBar(binding.toolbar)
 
-
 		// 下方navBar
 		val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main) as NavHostFragment
 		val navController = navHostFragment.navController
@@ -89,18 +91,18 @@ class MainActivity : AppCompatActivity() {
 		// 訂閱斷線處理
 		lifecycleScope.launch {
 			repeatOnLifecycle(Lifecycle.State.STARTED) {
-				NetworkInfo.state.collectLatest { state ->
+				NetworkInfo.networkStateFlow.asStateFlow().collectLatest { state ->
 					when (state) {
 						NetworkInfo.NetworkState.Available -> {}
 						NetworkInfo.NetworkState.Connecting -> {
-							SharedEvent._eventFlow.emit(
+							SharedEvent.eventFlow.emit(
 								SharedEvent.ShowSnackbar("網路已連線", SharedEvent.SnackbarColor.Success, Snackbar.LENGTH_SHORT)
 							)
-							NetworkInfo._state.value = NetworkInfo.NetworkState.Available
+							NetworkInfo.networkStateFlow.value = NetworkInfo.NetworkState.Available
 						}
 
 						NetworkInfo.NetworkState.Lost -> {
-							SharedEvent._eventFlow.emit(
+							SharedEvent.eventFlow.emit(
 								SharedEvent.ShowSnackbar("網路已斷線", SharedEvent.SnackbarColor.Error, Snackbar.LENGTH_SHORT)
 							)
 						}
@@ -112,7 +114,7 @@ class MainActivity : AppCompatActivity() {
 		// 訂閱ui事件
 		lifecycleScope.launch {
 			repeatOnLifecycle(Lifecycle.State.STARTED) {
-				SharedEvent.eventFlow.collectLatest { event ->
+				SharedEvent.eventFlow.asSharedFlow().collectLatest { event ->
 					when (event) {
 						// 小吃
 						is SharedEvent.ShowSnackbar -> {
@@ -140,8 +142,10 @@ class MainActivity : AppCompatActivity() {
 										.setTextColor(Color.parseColor("#4456B6"))
 								}
 							}
-							// displaySnackBarWithBottomMargin(snackbar, marginBottom = 250)
-							// displaySnackBarTop(snackbar)
+							if (view == binding.root) {
+								displaySnackBarWithBottomMargin(snackbar, marginBottom = 250)
+								// displaySnackBarTop(snackbar)
+							}
 							snackbar.show()
 						}
 						// 訊息對話框
@@ -188,6 +192,7 @@ class MainActivity : AppCompatActivity() {
 			val snackBarView = snackbar.view
 			val params = snackBarView.layoutParams as CoordinatorLayout.LayoutParams
 			params.gravity = Gravity.TOP
+			params.setMargins(0, 100, 0, 0)
 			snackBarView.layoutParams = params
 		}
 	}

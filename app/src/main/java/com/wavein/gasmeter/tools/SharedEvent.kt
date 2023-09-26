@@ -4,7 +4,6 @@ import android.content.DialogInterface
 import android.view.View
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 
 // 共用事件
 sealed class SharedEvent {
@@ -29,7 +28,6 @@ sealed class SharedEvent {
 
 	companion object {
 		// 事件流
-		val _eventFlow = MutableSharedFlow<SharedEvent>()
-		val eventFlow = _eventFlow.asSharedFlow()
+		val eventFlow = MutableSharedFlow<SharedEvent>()
 	}
 }

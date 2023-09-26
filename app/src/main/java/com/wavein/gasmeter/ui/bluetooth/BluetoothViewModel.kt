@@ -36,7 +36,7 @@ class BluetoothViewModel @Inject constructor(
 	init {
 		if (bluetoothAdapter == null) {
 			viewModelScope.launch {
-				SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("此裝置不支援藍牙", SharedEvent.SnackbarColor.Error))
+				SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("此裝置不支援藍牙", SharedEvent.SnackbarColor.Error))
 			}
 		}
 	}
@@ -51,7 +51,7 @@ class BluetoothViewModel @Inject constructor(
 	// 藍牙未開啟提示
 	private suspend fun bluetoothOffTip():Boolean {
 		if (!isBluetoothOn()) {
-			SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("請開啟藍牙", SharedEvent.SnackbarColor.Error))
+			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("請開啟藍牙", SharedEvent.SnackbarColor.Error))
 			return true
 		}
 		return false
@@ -60,7 +60,7 @@ class BluetoothViewModel @Inject constructor(
 	// 檢查藍牙並請求開啟
 	fun checkBluetoothOn(bluetoothRequestLauncher:ActivityResultLauncher<Intent>) = viewModelScope.launch {
 		if (bluetoothAdapter == null) {
-			SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("此裝置不支援藍牙", SharedEvent.SnackbarColor.Error))
+			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("此裝置不支援藍牙", SharedEvent.SnackbarColor.Error))
 			return@launch
 		}
 		if (!bluetoothAdapter.isEnabled) {
@@ -98,7 +98,7 @@ class BluetoothViewModel @Inject constructor(
 	// 開始掃描
 	fun toggleDiscovery() = viewModelScope.launch {
 		if (!isBluetoothOn()) {
-			SharedEvent._eventFlow.emit(SharedEvent.ShowSnackbar("請開啟藍牙", SharedEvent.SnackbarColor.Error))
+			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("請開啟藍牙", SharedEvent.SnackbarColor.Error))
 			return@launch
 		}
 		if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) return@launch

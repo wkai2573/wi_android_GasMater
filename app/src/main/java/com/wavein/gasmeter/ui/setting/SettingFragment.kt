@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -26,6 +27,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.FragmentSettingBinding
+import com.wavein.gasmeter.tools.NetworkInfo
 import com.wavein.gasmeter.tools.Preference
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.bluetooth.BtDialogFragment
@@ -127,36 +129,16 @@ class SettingFragment : Fragment() {
 
 		// ui
 		ftpVM.view = binding.coordinator
-		val savedAppKey = Preference[Preference.APP_KEY, ""]!!
-		binding.appKeyEt.setText(savedAppKey)
+		val savedAppkey = Preference[Preference.APP_KEY, ""]!!
+		binding.appkeyEt.setText(savedAppkey)
 		binding.appActivateBtn.setOnClickListener {
 			val uuid = settingVM.uuidStateFlow.value
-			val appKey = binding.appKeyEt.text.toString()
-			ftpVM.checkAppActivate(uuid, appKey)
+			val appkey = binding.appkeyEt.text.toString()
+			ftpVM.checkAppActivate(uuid, appkey)
 			// 關閉軟鍵盤
 			val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-			imm?.hideSoftInputFromWindow(binding.appKeyEt.windowToken, 0)
+			imm?.hideSoftInputFromWindow(binding.appkeyEt.windowToken, 0)
 		}
-
-		/*
-					開啟APP
-						無網路，無開通 {
-							狀態 = 未開通
-						}
-						無網路，有開通 {
-							狀態 = 開通
-							正常使用
-						}
-						有網路，無開通 {
-								狀態 = 未開通
-						}
-						有網路，有開通 {
-							狀態 = 未檢查
-							檢查後 {
-								狀態 = 正常使用 | 未開通
-							}
-						}
-		*/
 
 		// 註冊開通狀態
 		viewLifecycleOwner.lifecycleScope.launch {
@@ -166,7 +148,7 @@ class SettingFragment : Fragment() {
 						AppState.NotChecked -> {
 							binding.appActivatedTv.text = "產品未開通"
 							binding.appActivatedTv.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.md_theme_light_error))
-							binding.appKeyLayout.visibility = View.VISIBLE
+							binding.appkeyLayout.visibility = View.VISIBLE
 							binding.appActivateBtn.isEnabled = true
 							binding.appActivateBtn.callOnClick()
 						}
@@ -178,19 +160,46 @@ class SettingFragment : Fragment() {
 						AppState.Inactivated -> {
 							binding.appActivatedTv.text = "產品未開通"
 							binding.appActivatedTv.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.md_theme_light_error))
-							binding.appKeyLayout.visibility = View.VISIBLE
+							binding.appkeyLayout.visibility = View.VISIBLE
 							binding.appActivateBtn.isEnabled = true
 						}
 
 						AppState.Activated -> {
-							binding.appActivatedTv.text = "產品已開通"
+							val uuid = settingVM.uuidStateFlow.value
+							val appkey = binding.appkeyEt.text.toString()
+							val text = "產品已開通\n裝置UUID: $uuid\n產品序號: $appkey"
+							binding.appActivatedTv.text = text
 							binding.appActivatedTv.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.md_theme_light_tertiary))
-							binding.appKeyLayout.visibility = View.GONE
+							binding.appkeyLayout.visibility = View.GONE
 						}
 					}
 				}
 			}
 		}
+
+		/**
+		 * 初始化APP開通狀態
+		 * 開啟APP, 狀態=未檢查 ->
+		 * 	有開通+有網路 -> 檢查序號，然後 { 狀態=開通|未開通 }
+		 * 	有開通+無網路 { 狀態=開通 }
+		 * 	無開通 { 狀態=未開通, 移到最上面 }
+		 */
+		when (Preference[Preference.APP_ACTIVATED, false]!!) {
+			 true -> {
+				when (NetworkInfo.networkStateFlow.value) {
+					NetworkInfo.NetworkState.Available -> binding.appActivateBtn.callOnClick()
+					else -> ftpVM.appStateFlow.value = AppState.Activated
+				}
+			}
+
+			false -> {
+				ftpVM.appStateFlow.value = AppState.Inactivated
+				 binding.areaContainer.removeView(binding.appkeyArea)
+				binding.areaContainer.addView(binding.appkeyArea, 0)
+			}
+		}
+
+		// 系統設定__________
 	}
 
 	// 檢查藍牙是否開啟
