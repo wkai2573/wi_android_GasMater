@@ -9,8 +9,10 @@ import android.view.Gravity
 import android.view.View
 import android.widget.Button
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -26,6 +28,7 @@ import com.wavein.gasmeter.tools.AppManager
 import com.wavein.gasmeter.tools.LanguageUtil
 import com.wavein.gasmeter.tools.NetworkInfo
 import com.wavein.gasmeter.tools.SharedEvent
+import com.wavein.gasmeter.ui.ftp.FtpViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,6 +43,10 @@ class MainActivity : AppCompatActivity() {
 
 	// binding & viewModel
 	private lateinit var binding:ActivityMainBinding
+	private val ftpVM by viewModels<FtpViewModel>()
+
+	// 變數
+	var showSystemAreaClickCountdown = 5
 
 	// 切換語言
 	override fun attachBaseContext(newBase:Context?) {
@@ -66,6 +73,7 @@ class MainActivity : AppCompatActivity() {
 		val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main) as NavHostFragment
 		val navController = navHostFragment.navController
 		navController.addOnDestinationChangedListener { _, destination, _ ->
+			// 隱藏顯示 navBar
 			binding.navView.visibility = when (destination.id) {
 				R.id.nav_logoFragment, R.id.nav_nccFragment -> View.GONE
 				else -> View.VISIBLE
@@ -73,6 +81,18 @@ class MainActivity : AppCompatActivity() {
 			when (destination.id) {
 				R.id.nav_logoFragment -> {}
 				else -> setBackPressedDispatcherAppToBack()
+			}
+			// 連點5次設定 顯示系統設定
+			if (destination.id == R.id.nav_settingFragment) {
+				showSystemAreaClickCountdown -= 1
+				if (!ftpVM.systemAreaOpenedStateFlow.value && showSystemAreaClickCountdown == 0) {
+					lifecycleScope.launch {
+						SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("系統設定已顯示"))
+						ftpVM.systemAreaOpenedStateFlow.value = true
+					}
+				}
+			} else {
+				showSystemAreaClickCountdown = 5
 			}
 		}
 		appBarConfiguration = AppBarConfiguration(

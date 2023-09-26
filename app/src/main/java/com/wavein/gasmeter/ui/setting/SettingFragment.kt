@@ -185,7 +185,7 @@ class SettingFragment : Fragment() {
 		 * 	無開通 { 狀態=未開通, 移到最上面 }
 		 */
 		when (Preference[Preference.APP_ACTIVATED, false]!!) {
-			 true -> {
+			true -> {
 				when (NetworkInfo.networkStateFlow.value) {
 					NetworkInfo.NetworkState.Available -> binding.appActivateBtn.callOnClick()
 					else -> ftpVM.appStateFlow.value = AppState.Activated
@@ -194,12 +194,26 @@ class SettingFragment : Fragment() {
 
 			false -> {
 				ftpVM.appStateFlow.value = AppState.Inactivated
-				 binding.areaContainer.removeView(binding.appkeyArea)
+				binding.areaContainer.removeView(binding.appkeyArea)
 				binding.areaContainer.addView(binding.appkeyArea, 0)
 			}
 		}
 
 		// 系統設定__________
+
+		// 註冊系統區塊顯示
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				ftpVM.systemAreaOpenedStateFlow.asStateFlow().collectLatest {
+					when (it) {
+						true -> binding.systemArea.visibility = View.VISIBLE
+						false -> binding.systemArea.visibility = View.GONE
+					}
+				}
+			}
+		}
+
+
 	}
 
 	// 檢查藍牙是否開啟

@@ -28,6 +28,7 @@ class FtpViewModel @Inject constructor(
 
 	// 可觀察變數
 	val appStateFlow = MutableStateFlow(AppState.NotChecked)
+	var systemAreaOpenedStateFlow = MutableStateFlow(false)
 
 	// 變數
 	@SuppressLint("StaticFieldLeak")
