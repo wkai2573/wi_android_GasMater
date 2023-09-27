@@ -13,6 +13,8 @@ import android.content.IntentFilter
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
+import androidx.activity.ComponentDialog
+import androidx.activity.addCallback
 import androidx.core.content.IntentCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentActivity
@@ -22,19 +24,18 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.wavein.gasmeter.databinding.FragmentBtDialogBinding
+import com.wavein.gasmeter.databinding.DialogBtBinding
+import com.wavein.gasmeter.databinding.DialogLoadingBinding
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @SuppressLint("MissingPermission")
 class BtDialogFragment(
-	val onDismissCallback:(dialog:DialogInterface) -> Unit = {},
+	private val onDismissCallback:((dialog:DialogInterface) -> Unit)? = null,
 ) : DialogFragment() {
 
-	private var dialog:AlertDialog? = null
-
 	// binding & viewModel
-	private var _binding:FragmentBtDialogBinding? = null
+	private var _binding:DialogBtBinding? = null
 	private val binding get() = _binding!!
 	private val blVM by activityViewModels<BluetoothViewModel>()
 
@@ -52,18 +53,17 @@ class BtDialogFragment(
 			requireContext().unregisterReceiver(receiver)
 		}
 		// cb
-		onDismissCallback(dialog)
+		onDismissCallback?.invoke(dialog)
 		_binding = null
 	}
 
 	override fun onCreateDialog(savedInstanceState:Bundle?):Dialog {
 		return activity?.let {
-			val builder = AlertDialog.Builder(it)
-			val inflater = requireActivity().layoutInflater
-			_binding = FragmentBtDialogBinding.inflate(inflater)
-			builder.setView(binding.root)
+			_binding = DialogBtBinding.inflate(it.layoutInflater)
 			init(it)
-			dialog = builder.create()
+			val dialog = ComponentDialog(it, theme).apply {
+				setContentView(binding.root)
+			}
 			dialog
 		} ?: throw IllegalStateException("Activity cannot be null")
 	}
@@ -187,7 +187,7 @@ class BtDialogFragment(
 	}
 
 	companion object {
-		// 開啟選擇bt視窗頁
+		// 開啟選擇bt視窗
 		fun open(context:Context) {
 			val supportFragmentManager = (context as FragmentActivity).supportFragmentManager
 			BtDialogFragment().show(supportFragmentManager, "BtDialogFragment")

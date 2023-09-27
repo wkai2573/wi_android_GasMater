@@ -33,11 +33,11 @@ class MeterBaseFragment : Fragment() {
 	override fun onViewCreated(view:View, savedInstanceState:Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
 
-		//TODO pager
+		//todo pager
 		val meterPageAdapter = MeterPageAdapter(this)
 		binding.pager.adapter = meterPageAdapter
 
-		//TODO Tab
+		//todo Tab
 		TabLayoutMediator(binding.tabLayout, binding.pager) { tab, position ->
 			when(position) {
 				0 -> {

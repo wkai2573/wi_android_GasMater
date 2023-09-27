@@ -1,12 +1,19 @@
 package com.wavein.gasmeter.ui.ftp
 
 import android.annotation.SuppressLint
-import androidx.coordinatorlayout.widget.CoordinatorLayout
+import android.content.Context
+import android.net.Uri
+import android.view.View
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.tools.Preference
 import com.wavein.gasmeter.tools.SharedEvent
+import com.wavein.gasmeter.tools.TimeUtil
+import com.wavein.gasmeter.ui.setting.CsvViewModel
+import com.wavein.gasmeter.ui.setting.FileState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -14,11 +21,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.apache.commons.net.ftp.FTP
 import org.apache.commons.net.ftp.FTPClient
-import org.apache.commons.net.ftp.FTPConnectionClosedException
+import java.io.File
 import java.io.FileDescriptor
 import java.io.FileInputStream
-import java.io.IOException
-import java.net.SocketException
+import java.io.FileOutputStream
 import javax.inject.Inject
 
 @HiltViewModel
@@ -27,84 +33,268 @@ class FtpViewModel @Inject constructor(
 ) : ViewModel() {
 
 	// 可觀察變數
-	val appStateFlow = MutableStateFlow(AppState.NotChecked)
 	var systemAreaOpenedStateFlow = MutableStateFlow(false)
+	val appStateFlow = MutableStateFlow(AppState.NotChecked)
+	val ftpConnStateFlow = MutableStateFlow<FtpConnState>(FtpConnState.Idle)
 
 	// 變數
 	@SuppressLint("StaticFieldLeak")
-	var view:CoordinatorLayout? = null
+	var snackbarView:View? = null
+	var snackbarAnchorView:View? = null
 
-	private var systemFtpState:FtpState = FtpState(
+	var systemFtpInfo:FtpInfo = FtpInfo(
+		FtpEnum.System,
 		Preference[Preference.FTP_SYSTEM_HOST, "118.163.191.31"]!!,
 		Preference[Preference.FTP_SYSTEM_USERNAME, "aktwset01"]!!,
 		Preference[Preference.FTP_SYSTEM_PASSWORD, "NSsetup09"]!!,
 		Preference[Preference.FTP_SYSTEM_ROOT, "WaveIn/system"]!!
 	)
-	private var downloadFtpState:FtpState = FtpState(
+	var downloadFtpInfo:FtpInfo = FtpInfo(
+		FtpEnum.Download,
 		Preference[Preference.FTP_DOWNLOAD_HOST, ""]!!,
 		Preference[Preference.FTP_DOWNLOAD_USERNAME, ""]!!,
 		Preference[Preference.FTP_DOWNLOAD_PASSWORD, ""]!!,
-		Preference[Preference.FTP_DOWNLOAD_ROOT, "WaveIn/data"]!!
+		Preference[Preference.FTP_DOWNLOAD_ROOT, "WaveIn/download"]!!
 	)
-	private var uploadFtpState:FtpState = FtpState(
+	var uploadFtpInfo:FtpInfo = FtpInfo(
+		FtpEnum.Upload,
 		Preference[Preference.FTP_UPLOAD_HOST, ""]!!,
 		Preference[Preference.FTP_UPLOAD_USERNAME, ""]!!,
 		Preference[Preference.FTP_UPLOAD_PASSWORD, ""]!!,
-		Preference[Preference.FTP_UPLOAD_ROOT, "WaveIn/data"]!!
+		Preference[Preference.FTP_UPLOAD_ROOT, "WaveIn/upload"]!!
 	)
+
+	fun saveFtpInfo(ftpInfo:FtpInfo) {
+		val mFtpInfo = when (ftpInfo.ftpEnum) {
+			FtpEnum.System -> {
+				Preference[Preference.FTP_SYSTEM_HOST] = ftpInfo.host
+				Preference[Preference.FTP_SYSTEM_USERNAME] = ftpInfo.username
+				Preference[Preference.FTP_SYSTEM_PASSWORD] = ftpInfo.password
+				Preference[Preference.FTP_SYSTEM_ROOT] = ftpInfo.root
+				systemFtpInfo
+			}
+
+			FtpEnum.Download -> {
+				Preference[Preference.FTP_DOWNLOAD_HOST] = ftpInfo.host
+				Preference[Preference.FTP_DOWNLOAD_USERNAME] = ftpInfo.username
+				Preference[Preference.FTP_DOWNLOAD_PASSWORD] = ftpInfo.password
+				Preference[Preference.FTP_DOWNLOAD_ROOT] = ftpInfo.root
+				downloadFtpInfo
+			}
+
+			FtpEnum.Upload -> {
+				Preference[Preference.FTP_UPLOAD_HOST] = ftpInfo.host
+				Preference[Preference.FTP_UPLOAD_USERNAME] = ftpInfo.username
+				Preference[Preference.FTP_UPLOAD_PASSWORD] = ftpInfo.password
+				Preference[Preference.FTP_UPLOAD_ROOT] = ftpInfo.root
+				uploadFtpInfo
+			}
+		}
+		mFtpInfo.apply {
+			host = ftpInfo.host
+			username = ftpInfo.username
+			password = ftpInfo.password
+			root = ftpInfo.root
+		}
+	}
+
+	// 編碼
+	private val LOCAL_CHARSET = Charsets.UTF_8
+	private val SERVER_CHARSET = Charsets.ISO_8859_1
+	private fun encode(text:String):String = String(text.toByteArray(LOCAL_CHARSET), SERVER_CHARSET)
+	private fun decode(text:String):String = String(text.toByteArray(SERVER_CHARSET), LOCAL_CHARSET)
 
 	/**
 	 * ftp連線到結束
-	 * @param ftpState FTP連線資訊
+	 * @param ftpInfo FTP連線資訊
 	 * @param path 進入目錄
-	 * @param ftpLoginError 當連結失敗時的處理，return true 顯示原因小吃
+	 * @param autoDisconnect 自動中斷FTP，若連線中有延遲處理則需要設為false，並自行呼叫disconnect(ftpClient)
+	 * @param ftpLoginError 當連結失敗時的處理，return true 顯示原因小吃(預設)
 	 * @param ftpHandle 連線FTP中要做的事
 	 */
 	private fun ftpProcess(
-		ftpState:FtpState,
+		ftpInfo:FtpInfo,
 		path:String = "",
+		autoDisconnect:Boolean = true,
 		ftpLoginError:() -> Boolean = { true },
-		ftpHandle:(FTPClient) -> Unit = {}
+		ftpHandle:(ftpClient:FTPClient) -> Unit = {}
 	) {
 		CoroutineScope(Dispatchers.IO).launch {
 			val ftpClient = FTPClient()
 			try {
-				ftpClient.connect(ftpState.host)
-				if (!ftpClient.login(ftpState.username, ftpState.password)) {
-					if (ftpLoginError()) SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("無法登入FTP", SharedEvent.SnackbarColor.Error, view = view))
+				ftpConnStateFlow.value = FtpConnState.Connecting("正在連線FTP")
+				ftpClient.connect(ftpInfo.host)
+				ftpConnStateFlow.value = FtpConnState.Connecting("FTP登入中")
+				if (!ftpClient.login(ftpInfo.username, ftpInfo.password)) {
+					if (ftpLoginError()) showSnack("無法登入FTP")
 					return@launch
 				}
+				ftpConnStateFlow.value = FtpConnState.Connected
 				ftpClient.enterLocalPassiveMode()
-				if (ftpState.root.isNotEmpty() && !ftpClient.makeAndChangeDirectory(ftpState.root)) {
-					if (ftpLoginError()) SharedEvent.eventFlow.emit(
-						SharedEvent.ShowSnackbar("${ftpState.root} 目錄無法開啟", SharedEvent.SnackbarColor.Error, view = view)
-					)
+				if (ftpInfo.root.isNotEmpty() && !ftpClient.changeWorkingDirectory(encode(ftpInfo.root))) {
+					if (ftpLoginError()) showSnack("${ftpInfo.root} 目錄無法開啟")
 					return@launch
 				}
-				if (path.isNotEmpty() && !ftpClient.makeAndChangeDirectory(path)) {
-					if (ftpLoginError()) SharedEvent.eventFlow.emit(
-						SharedEvent.ShowSnackbar("$path 目錄無法開啟", SharedEvent.SnackbarColor.Error, view = view)
-					)
+				if (path.isNotEmpty() && !ftpClient.makeAndChangeDirectory(encode(path))) {
+					if (ftpLoginError()) showSnack("$path 目錄無法開啟")
 					return@launch
 				}
 				ftpHandle(ftpClient)
-				ftpClient.logout()
-				ftpClient.disconnect()
-			} catch (e:SocketException) {
-				if (ftpLoginError()) SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("FTP連線逾時", SharedEvent.SnackbarColor.Error, view = view))
-			} catch (e:java.net.UnknownHostException) {
-				if (ftpLoginError()) SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("host解析錯誤", SharedEvent.SnackbarColor.Error, view = view))
-			} catch (e:FTPConnectionClosedException) {
-				if (ftpLoginError()) SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("FTP連線被中斷", SharedEvent.SnackbarColor.Error, view = view))
-			} catch (e:IOException) {
-				if (ftpLoginError()) SharedEvent.eventFlow.emit(SharedEvent.ShowDialog("FTP Error", e.message.toString()))
+			} catch (e:Exception) {
+				if (ftpLoginError()) showSnack("[FTP Error]\n${e.message}")
+			} finally {
+				if (autoDisconnect) disconnect(ftpClient)
 			}
 		}
 	}
 
+	private fun disconnect(ftpClient:FTPClient) {
+		kotlin.runCatching { ftpClient.logout() }
+		kotlin.runCatching { ftpClient.disconnect() }
+		ftpConnStateFlow.value = FtpConnState.Idle
+	}
+
+	// ==Dialog==
+	// 測試FTP
+	fun testFtp(ftpInfo:FtpInfo) {
+		ftpProcess(ftpInfo, "") { ftpClient ->
+			showSnack("連線成功", SharedEvent.Color.Success)
+		}
+	}
+
+	// ==SYSTEM==
+	// 檢查產品開通
+	fun checkAppActivate(uuid:String, appkey:String) {
+		appStateFlow.value = AppState.Checking
+		if (uuid.isEmpty() || appkey.isEmpty()) {
+			appStateFlow.value = AppState.Inactivated
+			return
+		}
+		ftpProcess(systemFtpInfo, "key",
+			ftpLoginError = {
+				appStateFlow.value = AppState.Inactivated
+				return@ftpProcess true
+			},
+			ftpHandle = { ftpClient ->
+				if (!ftpClient.changeWorkingDirectory(encode(appkey))) {
+					onAppkeyVerifyFail("序號錯誤")
+					return@ftpProcess
+				}
+				val uuidFilename = "$uuid.uuid"
+				val files = ftpClient.listFiles()
+				when {
+					// 序號未被註冊，該序號綁定此裝置
+					files.isEmpty() -> {
+						ftpClient.setFileType(FTP.ASCII_FILE_TYPE)
+						val emptyInputStream = "".byteInputStream()
+						if (ftpClient.storeFile(encode(uuidFilename), emptyInputStream)) {
+							onAppkeyVerifySuccess("產品開通成功", appkey)
+						} else {
+							onAppkeyVerifyFail("產品開通失敗 (無法建立uuid檔案於FTP)")
+						}
+					}
+					// 檢查序號正確
+					decode(files[0].name) == uuidFilename -> {
+						Preference[Preference.APP_KEY] = appkey
+						Preference[Preference.APP_ACTIVATED] = true
+						appStateFlow.value = AppState.Activated
+					}
+					// 檢查序號錯誤，該序號已被其他裝置綁定
+					else -> onAppkeyVerifyFail("此序號已被其他裝置註冊")
+				}
+			})
+	}
+
+	private fun onAppkeyVerifySuccess(msg:String, appkey:String) {
+		showSnack(msg, SharedEvent.Color.Success)
+		Preference[Preference.APP_KEY] = appkey
+		Preference[Preference.APP_ACTIVATED] = true
+		appStateFlow.value = AppState.Activated
+	}
+
+	private fun onAppkeyVerifyFail(msg:String) {
+		showSnack(msg)
+		Preference[Preference.APP_KEY] = ""
+		Preference[Preference.APP_ACTIVATED] = false
+		appStateFlow.value = AppState.Inactivated
+	}
+
+	private fun showSnack(msg:String, snackbarColor:SharedEvent.Color = SharedEvent.Color.Error) {
+		viewModelScope.launch {
+			SharedEvent.eventFlow.emit(
+				SharedEvent.ShowSnackbar(
+					msg, snackbarColor,
+					duration = if (snackbarColor == SharedEvent.Color.Error) Snackbar.LENGTH_INDEFINITE else Snackbar.LENGTH_SHORT,
+					view = snackbarView, anchorView = snackbarAnchorView
+				)
+			)
+		}
+	}
+
+	// ==UPLOAD==
+	fun uploadFile(context:Context, fileState:FileState) {
+		val path = Preference[Preference.APP_KEY, ""]!!
+		if (path.isEmpty() || !fileState.isOpened) return
+
+		ftpProcess(uploadFtpInfo, path) { ftpClient ->
+			val filenameWithTime = "${fileState.nameWithoutExtension}_${TimeUtil.getCurrentTime("yyyyMMddHH")}.${fileState.extension}"
+			ftpClient.setFileType(FTP.BINARY_FILE_TYPE)
+			context.contentResolver.openFileDescriptor(fileState.uri!!, "r").use { parcelFileDescriptor ->
+				val fileDescriptor = parcelFileDescriptor?.fileDescriptor
+				val inputStream = FileInputStream(fileDescriptor)
+				ftpClient.storeFile(encode(filenameWithTime), inputStream)
+				showSnack("上傳成功, 目錄: $path/$filenameWithTime", SharedEvent.Color.Success)
+			}
+		}
+	}
+
+	// ==DOWNLOAD==
+	fun downloadFileOpenFolder(context:Context, csvVM:CsvViewModel) {
+		ftpProcess(downloadFtpInfo, "") { ftpClient ->
+			ftpClient.setFileType(FTP.BINARY_FILE_TYPE)
+			val fileArray = ftpClient.listFiles()
+				.map { ftpFile -> decode(ftpFile.name) }
+				.filter { filename -> filename.endsWith(".csv", true) }
+				.toTypedArray()
+			if (fileArray.isEmpty()) {
+				showSnack("沒有找到任何.csv檔案")
+				return@ftpProcess
+			}
+			viewModelScope.launch {
+				val builder = MaterialAlertDialogBuilder(context)
+					.setTitle("選擇檔案")
+					.setItems(fileArray) { dialogInterface, index ->
+						val filename = fileArray[index]
+						downloadFile(context, csvVM, filename)
+						dialogInterface.dismiss()
+					}
+					.create()
+				SharedEvent.eventFlow.emit(SharedEvent.ShowDialogB(builder))
+			}
+		}
+	}
+
+	private fun downloadFile(context:Context, csvVM:CsvViewModel, filename:String) {
+		ftpProcess(downloadFtpInfo, "") { ftpClient ->
+			val localFilePath = "/storage/emulated/0/Download/$filename" // 下載到DOWNLOAD資料夾
+			val localFile = File(localFilePath)
+			val outputStream = FileOutputStream(localFile)
+			val success = ftpClient.retrieveFile(encode(filename), outputStream)
+			outputStream.close()
+			if (success) {
+				showSnack("\"$filename\" 已保存於下載資料夾", SharedEvent.Color.Success)
+				// csvVM.selectCsv(context, Uri.fromFile(localFile)) //todo 失敗，找原因
+			} else {
+				showSnack("下載失敗")
+			}
+		}
+	}
+
+	//__________ 以下參考 __________
+
 	// 上傳空文件
-	fun uploadEmptyFile(ftpState:FtpState, path:String, filename:String) {
-		ftpProcess(ftpState, path) { ftpClient ->
+	fun uploadEmptyFile(ftpInfo:FtpInfo, path:String, filename:String) {
+		ftpProcess(ftpInfo, path) { ftpClient ->
 			ftpClient.setFileType(FTP.ASCII_FILE_TYPE)
 			val emptyInputStream = "".byteInputStream()
 			ftpClient.storeFile(filename, emptyInputStream)
@@ -112,75 +302,19 @@ class FtpViewModel @Inject constructor(
 	}
 
 	// 上傳文件
-	fun uploadEmptyFile(ftpState:FtpState, path:String, filename:String, fileDescriptor:FileDescriptor) {
-		ftpProcess(ftpState, path) { ftpClient ->
+	fun uploadFile_r(ftpInfo:FtpInfo, path:String, filename:String, fileDescriptor:FileDescriptor) {
+		ftpProcess(ftpInfo, path) { ftpClient ->
 			ftpClient.setFileType(FTP.BINARY_FILE_TYPE)
 			val inputStream = FileInputStream(fileDescriptor)
-			ftpClient.storeFile(filename, inputStream)
+			ftpClient.storeFile(encode(filename), inputStream)
 		}
 	}
 
 	// 刪除檔案
-	fun deleteFile(ftpState:FtpState, path:String, filename:String) {
-		ftpProcess(ftpState, path) { ftpClient ->
+	fun deleteFile(ftpInfo:FtpInfo, path:String, filename:String) {
+		ftpProcess(ftpInfo, path) { ftpClient ->
 			ftpClient.deleteFile(filename)
 		}
-	}
-
-	// SYSTEM: 檢查產品開通
-	fun checkAppActivate(uuid:String, appkey:String) {
-		if (appStateFlow.value in listOf(AppState.Checking, AppState.Activated)) return
-		appStateFlow.value = AppState.Checking
-		if (uuid.isEmpty() || appkey.isEmpty()) {
-			appStateFlow.value = AppState.Inactivated
-			return
-		}
-		ftpProcess(systemFtpState, "key", ftpLoginError = { false }) { ftpClient ->
-			if (!ftpClient.changeWorkingDirectory(appkey)) {
-				onAppkeyVerifyFail("序號錯誤")
-				return@ftpProcess
-			}
-			val uuidFilename = "$uuid.uuid"
-			val files = ftpClient.listFiles()
-			when {
-				// 序號未被註冊，該序號綁定此裝置
-				files.isEmpty() -> {
-					ftpClient.setFileType(FTP.ASCII_FILE_TYPE)
-					val emptyInputStream = "".byteInputStream()
-					if (ftpClient.storeFile(uuidFilename, emptyInputStream)) {
-						onAppkeyVerifySuccess("產品開通成功", appkey)
-					} else {
-						onAppkeyVerifyFail("產品開通失敗 (無法建立uuid檔案於FTP)")
-					}
-				}
-				// 檢查序號正確
-				files[0].name == uuidFilename -> {
-					Preference[Preference.APP_KEY] = appkey
-					Preference[Preference.APP_ACTIVATED] = true
-					appStateFlow.value = AppState.Activated
-				}
-				// 檢查序號錯誤，該序號已被其他裝置綁定
-				else -> onAppkeyVerifyFail("此序號已被其他裝置註冊")
-			}
-		}
-	}
-
-	private inline fun onAppkeyVerifySuccess(msg:String, appkey:String) {
-		viewModelScope.launch {
-			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(msg, SharedEvent.SnackbarColor.Success, view = view))
-		}
-		Preference[Preference.APP_KEY] = appkey
-		Preference[Preference.APP_ACTIVATED] = true
-		appStateFlow.value = AppState.Activated
-	}
-
-	private inline fun onAppkeyVerifyFail(msg:String) {
-		viewModelScope.launch {
-			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(msg, SharedEvent.SnackbarColor.Error, view = view))
-		}
-		Preference[Preference.APP_KEY] = ""
-		Preference[Preference.APP_ACTIVATED] = false
-		appStateFlow.value = AppState.Inactivated
 	}
 
 	// todo 問chatGPT用
@@ -203,10 +337,11 @@ class FtpViewModel @Inject constructor(
 
 }
 
-// 進入目錄，沒有則創建再進入
+// 進入目錄，沒有則創建再進入 (進入根的時候不要用)
 private fun FTPClient.makeAndChangeDirectory(directory:String):Boolean {
 	val directories = directory.split("/")
 	for (dir in directories) {
+		if (dir.isEmpty()) continue
 		if (!this.changeWorkingDirectory(dir)) {
 			this.makeDirectory(dir)
 			if (!this.changeWorkingDirectory(dir)) {
@@ -217,6 +352,15 @@ private fun FTPClient.makeAndChangeDirectory(directory:String):Boolean {
 	return true
 }
 
-// state
-data class FtpState(val host:String = "", val username:String = "", val password:String = "", val root:String = "")
+// class
+data class FtpInfo(val ftpEnum:FtpEnum, var host:String = "", var username:String = "", var password:String = "", var root:String = "")
+enum class FtpEnum { System, Download, Upload }
+
 enum class AppState { NotChecked, Checking, Activated, Inactivated }
+
+sealed class FtpConnState {
+	object Idle : FtpConnState()
+	data class Connecting(val msg:String) : FtpConnState()
+	object Connected : FtpConnState()
+	// data class Error(val msg:String) : FtpConnState()
+}

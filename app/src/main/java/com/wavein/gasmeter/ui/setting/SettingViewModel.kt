@@ -34,7 +34,7 @@ class SettingViewModel @Inject constructor(
 	private fun initUuid() = viewModelScope.launch {
 		val uuid = readDocumentFileContent() ?: createUuidFileSaveToExternalStorage()
 		if (uuid == null) {
-			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("無法生成UUID", SharedEvent.SnackbarColor.Error))
+			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("無法生成UUID", SharedEvent.Color.Error))
 		} else {
 			uuidStateFlow.value = uuid
 		}

@@ -61,14 +61,14 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:hint="個別抄表_表號"
-        android:inputType="text|textMultiLine">
+        android:hint="個別抄表_表號">
 
         <com.google.android.material.textfield.TextInputEditText
           android:id="@+id/meterEt"
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
           android:layout_marginBottom="4dp"
+          android:inputType="text"
           tools:text="00000002306003" />
       </com.google.android.material.textfield.TextInputLayout>
 
@@ -132,7 +132,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:hint="指定電文"
-        android:inputType="text|textMultiLine">
+        android:inputType="text">
 
         <com.google.android.material.textfield.TextInputEditText
           android:id="@+id/sendEt"

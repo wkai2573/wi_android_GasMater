@@ -38,7 +38,7 @@ class BleViewModel @Inject constructor(
 	init {
 		if (bluetoothAdapter == null) {
 			viewModelScope.launch {
-				SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("設備不支援藍牙", SharedEvent.SnackbarColor.Error))
+				SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("設備不支援藍牙", SharedEvent.Color.Error))
 			}
 		}
 	}

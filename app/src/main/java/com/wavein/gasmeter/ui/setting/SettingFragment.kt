@@ -11,7 +11,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -29,12 +28,13 @@ import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.FragmentSettingBinding
 import com.wavein.gasmeter.tools.NetworkInfo
 import com.wavein.gasmeter.tools.Preference
+import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.bluetooth.BtDialogFragment
 import com.wavein.gasmeter.ui.ftp.AppState
+import com.wavein.gasmeter.ui.ftp.FtpConnState
+import com.wavein.gasmeter.ui.ftp.FtpSettingDialogFragment
 import com.wavein.gasmeter.ui.ftp.FtpViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -84,7 +84,7 @@ class SettingFragment : Fragment() {
 						binding.btSelectBtn.text = "選擇裝置"
 					} else {
 						binding.selectedDevice.layout.visibility = View.VISIBLE
-						val text = "${device.name} [${device.address}]"
+						val text = "${device.name}\n${device.address}"
 						binding.selectedDevice.btInfoTv.text = text
 						binding.btSelectBtn.text = "重新選擇裝置"
 					}
@@ -104,31 +104,60 @@ class SettingFragment : Fragment() {
 					if (!fileState.isOpened) {
 						binding.selectedCsv.layout.visibility = View.GONE
 						binding.selectCsvFromLocalBtn.text = "選擇CSV"
+						binding.uploadCsvBtn.isEnabled = false
 					} else {
 						binding.selectedCsv.layout.visibility = View.VISIBLE
 						binding.selectedCsv.infoTv.text = fileState.name
 						binding.selectCsvFromLocalBtn.text = "重新選擇CSV"
+						binding.uploadCsvBtn.isEnabled = true
 					}
 				}
 			}
 		}
 
 		binding.selectCsvFromLocalBtn.setOnClickListener {
-			csvVM.selectCsv(filePickerLauncher)
+			csvVM.openFilePicker(filePickerLauncher)
 		}
 
 		binding.downloadCsvBtn.setOnClickListener {
-
+			ftpVM.downloadFileOpenFolder(requireContext(), csvVM)
 		}
 
 		binding.uploadCsvBtn.setOnClickListener {
+			val fileState = csvVM.selectedFileStateFlow.value
+			ftpVM.uploadFile(requireContext(), fileState)
+		}
 
+		binding.downloadFtpSettingBtn.setOnClickListener {
+			FtpSettingDialogFragment.open(
+				context = requireContext(),
+				ftpInfo = ftpVM.downloadFtpInfo,
+				onSaveCallback = {
+					ftpVM.saveFtpInfo(it)
+				})
+		}
+
+		binding.uploadFtpSettingBtn.setOnClickListener {
+			FtpSettingDialogFragment.open(
+				context = requireContext(),
+				ftpInfo = ftpVM.uploadFtpInfo,
+				onSaveCallback = {
+					ftpVM.saveFtpInfo(it)
+				})
+		}
+
+		binding.systemFtpSettingBtn.setOnClickListener {
+			FtpSettingDialogFragment.open(
+				context = requireContext(),
+				ftpInfo = ftpVM.systemFtpInfo,
+				onSaveCallback = {
+					ftpVM.saveFtpInfo(it)
+				})
 		}
 
 		// 產品註冊__________
 
 		// ui
-		ftpVM.view = binding.coordinator
 		val savedAppkey = Preference[Preference.APP_KEY, ""]!!
 		binding.appkeyEt.setText(savedAppkey)
 		binding.appActivateBtn.setOnClickListener {
@@ -140,6 +169,23 @@ class SettingFragment : Fragment() {
 			imm?.hideSoftInputFromWindow(binding.appkeyEt.windowToken, 0)
 		}
 
+		// 註冊FTP連接狀態 (loading)
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				ftpVM.ftpConnStateFlow.asStateFlow().collectLatest {
+					when (it) {
+						is FtpConnState.Idle -> SharedEvent.loadingFlow.value = ""
+
+						is FtpConnState.Connecting -> SharedEvent.loadingFlow.value =
+							if (ftpVM.appStateFlow.value == AppState.Checking) "序號驗證中" else "連線FTP中"
+
+
+						is FtpConnState.Connected -> SharedEvent.loadingFlow.value = ""
+					}
+				}
+			}
+		}
+
 		// 註冊開通狀態
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -149,19 +195,19 @@ class SettingFragment : Fragment() {
 							binding.appActivatedTv.text = "產品未開通"
 							binding.appActivatedTv.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.md_theme_light_error))
 							binding.appkeyLayout.visibility = View.VISIBLE
-							binding.appActivateBtn.isEnabled = true
+							binding.btArea.visibility = View.GONE
+							binding.fileArea.visibility = View.GONE
 							binding.appActivateBtn.callOnClick()
 						}
 
-						AppState.Checking -> {
-							binding.appActivateBtn.isEnabled = false
-						}
+						AppState.Checking -> {}
 
 						AppState.Inactivated -> {
 							binding.appActivatedTv.text = "產品未開通"
 							binding.appActivatedTv.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.md_theme_light_error))
 							binding.appkeyLayout.visibility = View.VISIBLE
-							binding.appActivateBtn.isEnabled = true
+							binding.btArea.visibility = View.GONE
+							binding.fileArea.visibility = View.GONE
 						}
 
 						AppState.Activated -> {
@@ -171,6 +217,8 @@ class SettingFragment : Fragment() {
 							binding.appActivatedTv.text = text
 							binding.appActivatedTv.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.md_theme_light_tertiary))
 							binding.appkeyLayout.visibility = View.GONE
+							binding.btArea.visibility = View.VISIBLE
+							binding.fileArea.visibility = View.VISIBLE
 						}
 					}
 				}
@@ -182,20 +230,20 @@ class SettingFragment : Fragment() {
 		 * 開啟APP, 狀態=未檢查 ->
 		 * 	有開通+有網路 -> 檢查序號，然後 { 狀態=開通|未開通 }
 		 * 	有開通+無網路 { 狀態=開通 }
-		 * 	無開通 { 狀態=未開通, 移到最上面 }
+		 * 	無開通 { 狀態=未開通 }
 		 */
-		when (Preference[Preference.APP_ACTIVATED, false]!!) {
-			true -> {
-				when (NetworkInfo.networkStateFlow.value) {
-					NetworkInfo.NetworkState.Available -> binding.appActivateBtn.callOnClick()
-					else -> ftpVM.appStateFlow.value = AppState.Activated
+		if (ftpVM.appStateFlow.value == AppState.NotChecked) {
+			when (Preference[Preference.APP_ACTIVATED, false]!!) {
+				true -> {
+					when (NetworkInfo.networkStateFlow.value) {
+						NetworkInfo.NetworkState.Available -> binding.appActivateBtn.callOnClick()
+						else -> ftpVM.appStateFlow.value = AppState.Activated
+					}
 				}
-			}
 
-			false -> {
-				ftpVM.appStateFlow.value = AppState.Inactivated
-				binding.areaContainer.removeView(binding.appkeyArea)
-				binding.areaContainer.addView(binding.appkeyArea, 0)
+				false -> {
+					ftpVM.appStateFlow.value = AppState.Inactivated
+				}
 			}
 		}
 
@@ -213,8 +261,8 @@ class SettingFragment : Fragment() {
 			}
 		}
 
-
 	}
+
 
 	// 檢查藍牙是否開啟
 	private fun checkBluetoothOn(onBluetoothOn:() -> Unit) {

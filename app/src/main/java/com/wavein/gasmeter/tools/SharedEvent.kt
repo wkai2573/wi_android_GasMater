@@ -2,18 +2,21 @@ package com.wavein.gasmeter.tools
 
 import android.content.DialogInterface
 import android.view.View
+import androidx.appcompat.app.AlertDialog
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 
 // 共用事件
 sealed class SharedEvent {
 
-	enum class SnackbarColor { Normal, Error, Success, Info }
+	enum class Color { Normal, Error, Success, Info }
 
 	data class ShowSnackbar(
 		val message:String,
-		val color:SnackbarColor = SnackbarColor.Normal,
+		val color:Color = Color.Normal,
 		val duration:Int = Snackbar.LENGTH_SHORT,
+		val anchorView:View? = null,
 		val view:View? = null,
 	) : SharedEvent()
 
@@ -26,8 +29,15 @@ sealed class SharedEvent {
 		val onDissmiss:DialogInterface.OnDismissListener = DialogInterface.OnDismissListener { dialog -> },
 	) : SharedEvent()
 
+	data class ShowDialogB(
+		val builder:AlertDialog,
+	) : SharedEvent()
+
 	companion object {
 		// 事件流
 		val eventFlow = MutableSharedFlow<SharedEvent>()
+
+		// 可觀察變數
+		val loadingFlow = MutableStateFlow("")
 	}
 }

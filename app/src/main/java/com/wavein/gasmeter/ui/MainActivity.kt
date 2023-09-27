@@ -4,15 +4,14 @@ import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
-import android.view.Gravity
 import android.view.View
+import android.view.WindowManager
 import android.widget.Button
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.coordinatorlayout.widget.CoordinatorLayout
-import androidx.fragment.app.activityViewModels
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -24,11 +23,14 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.ActivityMainBinding
+import com.wavein.gasmeter.databinding.DialogLoadingBinding
 import com.wavein.gasmeter.tools.AppManager
 import com.wavein.gasmeter.tools.LanguageUtil
 import com.wavein.gasmeter.tools.NetworkInfo
 import com.wavein.gasmeter.tools.SharedEvent
+import com.wavein.gasmeter.tools.allowInfiniteLines
 import com.wavein.gasmeter.ui.ftp.FtpViewModel
+import com.wavein.gasmeter.ui.loading.LoadingDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,7 +48,8 @@ class MainActivity : AppCompatActivity() {
 	private val ftpVM by viewModels<FtpViewModel>()
 
 	// 變數
-	var showSystemAreaClickCountdown = 5
+	private var showSystemAreaClickCountdown = 5
+	private var loadingDialog:LoadingDialogFragment? = null
 
 	// 切換語言
 	override fun attachBaseContext(newBase:Context?) {
@@ -116,14 +119,14 @@ class MainActivity : AppCompatActivity() {
 						NetworkInfo.NetworkState.Available -> {}
 						NetworkInfo.NetworkState.Connecting -> {
 							SharedEvent.eventFlow.emit(
-								SharedEvent.ShowSnackbar("網路已連線", SharedEvent.SnackbarColor.Success, Snackbar.LENGTH_SHORT)
+								SharedEvent.ShowSnackbar("網路已連線", SharedEvent.Color.Success, Snackbar.LENGTH_SHORT)
 							)
 							NetworkInfo.networkStateFlow.value = NetworkInfo.NetworkState.Available
 						}
 
 						NetworkInfo.NetworkState.Lost -> {
 							SharedEvent.eventFlow.emit(
-								SharedEvent.ShowSnackbar("網路已斷線", SharedEvent.SnackbarColor.Error, Snackbar.LENGTH_SHORT)
+								SharedEvent.ShowSnackbar("網路已斷線", SharedEvent.Color.Error, Snackbar.LENGTH_SHORT)
 							)
 						}
 					}
@@ -138,39 +141,43 @@ class MainActivity : AppCompatActivity() {
 					when (event) {
 						// 小吃
 						is SharedEvent.ShowSnackbar -> {
-							val view = event.view ?: binding.root
+							val view = event.view ?: binding.coordinator
 							val snackbar = when (event.color) {
-								SharedEvent.SnackbarColor.Normal -> {
+								SharedEvent.Color.Normal -> {
 									Snackbar.make(view, event.message, event.duration)
 								}
 
-								SharedEvent.SnackbarColor.Error -> {
+								SharedEvent.Color.Error -> {
 									Snackbar.make(view, event.message, event.duration)
 										.setBackgroundTint(Color.parseColor("#FFDAD6"))
 										.setTextColor(Color.parseColor("#BA1A1A"))
+										.setActionTextColor(Color.parseColor("#504EC8"))
 								}
 
-								SharedEvent.SnackbarColor.Success -> {
+								SharedEvent.Color.Success -> {
 									Snackbar.make(view, event.message, event.duration)
 										.setBackgroundTint(Color.parseColor("#D0FF9A"))
 										.setTextColor(Color.parseColor("#004705"))
+										.setActionTextColor(Color.parseColor("#504EC8"))
 								}
 
-								SharedEvent.SnackbarColor.Info -> {
+								SharedEvent.Color.Info -> {
 									Snackbar.make(view, event.message, event.duration)
 										.setBackgroundTint(Color.parseColor("#DEE0FF"))
 										.setTextColor(Color.parseColor("#4456B6"))
+										.setActionTextColor(Color.parseColor("#504EC8"))
 								}
 							}
-							if (view == binding.root) {
-								displaySnackBarWithBottomMargin(snackbar, marginBottom = 250)
-								// displaySnackBarTop(snackbar)
+							if (event.duration == Snackbar.LENGTH_INDEFINITE) {
+								snackbar.setAction("close") { snackbar.dismiss() }
 							}
+							snackbar.anchorView = event.anchorView ?: binding.navView
+							snackbar.allowInfiniteLines()
 							snackbar.show()
 						}
 						// 訊息對話框
 						is SharedEvent.ShowDialog -> {
-							val builder = MaterialAlertDialogBuilder(this@MainActivity, R.style.MyAlertDialogTheme)
+							val builder = MaterialAlertDialogBuilder(this@MainActivity/*, R.style.MyAlertDialogTheme*/)
 								.setTitle(event.title)
 								.setMessage(event.message)
 								.setPositiveButton(event.positiveButton.first, event.positiveButton.second)
@@ -190,30 +197,28 @@ class MainActivity : AppCompatActivity() {
 							}
 							alertDialog.show()
 						}
+						// 訊息對話框 by builder
+						is SharedEvent.ShowDialogB -> {
+							event.builder.show()
+						}
+
+						else -> {}
 					}
 				}
 			}
 		}
-	}
 
-	// 小吃margin, https://stackoverflow.com/questions/36588881/snackbar-behind-navigation-bar
-	private fun displaySnackBarWithBottomMargin(snackbar:Snackbar, sideMargin:Int = 0, marginBottom:Int = 0) {
-		kotlin.runCatching {
-			val snackBarView = snackbar.view
-			val params = snackBarView.layoutParams as CoordinatorLayout.LayoutParams
-			params.setMargins(params.leftMargin + sideMargin, params.topMargin, params.rightMargin + sideMargin, params.bottomMargin + marginBottom)
-			snackBarView.layoutParams = params
-		}
-	}
-
-	// 小吃show top
-	private fun displaySnackBarTop(snackbar:Snackbar) {
-		kotlin.runCatching {
-			val snackBarView = snackbar.view
-			val params = snackBarView.layoutParams as CoordinatorLayout.LayoutParams
-			params.gravity = Gravity.TOP
-			params.setMargins(0, 100, 0, 0)
-			snackBarView.layoutParams = params
+		// 訂閱全域loading
+		lifecycleScope.launch {
+			repeatOnLifecycle(Lifecycle.State.STARTED) {
+				SharedEvent.loadingFlow.asStateFlow().collectLatest { message ->
+					if (message.isNotEmpty()) {
+						loadingDialog = LoadingDialogFragment.open(this@MainActivity)
+					} else {
+						loadingDialog?.dismiss()
+					}
+				}
+			}
 		}
 	}
 

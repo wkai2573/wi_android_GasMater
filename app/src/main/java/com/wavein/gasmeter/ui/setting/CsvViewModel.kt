@@ -34,8 +34,8 @@ class CsvViewModel @Inject constructor(
 	val selectedFileStateFlow = MutableStateFlow(FileState())
 	val rowsStateFlow = MutableStateFlow<List<Map<String, String>>>(emptyList())
 
-	// 選擇本地Csv檔案
-	fun selectCsv(filePickerLauncher:ActivityResultLauncher<Intent>) {
+	// 檔案選取器
+	fun openFilePicker(filePickerLauncher:ActivityResultLauncher<Intent>) {
 		// 預設開啟位置:下載資料夾
 		val pickerInitialUri = DocumentsContract.buildDocumentUri("com.android.providers.downloads.documents", "downloads")
 		val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
@@ -51,20 +51,25 @@ class CsvViewModel @Inject constructor(
 		readFileStateFlow.value = ReadFileState(ReadFileState.Type.Reading)
 		if (result.resultCode == Activity.RESULT_OK) {
 			kotlin.runCatching {
-				val uri = result.data?.data!!
-				val fileDescriptor = context.contentResolver.openFileDescriptor(uri, "r")
-				val inputStream = FileInputStream(fileDescriptor!!.fileDescriptor)
-				val rows:List<Map<String, String>> = csvReader().readAllWithHeader(inputStream)
-				readFileStateFlow.value = ReadFileState(ReadFileState.Type.Idle)
-				rowsStateFlow.value = rows
-				setFileState(context, uri)
+				selectCsv(context, result.data?.data!!)
 			}.onFailure {
 //				readFileStateFlow.value = ReadFileState(ReadFileState.Type.ReadFailed, it.message)
-				SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(it.message ?: "", SharedEvent.SnackbarColor.Error))
+				SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(it.message ?: "", SharedEvent.Color.Error))
 			}
 		} else {
 			readFileStateFlow.value = ReadFileState(ReadFileState.Type.ReadFailed, result.resultCode.toString())
 		}
+	}
+
+	// 選擇csv檔案 //todo 失敗,找原因
+	fun selectCsv(context:Context, uri:Uri) {
+		val parcelFileDescriptor = context.contentResolver.openFileDescriptor(uri, "r")
+		val inputStream = FileInputStream(parcelFileDescriptor!!.fileDescriptor)
+		parcelFileDescriptor.close()
+		val rows:List<Map<String, String>> = csvReader().readAllWithHeader(inputStream)
+		readFileStateFlow.value = ReadFileState(ReadFileState.Type.Idle)
+		rowsStateFlow.value = rows
+		setFileState(context, uri)
 	}
 
 	@SuppressLint("Range")
@@ -88,10 +93,15 @@ class CsvViewModel @Inject constructor(
 
 data class FileState(val uri:Uri? = null, val path:String = "", val name:String = "", val size:Long = 0L) {
 	val isOpened get() = uri != null && path.isNotEmpty()
-	private val extension:String
+	val extension:String
 		get() {
 			if (!name.contains(".")) return ""
 			return name.substring(name.lastIndexOf(".") + 1)
+		}
+	val nameWithoutExtension:String
+		get() {
+			if (!name.contains(".")) return name
+			return name.substring(0, name.lastIndexOf("."))
 		}
 	val isCsv get() = extension.uppercase() == "CSV".uppercase()
 }
