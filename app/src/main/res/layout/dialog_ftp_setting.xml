@@ -133,7 +133,7 @@
       android:text="測試"
       app:icon="@drawable/ic_send_24" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
       android:id="@+id/saveBtn"
       style="?attr/materialButtonOutlinedStyle"
       android:layout_width="0dp"

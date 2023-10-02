@@ -120,12 +120,34 @@ class SettingFragment : Fragment() {
 		}
 
 		binding.downloadCsvBtn.setOnClickListener {
-			ftpVM.downloadFileOpenFolder(requireContext(), csvVM)
+			if (ftpVM.downloadFtpInfo.host.isNotEmpty()) {
+				ftpVM.downloadFileOpenFolder(requireContext(), csvVM)
+			} else {
+				FtpSettingDialogFragment.open(
+					context = requireContext(),
+					ftpInfo = ftpVM.downloadFtpInfo,
+					saveBtnText = "下載",
+					saveBtnIcon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_download_24),
+					onSaveCallback = {
+						ftpVM.downloadFileOpenFolder(requireContext(), csvVM)
+					})
+			}
 		}
 
 		binding.uploadCsvBtn.setOnClickListener {
 			val fileState = csvVM.selectedFileStateFlow.value
-			ftpVM.uploadFile(requireContext(), fileState)
+			if (ftpVM.uploadFtpInfo.host.isNotEmpty()) {
+				ftpVM.uploadFile(requireContext(), fileState)
+			} else {
+				FtpSettingDialogFragment.open(
+					context = requireContext(),
+					ftpInfo = ftpVM.uploadFtpInfo,
+					saveBtnText = "上傳",
+					saveBtnIcon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_upload_24),
+					onSaveCallback = {
+						ftpVM.uploadFile(requireContext(), fileState)
+					})
+			}
 		}
 
 		binding.downloadFtpSettingBtn.setOnClickListener {

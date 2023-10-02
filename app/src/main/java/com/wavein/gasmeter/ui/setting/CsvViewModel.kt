@@ -51,9 +51,11 @@ class CsvViewModel @Inject constructor(
 		readFileStateFlow.value = ReadFileState(ReadFileState.Type.Reading)
 		if (result.resultCode == Activity.RESULT_OK) {
 			kotlin.runCatching {
-				selectCsv(context, result.data?.data!!)
+				val uri = result.data?.data!!
+				selectCsv(context, uri)
 			}.onFailure {
-//				readFileStateFlow.value = ReadFileState(ReadFileState.Type.ReadFailed, it.message)
+				it.printStackTrace()
+				readFileStateFlow.value = ReadFileState(ReadFileState.Type.ReadFailed, it.message)
 				SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(it.message ?: "", SharedEvent.Color.Error))
 			}
 		} else {
@@ -61,32 +63,38 @@ class CsvViewModel @Inject constructor(
 		}
 	}
 
-	// 選擇csv檔案 //todo 失敗,找原因
-	fun selectCsv(context:Context, uri:Uri) {
+	// 選擇csv檔案
+	fun selectCsv(context:Context, uri:Uri, specifiedFilename:String = "") {
 		val parcelFileDescriptor = context.contentResolver.openFileDescriptor(uri, "r")
 		val inputStream = FileInputStream(parcelFileDescriptor!!.fileDescriptor)
-		parcelFileDescriptor.close()
 		val rows:List<Map<String, String>> = csvReader().readAllWithHeader(inputStream)
+		parcelFileDescriptor.close()
 		readFileStateFlow.value = ReadFileState(ReadFileState.Type.Idle)
 		rowsStateFlow.value = rows
-		setFileState(context, uri)
+		setFileState(context, uri, specifiedFilename)
+
+		viewModelScope.launch {
+			SharedEvent.eventFlow.emit(SharedEvent.ShowDialog("title", rows.toString()))
+		}
 	}
 
 	@SuppressLint("Range")
-	private fun setFileState(context:Context, uri:Uri) {
+	private fun setFileState(context:Context, uri:Uri, specifiedFilename:String = "") {
 		val contentResolver:ContentResolver = context.contentResolver
 		val cursor:Cursor? = contentResolver.query(uri, null, null, null, null)
-		val filePath = uri.path ?: ""
-		var fileName = ""
+		val filepath = uri.path ?: ""
+		var filename = specifiedFilename
 		var size = 0L
-		cursor?.use {
-			if (it.moveToFirst()) {
-				fileName = it.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))
-				size = it.getLong(it.getColumnIndex(OpenableColumns.SIZE))
-				it.close()
+		if (filename.isEmpty()) {
+			cursor?.use {
+				if (it.moveToFirst()) {
+					filename = it.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+					size = it.getLong(it.getColumnIndex(OpenableColumns.SIZE))
+					it.close()
+				}
 			}
 		}
-		val fileState = FileState(uri = uri, path = filePath, name = fileName, size = size)
+		val fileState = FileState(uri = uri, path = filepath, name = filename, size = size)
 		selectedFileStateFlow.value = fileState
 	}
 }

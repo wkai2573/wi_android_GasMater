@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
@@ -19,6 +20,8 @@ import com.wavein.gasmeter.databinding.DialogLoadingBinding
 @SuppressLint("MissingPermission")
 class FtpSettingDialogFragment(
 	private val ftpInfo:FtpInfo,
+	private val saveBtnText:String? = null,
+	private val saveBtnIcon:Drawable? = null,
 	private val onSaveCallback:((ftpInfo:FtpInfo) -> Unit)? = null,
 	private val onDismissCallback:((dialog:DialogInterface) -> Unit)? = null,
 ) : DialogFragment() {
@@ -63,6 +66,8 @@ class FtpSettingDialogFragment(
 		binding.testFtpBtn.setOnClickListener {
 			ftpVM.testFtp(copiedFtpInfo)
 		}
+		if (saveBtnText != null) binding.saveBtn.text = saveBtnText
+		if (saveBtnIcon != null) binding.saveBtn.icon = saveBtnIcon
 		binding.saveBtn.setOnClickListener {
 			onSaveCallback?.invoke(copiedFtpInfo)
 			dialog?.dismiss()
@@ -82,12 +87,16 @@ class FtpSettingDialogFragment(
 		fun open(
 			context:Context,
 			ftpInfo:FtpInfo,
+			saveBtnText:String? = null,
+			saveBtnIcon:Drawable? = null,
 			onSaveCallback:((ftpInfo:FtpInfo) -> Unit)? = null,
 			onDismissCallback:((dialog:DialogInterface) -> Unit)? = null
 		) {
 			val supportFragmentManager = (context as FragmentActivity).supportFragmentManager
 			FtpSettingDialogFragment(
 				ftpInfo = ftpInfo,
+				saveBtnText = saveBtnText,
+				saveBtnIcon = saveBtnIcon,
 				onSaveCallback = onSaveCallback,
 				onDismissCallback = onDismissCallback
 			).show(supportFragmentManager, "FtpSettingDialogFragment")

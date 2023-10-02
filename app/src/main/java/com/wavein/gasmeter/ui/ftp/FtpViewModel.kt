@@ -243,7 +243,7 @@ class FtpViewModel @Inject constructor(
 				val fileDescriptor = parcelFileDescriptor?.fileDescriptor
 				val inputStream = FileInputStream(fileDescriptor)
 				ftpClient.storeFile(encode(filenameWithTime), inputStream)
-				showSnack("上傳成功, 目錄: $path/$filenameWithTime", SharedEvent.Color.Success)
+				showSnack("上傳成功, FTP目錄: $path/$filenameWithTime", SharedEvent.Color.Success)
 			}
 		}
 	}
@@ -283,7 +283,7 @@ class FtpViewModel @Inject constructor(
 			outputStream.close()
 			if (success) {
 				showSnack("\"$filename\" 已保存於下載資料夾", SharedEvent.Color.Success)
-				// csvVM.selectCsv(context, Uri.fromFile(localFile)) //todo 失敗，找原因
+				csvVM.selectCsv(context, Uri.fromFile(localFile), filename)
 			} else {
 				showSnack("下載失敗")
 			}
