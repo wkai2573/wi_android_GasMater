@@ -75,7 +75,7 @@ class SettingFragment : Fragment() {
 
 		// 藍牙裝置__________
 
-		// 註冊藍牙設備
+		// 訂閱藍牙設備
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.autoConnectDeviceStateFlow.asStateFlow().collectLatest { device ->
@@ -97,7 +97,7 @@ class SettingFragment : Fragment() {
 
 		// 檔案管理__________
 
-		// 註冊Csv檔案
+		// 訂閱Csv檔案
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				csvVM.selectedFileStateFlow.asStateFlow().collectLatest { fileState ->
@@ -177,13 +177,34 @@ class SettingFragment : Fragment() {
 				})
 		}
 
+		//todo 測試
+		binding.test1Btn.setOnClickListener {
+			lifecycleScope.launch {
+				SharedEvent.eventFlow.emit(SharedEvent.ShowDialog("title", csvVM.meterRowsStateFlow.value.toString()))
+			}
+		}
+
+		binding.test2Btn.setOnClickListener {
+			//csvVM.writeFile(fileInfo.relativePath, "隨機數,欄位2,\n${Random.nextInt(1, 100)},內容2")
+
+			val meterRows = csvVM.meterRowsStateFlow.value.toMutableList()
+			// rows.add(
+			// 	mapOf("header1" to "AAA", "header2" to "中文", "header3" to "♥\n🙄🙄🙄\n這樣也\"可以\"??")
+			// )
+			csvVM.meterRowsStateFlow.value = meterRows
+			csvVM.saveCsv()
+		}
+
+
 		// 產品註冊__________
 
 		// ui
 		val savedAppkey = Preference[Preference.APP_KEY, ""]!!
 		binding.appkeyEt.setText(savedAppkey)
 		binding.appActivateBtn.setOnClickListener {
-			val uuid = settingVM.uuidStateFlow.value
+			var uuid = settingVM.uuidStateFlow.value
+			if (uuid.isEmpty()) settingVM.initUuid()
+			uuid = settingVM.uuidStateFlow.value
 			val appkey = binding.appkeyEt.text.toString()
 			ftpVM.checkAppActivate(uuid, appkey)
 			// 關閉軟鍵盤
@@ -191,7 +212,7 @@ class SettingFragment : Fragment() {
 			imm?.hideSoftInputFromWindow(binding.appkeyEt.windowToken, 0)
 		}
 
-		// 註冊FTP連接狀態 (loading)
+		// 訂閱FTP連接狀態 (loading)
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				ftpVM.ftpConnStateFlow.asStateFlow().collectLatest {
@@ -208,7 +229,7 @@ class SettingFragment : Fragment() {
 			}
 		}
 
-		// 註冊開通狀態
+		// 訂閱開通狀態
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				ftpVM.appStateFlow.asStateFlow().collectLatest {
@@ -271,7 +292,7 @@ class SettingFragment : Fragment() {
 
 		// 系統設定__________
 
-		// 註冊系統區塊顯示
+		// 訂閱系統區塊顯示
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				ftpVM.systemAreaOpenedStateFlow.asStateFlow().collectLatest {
@@ -307,7 +328,7 @@ class SettingFragment : Fragment() {
 
 	// 選擇檔案Launcher
 	private val filePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-		csvVM.readCsv(requireContext(), result)
+		csvVM.readCsvByPicker(requireContext(), result)
 	}
 
 	//region __________權限方法__________
@@ -331,6 +352,7 @@ class SettingFragment : Fragment() {
 	} else {
 		arrayOf(
 			Manifest.permission.ACCESS_FINE_LOCATION,
+			Manifest.permission.MANAGE_DOCUMENTS
 		)
 	}
 

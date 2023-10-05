@@ -31,7 +31,7 @@ class SettingViewModel @Inject constructor(
 	}
 
 	// 初始化UUID
-	private fun initUuid() = viewModelScope.launch {
+	fun initUuid() = viewModelScope.launch {
 		val uuid = readDocumentFileContent() ?: createUuidFileSaveToExternalStorage()
 		if (uuid == null) {
 			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("無法生成UUID", SharedEvent.Color.Error))
@@ -68,27 +68,31 @@ class SettingViewModel @Inject constructor(
 
 	// 產生UUID檔案並儲存至文件資料夾
 	private fun createUuidFileSaveToExternalStorage():String? {
-		val uuid = UUID.randomUUID().toString().substring(0, 8)
 		val directoryType = Environment.DIRECTORY_DOCUMENTS
 
 		try {
 			val externalStorageState = Environment.getExternalStorageState()
-			return if (Environment.MEDIA_MOUNTED == externalStorageState) {
+			if (Environment.MEDIA_MOUNTED == externalStorageState) {
 				val directory = Environment.getExternalStoragePublicDirectory(directoryType)
 				directory.mkdirs() // 確保目錄存在
 
 				val file = File(directory, uuidFilename)
 				val outputStream = FileOutputStream(file)
-				outputStream.write(uuid.toByteArray())
-				outputStream.close()
-				uuid
+				try {
+					val uuid = UUID.randomUUID().toString().substring(0, 8)
+					outputStream.write(uuid.toByteArray())
+					return uuid
+				} catch (e:Exception) {
+					e.printStackTrace()
+					return null
+				} finally {
+					outputStream.close()
+				}
 			} else {
-				// 外部存儲不可用，處理錯誤
-				null
+				return null
 			}
 		} catch (e:Exception) {
 			e.printStackTrace()
-			// 處理保存文件時出現異常
 			return null
 		}
 	}

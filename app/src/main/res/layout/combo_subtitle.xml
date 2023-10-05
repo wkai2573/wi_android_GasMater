@@ -11,7 +11,7 @@
     style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:hint="群組號"
+    android:hint="群組"
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintEnd_toEndOf="parent"
     app:layout_constraintStart_toStartOf="parent"
@@ -34,6 +34,7 @@
     app:layout_constraintBottom_toBottomOf="@+id/layout"
     app:layout_constraintEnd_toEndOf="@+id/layout"
     app:layout_constraintTop_toTopOf="@+id/layout"
+    app:layout_constraintVertical_bias="0.55"
     tools:text="(subTitle)" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

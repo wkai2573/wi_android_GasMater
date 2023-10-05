@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:id="@+id/layout"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:background="?android:attr/selectableItemBackground"
+  android:paddingHorizontal="8dp"
+  android:paddingVertical="8dp">
+
+  <TextView
+    android:id="@+id/groupTitleTv"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="群組:"
+    android:textSize="18sp"
+    app:layout_constraintEnd_toStartOf="@+id/groupValueTv"
+    app:layout_constraintHorizontal_bias="0.0"
+    app:layout_constraintHorizontal_chainStyle="packed"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent" />
+
+  <TextView
+    android:id="@+id/groupValueTv"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="4dp"
+    android:textSize="18sp"
+    app:layout_constraintBottom_toBottomOf="@+id/groupTitleTv"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintHorizontal_bias="0.5"
+    app:layout_constraintStart_toEndOf="@+id/groupTitleTv"
+    app:layout_constraintTop_toTopOf="@+id/groupTitleTv"
+    tools:text="00001" />
+
+  <TextView
+    android:id="@+id/countTitleTv"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="4dp"
+    android:text="已抄表/總數量:"
+    android:textSize="18sp"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toStartOf="@+id/countValueTv"
+    app:layout_constraintHorizontal_bias="0.0"
+    app:layout_constraintHorizontal_chainStyle="packed"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toBottomOf="@+id/groupTitleTv" />
+
+  <TextView
+    android:id="@+id/countValueTv"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="4dp"
+    android:textSize="18sp"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintHorizontal_bias="0.5"
+    app:layout_constraintStart_toEndOf="@+id/countTitleTv"
+    app:layout_constraintTop_toTopOf="@+id/countTitleTv"
+    tools:text="15/30" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

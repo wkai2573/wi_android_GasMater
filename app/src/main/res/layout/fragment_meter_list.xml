@@ -13,15 +13,16 @@
     android:layout_height="wrap_content"
     android:layout_marginStart="8dp"
     android:layout_marginTop="8dp"
-    android:layout_marginEnd="8dp">
+    android:layout_marginEnd="8dp"
+    app:singleSelection="true">
 
     <com.google.android.material.button.MaterialButton
-      android:id="@+id/doneBtn"
+      android:id="@+id/undoneBtn"
       style="?attr/materialButtonOutlinedStyle"
       android:layout_width="0dp"
       android:layout_height="wrap_content"
       android:layout_weight="1"
-      android:text="未抄表完成" />
+      android:text="未抄表" />
 
     <com.google.android.material.button.MaterialButton
       android:id="@+id/allBtn"
@@ -41,12 +42,39 @@
     android:layout_marginTop="8dp"
     android:layout_marginEnd="8dp" />
 
-  <androidx.recyclerview.widget.RecyclerView
+  <Button
+    android:id="@+id/groupReadBtn"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginStart="8dp"
-    android:layout_marginTop="8dp"
-    android:layout_marginEnd="8dp"
-    tools:itemCount="5"
-    tools:listitem="@layout/item_device" />
+    android:layout_marginHorizontal="8dp"
+    android:layout_marginVertical="8dp"
+    android:text="群組抄表"
+    app:icon="@drawable/ic_send_24" />
+
+  <FrameLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <androidx.recyclerview.widget.RecyclerView
+      android:id="@+id/meterRowsRv"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:fadeScrollbars="false"
+      android:scrollbarSize="8dp"
+      android:scrollbarStyle="outsideOverlay"
+      android:scrollbars="vertical"
+      tools:itemCount="5"
+      tools:listitem="@layout/item_meter_row" />
+
+    <TextView
+      android:id="@+id/allDoneCongratsTip"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:background="?android:attr/colorBackground"
+      android:gravity="center_horizontal"
+      android:padding="32dp"
+      android:text="恭喜，此群組已抄表完成"
+      android:textSize="20sp"
+      android:visibility="gone" />
+  </FrameLayout>
 </LinearLayout>
