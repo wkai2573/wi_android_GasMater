@@ -31,6 +31,7 @@ import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.allowInfiniteLines
 import com.wavein.gasmeter.ui.ftp.FtpViewModel
 import com.wavein.gasmeter.ui.loading.LoadingDialogFragment
+import com.wavein.gasmeter.ui.setting.CsvViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,6 +47,7 @@ class MainActivity : AppCompatActivity() {
 	// binding & viewModel
 	private lateinit var binding:ActivityMainBinding
 	private val ftpVM by viewModels<FtpViewModel>()
+	private val csvVM by viewModels<CsvViewModel>()
 
 	// 變數
 	private var showSystemAreaClickCountdown = 5
@@ -126,7 +128,7 @@ class MainActivity : AppCompatActivity() {
 
 						NetworkInfo.NetworkState.Lost -> {
 							SharedEvent.eventFlow.emit(
-								SharedEvent.ShowSnackbar("網路已斷線", SharedEvent.Color.Error, Snackbar.LENGTH_SHORT)
+								SharedEvent.ShowSnackbar("網路已斷線", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE)
 							)
 						}
 					}

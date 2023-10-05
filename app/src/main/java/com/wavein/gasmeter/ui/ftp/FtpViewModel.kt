@@ -3,6 +3,8 @@ package com.wavein.gasmeter.ui.ftp
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
+import android.os.Environment
+import android.provider.DocumentsContract
 import android.view.View
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -51,16 +53,16 @@ class FtpViewModel @Inject constructor(
 	)
 	var downloadFtpInfo:FtpInfo = FtpInfo(
 		FtpEnum.Download,
-		Preference[Preference.FTP_DOWNLOAD_HOST, ""]!!,
-		Preference[Preference.FTP_DOWNLOAD_USERNAME, ""]!!,
-		Preference[Preference.FTP_DOWNLOAD_PASSWORD, ""]!!,
+		Preference[Preference.FTP_DOWNLOAD_HOST, "118.163.191.31"]!!, //todo 前三個要改回""
+		Preference[Preference.FTP_DOWNLOAD_USERNAME, "aktwset01"]!!,
+		Preference[Preference.FTP_DOWNLOAD_PASSWORD, "NSsetup09"]!!,
 		Preference[Preference.FTP_DOWNLOAD_ROOT, "WaveIn/download"]!!
 	)
 	var uploadFtpInfo:FtpInfo = FtpInfo(
 		FtpEnum.Upload,
-		Preference[Preference.FTP_UPLOAD_HOST, ""]!!,
-		Preference[Preference.FTP_UPLOAD_USERNAME, ""]!!,
-		Preference[Preference.FTP_UPLOAD_PASSWORD, ""]!!,
+		Preference[Preference.FTP_UPLOAD_HOST, "118.163.191.31"]!!, //todo 前三個要改回""
+		Preference[Preference.FTP_UPLOAD_USERNAME, "aktwset01"]!!,
+		Preference[Preference.FTP_UPLOAD_PASSWORD, "NSsetup09"]!!,
 		Preference[Preference.FTP_UPLOAD_ROOT, "WaveIn/upload"]!!
 	)
 
@@ -141,7 +143,13 @@ class FtpViewModel @Inject constructor(
 				}
 				ftpHandle(ftpClient)
 			} catch (e:Exception) {
-				if (ftpLoginError()) showSnack("[FTP Error]\n${e.message}")
+				if (ftpLoginError()) {
+					if (e.message?.contains("Network is unreachable") == true) {
+						showSnack("未連結網路")
+					} else {
+						showSnack("[FTP Error]\n${e.message}")
+					}
+				}
 			} finally {
 				if (autoDisconnect) disconnect(ftpClient)
 			}
@@ -276,14 +284,20 @@ class FtpViewModel @Inject constructor(
 
 	private fun downloadFile(context:Context, csvVM:CsvViewModel, filename:String) {
 		ftpProcess(downloadFtpInfo, "") { ftpClient ->
-			val localFilePath = "/storage/emulated/0/Download/$filename" // 下載到DOWNLOAD資料夾
-			val localFile = File(localFilePath)
+			val rootDirectory = Environment.getExternalStorageDirectory()
+			// 下載到Download資料夾
+			 val directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+			// 下載到"外部空間根目錄/NXU Gas Meter"
+			// val directory = File(rootDirectory, "NXU Gas Meter")
+			directory.mkdirs()
+
+			val localFile = File(directory, filename)
 			val outputStream = FileOutputStream(localFile)
 			val success = ftpClient.retrieveFile(encode(filename), outputStream)
 			outputStream.close()
 			if (success) {
-				showSnack("\"$filename\" 已保存於下載資料夾", SharedEvent.Color.Success)
-				csvVM.selectCsv(context, Uri.fromFile(localFile), filename)
+				showSnack("\"$filename\" 已保存於 \"/${directory.toRelativeString(rootDirectory)}\"", SharedEvent.Color.Success)
+				csvVM.readCsv(context, Uri.fromFile(localFile), filename)
 			} else {
 				showSnack("下載失敗")
 			}

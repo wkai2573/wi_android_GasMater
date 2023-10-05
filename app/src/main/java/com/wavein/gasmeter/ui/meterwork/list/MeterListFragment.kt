@@ -1,11 +1,7 @@
 package com.wavein.gasmeter.ui.meterwork.list
 
 import android.content.Context
-import android.graphics.Color
 import android.os.Bundle
-import android.text.Spannable
-import android.text.SpannableString
-import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,7 +9,22 @@ import android.widget.ArrayAdapter
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.wavein.gasmeter.data.model.MeterGroup
+import com.wavein.gasmeter.data.model.toMeterGroups
 import com.wavein.gasmeter.databinding.FragmentMeterListBinding
+import com.wavein.gasmeter.ui.meterwork.Filter
+import com.wavein.gasmeter.ui.meterwork.MeterBaseFragment
+import com.wavein.gasmeter.ui.meterwork.MeterViewModel
+import com.wavein.gasmeter.ui.setting.CsvViewModel
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 
 class MeterListFragment : Fragment() {
@@ -21,7 +32,11 @@ class MeterListFragment : Fragment() {
 	// binding & viewModel
 	private var _binding:FragmentMeterListBinding? = null
 	private val binding get() = _binding!!
-	private val meterListVM by activityViewModels<MeterListViewModel>()
+	private val meterVM by activityViewModels<MeterViewModel>()
+	private val csvVM by activityViewModels<CsvViewModel>()
+
+	// 實例
+	private lateinit var meterListAdapter:MeterListAdapter
 
 	override fun onDestroyView() {
 		super.onDestroyView()
@@ -36,47 +51,87 @@ class MeterListFragment : Fragment() {
 	override fun onViewCreated(view:View, savedInstanceState:Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
 
-		binding.doneAllToggleBtn.apply {
-			isSingleSelection = true
-			addOnButtonCheckedListener { group, checkedId, isChecked ->
-				if (group.checkedButtonId == -1) group.check(checkedId)
-			}
+		// 未抄表 / 全部顯示
+		binding.undoneBtn.setOnClickListener {
+			binding.undoneBtn.isChecked = true
+			meterVM.metersFilterFlow.value = Filter.Undone
 		}
-		binding.doneBtn.isChecked = true
+		binding.allBtn.setOnClickListener {
+			binding.allBtn.isChecked = true
+			meterVM.metersFilterFlow.value = Filter.All
+		}
 
-
-		val groups = listOf(
-			MeterGroup(
-				"Group1", listOf(
-					Meter("0001", null),
-					Meter("0002", null),
-					Meter("0003", 3.5f),
-					Meter("0004", null),
-					Meter("0005", 128.456f),
-				)
-			),
-			MeterGroup(
-				"Group2", listOf(
-					Meter("0001", null),
-					Meter("0002", null),
-				)
-			),
-			MeterGroup(
-				"Group3", listOf(
-					Meter("0001", 4.5f),
-					Meter("0002", 77.7f),
-				)
-			),
-		)
-		val meterComboAdapter = MeterComboAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, groups)
+		// combo
+		val meterGroups = csvVM.meterRowsStateFlow.value.toMeterGroups()
+		val meterComboAdapter = MeterComboAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, meterGroups)
 		binding.groupsCombo.listTv.setAdapter(meterComboAdapter)
 		binding.groupsCombo.listTv.setOnItemClickListener { parent, view, position, id ->
-			val group = meterComboAdapter.getItem(position)
-			group?.let {
-				binding.groupsCombo.subTitleTv.text = it.tip
-				binding.groupsCombo.subTitleTv.setTextColor(it.tipColor)
+			val meterGroup = meterComboAdapter.getItem(position)
+			meterVM.selectedMeterGroupFlow.value = meterGroup
+		}
+
+		// rv
+		meterListAdapter = MeterListAdapter {
+			meterVM.selectedMeterRowFlow.value = it
+			(parentFragment as MeterBaseFragment).changeTab(2)
+		}
+		binding.meterRowsRv.apply {
+			layoutManager = LinearLayoutManager(requireContext())
+			addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)) //分隔線
+			itemAnimator = DefaultItemAnimator()
+			adapter = meterListAdapter
+		}
+
+		// 訂閱選擇的group
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				meterVM.selectedMeterGroupFlow.asStateFlow().collectLatest {
+					setCombo(it)
+					submitList()
+				}
 			}
 		}
+
+		// 訂閱filter
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				meterVM.metersFilterFlow.asStateFlow().collectLatest {
+					when (it) {
+						Filter.All -> binding.allBtn.isChecked = true
+						Filter.Undone -> binding.undoneBtn.isChecked = true
+					}
+					submitList()
+				}
+			}
+		}
+
+		// 群組抄表
+		binding.groupReadBtn.setOnClickListener {
+			// todo...
+		}
+	}
+
+	private fun setCombo(meterGroup:MeterGroup?) {
+		meterGroup?.let {
+			binding.groupsCombo.listTv.setText(it.group, false) //todo 沒加false會把其他篩掉
+			binding.groupsCombo.subTitleTv.text = it.readTip
+			binding.groupsCombo.subTitleTv.setTextColor(it.readTipColor)
+		}
+	}
+
+	private fun submitList() {
+		val meterGroup = meterVM.selectedMeterGroupFlow.value
+		if (meterGroup == null) {
+			meterListAdapter.submitList(listOf())
+			return
+		}
+		val meterRows = when (meterVM.metersFilterFlow.value) {
+			Filter.All -> meterGroup.meterRows
+			Filter.Undone -> meterGroup.meterRows.filter { !it.degreeRead }
+		}.sortedBy { it.queue }
+		meterListAdapter.submitList(meterRows)
+		// 全完成提示
+		binding.allDoneCongratsTip.visibility = if (meterRows.isEmpty()) View.VISIBLE else View.GONE
 	}
 
 }
@@ -90,41 +145,7 @@ class MeterComboAdapter(context:Context, resource:Int, groups:List<MeterGroup>) 
 	override fun getView(position:Int, convertView:View?, parent:ViewGroup):View {
 		val view:TextView = super.getView(position, convertView, parent) as TextView
 		val group:MeterGroup = getItem(position)!!
-		view.text = group.spannable
+		view.text = group.groupWithTip
 		return view
-	}
-}
-
-data class CsvRawRow(private val data:Map<String, String>)
-
-
-data class Meter(
-	private val id:String,
-	private val degree:Float?,
-) {
-	val read:Boolean get() = degree != null
-}
-
-
-data class MeterGroup(
-	val title:String,
-	private val meterList:List<Meter>,
-) {
-	private val totalCount:Int get() = meterList.count()
-	private val readCount:Int get() = meterList.count { it.read }
-	val tip:String get() = "(${readCount}/${totalCount})"
-	val tipColor:Int get() = if (readCount == totalCount) Color.parseColor("#ff4a973b") else Color.RED
-
-	val spannable:SpannableString
-		get() {
-			val allText = "$title $tip"
-			val spannable = SpannableString(allText)
-			val color = ForegroundColorSpan(tipColor)
-			spannable.setSpan(color, title.length + 1, allText.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-			return spannable
-		}
-
-	override fun toString():String {
-		return this.title
 	}
 }
