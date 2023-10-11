@@ -1,5 +1,11 @@
 package com.wavein.gasmeter.data.model
 
+import android.graphics.Color
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.SpannableStringBuilder
+import android.text.style.ForegroundColorSpan
+import com.wavein.gasmeter.tools.Color_Success
 import com.wavein.gasmeter.tools.toBoolean10
 import com.wavein.gasmeter.tools.toString10
 
@@ -21,7 +27,26 @@ data class MeterRow(
 	val shutoffTime:String? = null,              // 遮斷時間
 ) {
 
+	// 已抄數量提示
 	val degreeRead:Boolean get() = meterDegree != null // 已抄表
+	val readTip:String get() = if (degreeRead) "已抄表" else "未抄表"
+	val readTipColor:Int get() = if (degreeRead) Color_Success else Color.RED
+	val readTipSpannable:SpannableString
+		get() {
+			val spannable = SpannableString(readTip)
+			val color = ForegroundColorSpan(readTipColor)
+			spannable.setSpan(color, 0, readTip.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+			return spannable
+		}
+	val queueAndIdWithTip:SpannableString
+		get() = SpannableString.valueOf(SpannableStringBuilder().append("$this ").append(readTipSpannable))
+
+	// combo下拉時顯示內容
+	override fun toString():String {
+		return "$queue" // "$queue ($meterId)"
+	}
+
+
 
 	// val batteryVoltageDropShutoff:Boolean,
 	// val innerPipeLeakageShutoff:Boolean,

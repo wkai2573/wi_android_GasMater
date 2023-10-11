@@ -58,7 +58,7 @@ class MeterGroupsFragment : Fragment() {
 
 		// rv
 		meterGroupListAdapter = MeterGroupListAdapter {
-			meterVM.selectedMeterGroupFlow.value = it
+			meterVM.setSelectedMeterGroup(it)
 			(parentFragment as MeterBaseFragment).changeTab(1)
 		}
 		binding.meterGroupsRv.apply {
@@ -89,6 +89,11 @@ class MeterGroupsFragment : Fragment() {
 				}
 			}
 		}
+
+		// 如果全部抄表完成, 預設全部顯示
+		val undoneSize = csvVM.meterRowsStateFlow.value.toMeterGroups().filter { !it.allRead }.size
+		val allDone = undoneSize == 0
+		if (allDone) meterVM.groupsFilterFlow.value = Filter.All
 	}
 
 	private fun submitList() {
@@ -98,6 +103,8 @@ class MeterGroupsFragment : Fragment() {
 			Filter.Undone -> meterRows.toMeterGroups().filter { !it.allRead }
 		}
 		meterGroupListAdapter.submitList(meterGroups)
+		// 全完成提示
+		binding.allDoneCongratsTip.visibility = if (meterGroups.isEmpty()) View.VISIBLE else View.GONE
 	}
 
 }

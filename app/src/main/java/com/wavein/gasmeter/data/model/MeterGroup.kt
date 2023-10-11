@@ -27,9 +27,9 @@ data class MeterGroup(
 			return spannable
 		}
 	val groupWithTip:SpannableString
-		get() = SpannableString.valueOf(SpannableStringBuilder().append("$group (").append(readTipSpannable).append(")"))
+		get() = SpannableString.valueOf(SpannableStringBuilder().append("$this (").append(readTipSpannable).append(")"))
 
-	// combo顯示內容
+	// combo下拉時顯示內容
 	override fun toString():String {
 		return this.group
 	}

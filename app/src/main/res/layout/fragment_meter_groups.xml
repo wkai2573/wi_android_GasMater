@@ -34,14 +34,30 @@
       android:text="全部顯示" />
   </com.google.android.material.button.MaterialButtonToggleGroup>
 
-  <androidx.recyclerview.widget.RecyclerView
-    android:id="@+id/meterGroupsRv"
+  <FrameLayout
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:fadeScrollbars="false"
-    android:scrollbarSize="8dp"
-    android:scrollbarStyle="outsideOverlay"
-    android:scrollbars="vertical"
-    tools:itemCount="5"
-    tools:listitem="@layout/item_meter_group" />
+    android:layout_height="wrap_content">
+
+    <androidx.recyclerview.widget.RecyclerView
+      android:id="@+id/meterGroupsRv"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:fadeScrollbars="false"
+      android:scrollbarSize="8dp"
+      android:scrollbarStyle="outsideOverlay"
+      android:scrollbars="vertical"
+      tools:itemCount="5"
+      tools:listitem="@layout/item_meter_group" />
+
+    <TextView
+      android:id="@+id/allDoneCongratsTip"
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:background="?android:attr/colorBackground"
+      android:gravity="center_horizontal"
+      android:padding="32dp"
+      android:text="恭喜，全瓦斯表抄表完成"
+      android:textSize="20sp"
+      android:visibility="gone" />
+  </FrameLayout>
 </LinearLayout>

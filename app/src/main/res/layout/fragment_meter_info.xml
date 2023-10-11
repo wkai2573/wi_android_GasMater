@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:orientation="vertical"
+  android:padding="8dp"
+  tools:context=".ui.meterwork.row.MeterInfoFragment">
+
+  <com.wavein.gasmeter.ui.component.Field
+    android:id="@+id/field_custId"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    app:title="客戶編號" />
+
+  <com.wavein.gasmeter.ui.component.Field
+    android:id="@+id/field_custName"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    app:title="客戶姓名" />
+
+  <com.wavein.gasmeter.ui.component.Field
+    android:id="@+id/field_custAddr"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    app:title="地址" />
+
+  <com.wavein.gasmeter.ui.component.Field
+    android:id="@+id/field_meterId"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    app:title="表ID (通信ID, 需要家ID)" />
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <com.wavein.gasmeter.ui.component.Field
+      android:id="@+id/field_meterDegree"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_weight="1"
+      app:title="抄表值" />
+
+    <Button
+      android:id="@+id/meterDegreeReadBtn"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_weight="1"
+      android:text="個別抄表"
+      app:icon="@drawable/ic_send_24" />
+  </LinearLayout>
+
+  <com.wavein.gasmeter.ui.component.Field
+    android:id="@+id/field_meterReadTime"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    app:title="抄表時間" />
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <com.wavein.gasmeter.ui.component.Field
+      android:id="@+id/field_alarm1"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_weight="1"
+      app:title="電池電壓過低" />
+
+    <com.wavein.gasmeter.ui.component.Field
+      android:id="@+id/field_alarm2"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_weight="1"
+      app:title="內管洩漏" />
+
+    <com.wavein.gasmeter.ui.component.Field
+      android:id="@+id/field_alarm3"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_weight="1"
+      app:title="遮斷" />
+  </LinearLayout>
+
+  <com.wavein.gasmeter.ui.component.Field
+    android:id="@+id/field_shutoffTime"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    app:title="遮斷時間" />
+
+</LinearLayout>

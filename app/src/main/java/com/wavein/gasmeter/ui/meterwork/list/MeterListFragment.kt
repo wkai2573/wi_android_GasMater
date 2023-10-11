@@ -1,5 +1,6 @@
 package com.wavein.gasmeter.ui.meterwork.list
 
+import android.R
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -62,13 +63,7 @@ class MeterListFragment : Fragment() {
 		}
 
 		// combo
-		val meterGroups = csvVM.meterRowsStateFlow.value.toMeterGroups()
-		val meterComboAdapter = MeterComboAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, meterGroups)
-		binding.groupsCombo.listTv.setAdapter(meterComboAdapter)
-		binding.groupsCombo.listTv.setOnItemClickListener { parent, view, position, id ->
-			val meterGroup = meterComboAdapter.getItem(position)
-			meterVM.selectedMeterGroupFlow.value = meterGroup
-		}
+		binding.groupsCombo.layout.hint = "群組"
 
 		// rv
 		meterListAdapter = MeterListAdapter {
@@ -85,7 +80,8 @@ class MeterListFragment : Fragment() {
 		// 訂閱選擇的group
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-				meterVM.selectedMeterGroupFlow.asStateFlow().collectLatest {
+				meterVM.selectedMeterGroupStateFlow.collectLatest {
+					initComboList()
 					setCombo(it)
 					submitList()
 				}
@@ -109,18 +105,38 @@ class MeterListFragment : Fragment() {
 		binding.groupReadBtn.setOnClickListener {
 			// todo...
 		}
+
+		// 如果全部抄表完成, 預設全部顯示
+		val undoneSize = meterVM.selectedMeterGroupStateFlow.value?.meterRows?.filter { !it.degreeRead }?.size ?: 0
+		val allDone = undoneSize == 0
+		if (allDone) meterVM.metersFilterFlow.value = Filter.All
+	}
+
+	private fun initComboList() {
+		if (
+			binding.groupsCombo.listTv.adapter == null ||
+			(binding.groupsCombo.listTv.adapter as MeterGroupComboAdapter).count == 0
+		) {
+			val meterGroups = csvVM.meterRowsStateFlow.value.toMeterGroups()
+			val meterGroupComboAdapter = MeterGroupComboAdapter(requireContext(), R.layout.simple_dropdown_item_1line, meterGroups)
+			binding.groupsCombo.listTv.setAdapter(meterGroupComboAdapter)
+			binding.groupsCombo.listTv.setOnItemClickListener { parent, view, position, id ->
+				val meterGroup = meterGroupComboAdapter.getItem(position)
+				meterVM.setSelectedMeterGroup(meterGroup)
+			}
+		}
 	}
 
 	private fun setCombo(meterGroup:MeterGroup?) {
 		meterGroup?.let {
-			binding.groupsCombo.listTv.setText(it.group, false) //todo 沒加false會把其他篩掉
+			binding.groupsCombo.listTv.setText(it.group, false)
 			binding.groupsCombo.subTitleTv.text = it.readTip
 			binding.groupsCombo.subTitleTv.setTextColor(it.readTipColor)
 		}
 	}
 
 	private fun submitList() {
-		val meterGroup = meterVM.selectedMeterGroupFlow.value
+		val meterGroup = meterVM.selectedMeterGroupStateFlow.value
 		if (meterGroup == null) {
 			meterListAdapter.submitList(listOf())
 			return
@@ -138,7 +154,7 @@ class MeterListFragment : Fragment() {
 
 
 // 群組ComboAdapter
-class MeterComboAdapter(context:Context, resource:Int, groups:List<MeterGroup>) :
+class MeterGroupComboAdapter(context:Context, resource:Int, groups:List<MeterGroup>) :
 	ArrayAdapter<MeterGroup>(context, resource, groups) {
 
 	// 提示未抄表數量 & 未完成顏色

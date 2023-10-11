@@ -32,8 +32,8 @@ class MeterGroupListAdapter(private val onClick:(MeterGroup) -> Unit) :
 
 		@SuppressLint("MissingPermission")
 		fun bind(item:MeterGroup) {
-			binding.groupValueTv.text = item.group
-			binding.countValueTv.text = item.readTipSpannable
+			binding.fieldGroup.setValue(item.group)
+			binding.fieldReadCount.setValue(item.readTip, item.readTipColor)
 		}
 	}
 

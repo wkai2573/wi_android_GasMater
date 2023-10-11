@@ -36,26 +36,10 @@ class MeterListAdapter(private val onClick:(MeterRow) -> Unit) :
 		}
 
 		@SuppressLint("MissingPermission")
-		fun bind(item:MeterRow) {
-			binding.queueValueTv.text = item.queue.toString()
-			binding.custNameValueTv.text = item.custName
-			binding.meterDegreeValueTv.text = when (item.meterDegree) {
-				null -> {
-					val text = "未抄表"
-					val spannable = SpannableString(text)
-					val color = ForegroundColorSpan(Color.RED)
-					spannable.setSpan(color, 0, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-					spannable
-				}
-
-				else -> {
-					val text = String.format("%.0f", item.meterDegree)
-					val spannable = SpannableString(text)
-					val color = ForegroundColorSpan(Color_Success)
-					spannable.setSpan(color, 0, text.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-					spannable
-				}
-			}
+		fun bind(meterRow:MeterRow) {
+			binding.fieldQueue.setValue("${meterRow.queue}")
+			binding.fieldCustName.setValue(meterRow.custName)
+			binding.fieldMeterDegree.setValue("${meterRow.meterDegree ?: "未抄表"}", if (meterRow.meterDegree == null) Color.RED else Color.BLACK)
 		}
 	}
 

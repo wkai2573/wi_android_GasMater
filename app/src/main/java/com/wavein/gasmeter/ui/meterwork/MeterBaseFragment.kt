@@ -1,13 +1,11 @@
 package com.wavein.gasmeter.ui.meterwork
 
-import android.R.attr
 import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -20,6 +18,7 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.wavein.gasmeter.databinding.FragmentMeterBaseBinding
 import com.wavein.gasmeter.ui.meterwork.groups.MeterGroupsFragment
 import com.wavein.gasmeter.ui.meterwork.list.MeterListFragment
+import com.wavein.gasmeter.ui.meterwork.row.MeterRowFragment
 import com.wavein.gasmeter.ui.setting.CsvViewModel
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -68,7 +67,7 @@ class MeterBaseFragment : Fragment() {
 		// 訂閱選擇的群組, 禁用tab
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-				meterVM.selectedMeterGroupFlow.asStateFlow().collectLatest { meterGroup ->
+				meterVM.selectedMeterGroupStateFlow.collectLatest { meterGroup ->
 					binding.tabLayout.getTabAt(1)?.let { tab ->
 						setTabView(meterGroup, tab)
 					}
@@ -119,7 +118,7 @@ class MeterPageAdapter(fragment:Fragment) : FragmentStateAdapter(fragment) {
 		val fragment = when (position) {
 			0 -> MeterGroupsFragment()
 			1 -> MeterListFragment()
-			2 -> MeterGroupsFragment()
+			2 -> MeterRowFragment()
 			else -> MeterGroupsFragment()
 		}
 		return fragment
