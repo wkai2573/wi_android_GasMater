@@ -13,7 +13,7 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="24dp"
     android:layout_marginVertical="8dp"
-    android:text="選擇藍牙裝置"
+    android:text="選擇藍牙設備"
     android:textColor="?attr/colorOnBackground"
     android:textSize="30sp" />
 
@@ -23,7 +23,7 @@
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="24dp"
     android:layout_marginVertical="8dp"
-    android:text="先前連結的裝置"
+    android:text="先前連結的設備"
     android:textColor="?attr/colorPrimary"
     android:textSize="16sp" />
 

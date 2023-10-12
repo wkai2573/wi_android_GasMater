@@ -14,6 +14,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.tools.Preference
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.TimeUtil
+import com.wavein.gasmeter.ui.meterwork.MeterViewModel
 import com.wavein.gasmeter.ui.setting.CsvViewModel
 import com.wavein.gasmeter.ui.setting.FileState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -257,7 +258,7 @@ class FtpViewModel @Inject constructor(
 	}
 
 	// ==DOWNLOAD==
-	fun downloadFileOpenFolder(context:Context, csvVM:CsvViewModel) {
+	fun downloadFileOpenFolder(context:Context, csvVM:CsvViewModel, meterVM:MeterViewModel) {
 		ftpProcess(downloadFtpInfo, "") { ftpClient ->
 			ftpClient.setFileType(FTP.BINARY_FILE_TYPE)
 			val fileArray = ftpClient.listFiles()
@@ -273,7 +274,7 @@ class FtpViewModel @Inject constructor(
 					.setTitle("選擇檔案")
 					.setItems(fileArray) { dialogInterface, index ->
 						val filename = fileArray[index]
-						downloadFile(context, csvVM, filename)
+						downloadFile(context, csvVM, meterVM, filename)
 						dialogInterface.dismiss()
 					}
 					.create()
@@ -282,7 +283,7 @@ class FtpViewModel @Inject constructor(
 		}
 	}
 
-	private fun downloadFile(context:Context, csvVM:CsvViewModel, filename:String) {
+	private fun downloadFile(context:Context, csvVM:CsvViewModel, meterVM:MeterViewModel, filename:String) {
 		ftpProcess(downloadFtpInfo, "") { ftpClient ->
 			val rootDirectory = Environment.getExternalStorageDirectory()
 			// 下載到Download資料夾
@@ -297,7 +298,7 @@ class FtpViewModel @Inject constructor(
 			outputStream.close()
 			if (success) {
 				showSnack("\"$filename\" 已保存於 \"/${directory.toRelativeString(rootDirectory)}\"", SharedEvent.Color.Success)
-				csvVM.readCsv(context, Uri.fromFile(localFile), filename)
+				csvVM.readCsv(context, Uri.fromFile(localFile), meterVM, filename)
 			} else {
 				showSnack("下載失敗")
 			}

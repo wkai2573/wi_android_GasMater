@@ -106,7 +106,7 @@ class MainActivity : AppCompatActivity() {
 				R.id.nav_logoFragment,
 				R.id.nav_settingFragment,
 				R.id.nav_meterBaseFragment,
-				R.id.nav_testFragment,
+				// R.id.nav_testFragment,
 				R.id.nav_nccFragment,
 			)
 		)
@@ -147,6 +147,9 @@ class MainActivity : AppCompatActivity() {
 							val snackbar = when (event.color) {
 								SharedEvent.Color.Normal -> {
 									Snackbar.make(view, event.message, event.duration)
+										.setBackgroundTint(Color.parseColor("#362F2F"))
+										.setTextColor(Color.parseColor("#EDE0DF"))
+										.setActionTextColor(Color.parseColor("#FFB3B5"))
 								}
 
 								SharedEvent.Color.Error -> {
@@ -215,9 +218,12 @@ class MainActivity : AppCompatActivity() {
 			repeatOnLifecycle(Lifecycle.State.STARTED) {
 				SharedEvent.loadingFlow.asStateFlow().collectLatest { message ->
 					if (message.isNotEmpty()) {
-						loadingDialog = LoadingDialogFragment.open(this@MainActivity)
+						if (loadingDialog == null) {
+							loadingDialog = LoadingDialogFragment.open(this@MainActivity)
+						}
 					} else {
 						loadingDialog?.dismiss()
+						loadingDialog = null
 					}
 				}
 			}

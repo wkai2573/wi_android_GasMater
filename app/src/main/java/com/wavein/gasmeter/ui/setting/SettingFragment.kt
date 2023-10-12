@@ -35,6 +35,7 @@ import com.wavein.gasmeter.ui.ftp.AppState
 import com.wavein.gasmeter.ui.ftp.FtpConnState
 import com.wavein.gasmeter.ui.ftp.FtpSettingDialogFragment
 import com.wavein.gasmeter.ui.ftp.FtpViewModel
+import com.wavein.gasmeter.ui.meterwork.MeterViewModel
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -48,6 +49,7 @@ class SettingFragment : Fragment() {
 	private val binding get() = _binding!!
 	private val blVM by activityViewModels<BluetoothViewModel>()
 	private val csvVM by activityViewModels<CsvViewModel>()
+	private val meterVM by activityViewModels<MeterViewModel>()
 	private val ftpVM by activityViewModels<FtpViewModel>()
 	private val settingVM by activityViewModels<SettingViewModel>()
 
@@ -73,7 +75,7 @@ class SettingFragment : Fragment() {
 	private fun onAllPermissionAllow() {
 		binding.permission.layout.visibility = View.GONE
 
-		// 藍牙裝置__________
+		// 藍牙設備__________
 
 		// 訂閱藍牙設備
 		viewLifecycleOwner.lifecycleScope.launch {
@@ -81,12 +83,12 @@ class SettingFragment : Fragment() {
 				blVM.autoConnectDeviceStateFlow.asStateFlow().collectLatest { device ->
 					if (device == null) {
 						binding.selectedDevice.layout.visibility = View.GONE
-						binding.btSelectBtn.text = "選擇裝置"
+						binding.btSelectBtn.text = "選擇藍牙設備"
 					} else {
 						binding.selectedDevice.layout.visibility = View.VISIBLE
 						val text = "${device.name}\n${device.address}"
 						binding.selectedDevice.btInfoTv.text = text
-						binding.btSelectBtn.text = "重新選擇裝置"
+						binding.btSelectBtn.text = "重新選擇設備"
 					}
 				}
 			}
@@ -121,7 +123,7 @@ class SettingFragment : Fragment() {
 
 		binding.downloadCsvBtn.setOnClickListener {
 			if (ftpVM.downloadFtpInfo.host.isNotEmpty()) {
-				ftpVM.downloadFileOpenFolder(requireContext(), csvVM)
+				ftpVM.downloadFileOpenFolder(requireContext(), csvVM, meterVM)
 			} else {
 				FtpSettingDialogFragment.open(
 					context = requireContext(),
@@ -129,7 +131,7 @@ class SettingFragment : Fragment() {
 					saveBtnText = "下載",
 					saveBtnIcon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_download_24),
 					onSaveCallback = {
-						ftpVM.downloadFileOpenFolder(requireContext(), csvVM)
+						ftpVM.downloadFileOpenFolder(requireContext(), csvVM, meterVM)
 					})
 			}
 		}
@@ -180,19 +182,19 @@ class SettingFragment : Fragment() {
 		//todo 測試
 		binding.test1Btn.setOnClickListener {
 			lifecycleScope.launch {
-				SharedEvent.eventFlow.emit(SharedEvent.ShowDialog("title", csvVM.meterRowsStateFlow.value.toString()))
+				SharedEvent.eventFlow.emit(SharedEvent.ShowDialog("title", meterVM.meterRowsStateFlow.value.toString()))
 			}
 		}
 
 		binding.test2Btn.setOnClickListener {
 			//csvVM.writeFile(fileInfo.relativePath, "隨機數,欄位2,\n${Random.nextInt(1, 100)},內容2")
 
-			val meterRows = csvVM.meterRowsStateFlow.value.toMutableList()
+			val meterRows = meterVM.meterRowsStateFlow.value.toMutableList()
 			// rows.add(
 			// 	mapOf("header1" to "AAA", "header2" to "中文", "header3" to "♥\n🙄🙄🙄\n這樣也\"可以\"??")
 			// )
-			csvVM.meterRowsStateFlow.value = meterRows
-			csvVM.saveCsv()
+			meterVM.meterRowsStateFlow.value = meterRows
+			csvVM.saveCsv(meterVM)
 		}
 
 
@@ -218,10 +220,8 @@ class SettingFragment : Fragment() {
 				ftpVM.ftpConnStateFlow.asStateFlow().collectLatest {
 					when (it) {
 						is FtpConnState.Idle -> SharedEvent.loadingFlow.value = ""
-
 						is FtpConnState.Connecting -> SharedEvent.loadingFlow.value =
 							if (ftpVM.appStateFlow.value == AppState.Checking) "序號驗證中" else "連線FTP中"
-
 
 						is FtpConnState.Connected -> SharedEvent.loadingFlow.value = ""
 					}
@@ -328,7 +328,7 @@ class SettingFragment : Fragment() {
 
 	// 選擇檔案Launcher
 	private val filePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-		csvVM.readCsvByPicker(requireContext(), result)
+		csvVM.readCsvByPicker(requireContext(), result, meterVM)
 	}
 
 	//region __________權限方法__________

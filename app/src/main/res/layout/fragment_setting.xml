@@ -52,7 +52,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="24dp"
             android:layout_marginVertical="8dp"
-            android:text="藍牙裝置"
+            android:text="藍牙設備"
             android:textColor="?attr/colorPrimary"
             android:textSize="16sp" />
 

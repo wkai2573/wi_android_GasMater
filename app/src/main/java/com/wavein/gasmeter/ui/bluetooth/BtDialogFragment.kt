@@ -1,7 +1,6 @@
 package com.wavein.gasmeter.ui.bluetooth
 
 import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.app.Dialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -14,7 +13,6 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.ComponentDialog
-import androidx.activity.addCallback
 import androidx.core.content.IntentCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentActivity
@@ -25,7 +23,6 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.wavein.gasmeter.databinding.DialogBtBinding
-import com.wavein.gasmeter.databinding.DialogLoadingBinding
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -35,8 +32,7 @@ class BtDialogFragment(
 ) : DialogFragment() {
 
 	// binding & viewModel
-	private var _binding:DialogBtBinding? = null
-	private val binding get() = _binding!!
+	private var binding:DialogBtBinding? = null
 	private val blVM by activityViewModels<BluetoothViewModel>()
 
 	// adapter
@@ -54,15 +50,15 @@ class BtDialogFragment(
 		}
 		// cb
 		onDismissCallback?.invoke(dialog)
-		_binding = null
+		binding = null
 	}
 
 	override fun onCreateDialog(savedInstanceState:Bundle?):Dialog {
 		return activity?.let {
-			_binding = DialogBtBinding.inflate(it.layoutInflater)
+			binding = DialogBtBinding.inflate(it.layoutInflater)
 			init(it)
 			val dialog = ComponentDialog(it, theme).apply {
-				setContentView(binding.root)
+				setContentView(binding!!.root)
 			}
 			dialog
 		} ?: throw IllegalStateException("Activity cannot be null")
@@ -85,7 +81,7 @@ class BtDialogFragment(
 	private fun initBondedDevice() {
 		bondedDeviceListAdapter = DeviceListAdapter { connectDevice(it) }
 		// 已配對的設備
-		binding.bondedDeviceRv.apply {
+		binding!!.bondedDeviceRv.apply {
 			layoutManager = LinearLayoutManager(requireContext())
 			// addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)) //分隔線
 			itemAnimator = DefaultItemAnimator()
@@ -111,9 +107,9 @@ class BtDialogFragment(
 		}
 
 		// 搜尋藍牙設備
-		binding.scanBtn.setOnClickListener { blVM.toggleDiscovery() }
+		binding!!.scanBtn.setOnClickListener { blVM.toggleDiscovery() }
 		scannedDeviceListAdapter = DeviceListAdapter { connectDevice(it) }
-		binding.scannedDeviceRv.apply {
+		binding!!.scannedDeviceRv.apply {
 			layoutManager = LinearLayoutManager(requireContext())
 			// addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)) //分隔線
 			itemAnimator = DefaultItemAnimator()
@@ -168,15 +164,16 @@ class BtDialogFragment(
 
 	// 藍牙掃描處理
 	private fun onScanStateChange(scanState:ScanState) {
+		if (binding == null) return
 		when (scanState) {
 			ScanState.Idle -> {
-				binding.scanProgressBar.visibility = View.GONE
-				binding.scanBtn.text = "開始掃描"
+				binding!!.scanProgressBar.visibility = View.GONE
+				binding!!.scanBtn.text = "開始掃描"
 			}
 
 			ScanState.Scanning -> {
-				binding.scanProgressBar.visibility = View.VISIBLE
-				binding.scanBtn.text = "停止掃描"
+				binding!!.scanProgressBar.visibility = View.VISIBLE
+				binding!!.scanBtn.text = "停止掃描"
 			}
 
 			ScanState.Error -> {

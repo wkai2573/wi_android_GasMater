@@ -68,11 +68,12 @@ class MeterGroupsFragment : Fragment() {
 			adapter = meterGroupListAdapter
 		}
 
-		// 訂閱rows
+		// 訂閱rows更新
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-				csvVM.meterRowsStateFlow.asStateFlow().collectLatest {
+				meterVM.meterRowsStateFlow.asStateFlow().collectLatest {
 					submitList()
+					ifAllDoneShowAll()
 				}
 			}
 		}
@@ -90,14 +91,18 @@ class MeterGroupsFragment : Fragment() {
 			}
 		}
 
-		// 如果全部抄表完成, 預設全部顯示
-		val undoneSize = csvVM.meterRowsStateFlow.value.toMeterGroups().filter { !it.allRead }.size
+		ifAllDoneShowAll()
+	}
+
+	// 如果全部抄表完成, 顯示全部
+	private fun ifAllDoneShowAll() {
+		val undoneSize = meterVM.meterRowsStateFlow.value.toMeterGroups().filter { !it.allRead }.size
 		val allDone = undoneSize == 0
 		if (allDone) meterVM.groupsFilterFlow.value = Filter.All
 	}
 
 	private fun submitList() {
-		val meterRows = csvVM.meterRowsStateFlow.value
+		val meterRows = meterVM.meterRowsStateFlow.value
 		val meterGroups = when (meterVM.groupsFilterFlow.value) {
 			Filter.All -> meterRows.toMeterGroups()
 			Filter.Undone -> meterRows.toMeterGroups().filter { !it.allRead }

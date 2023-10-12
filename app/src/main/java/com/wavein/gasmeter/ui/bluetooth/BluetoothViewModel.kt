@@ -9,6 +9,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.tools.RD64H
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.toHexString
@@ -51,7 +52,7 @@ class BluetoothViewModel @Inject constructor(
 	// 藍牙未開啟提示
 	private suspend fun bluetoothOffTip():Boolean {
 		if (!isBluetoothOn()) {
-			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("請開啟藍牙", SharedEvent.Color.Error))
+			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("請開啟藍牙", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
 			return true
 		}
 		return false
@@ -60,7 +61,7 @@ class BluetoothViewModel @Inject constructor(
 	// 檢查藍牙並請求開啟
 	fun checkBluetoothOn(bluetoothRequestLauncher:ActivityResultLauncher<Intent>) = viewModelScope.launch {
 		if (bluetoothAdapter == null) {
-			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("此裝置不支援藍牙", SharedEvent.Color.Error))
+			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("此裝置不支援藍牙", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
 			return@launch
 		}
 		if (!bluetoothAdapter.isEnabled) {
@@ -185,6 +186,8 @@ class BluetoothViewModel @Inject constructor(
 				val readSP = event.byteArray
 				onReceiveByStep(readSP)
 			}
+
+			else -> {}
 		}
 	}
 
@@ -283,7 +286,8 @@ class BluetoothViewModel @Inject constructor(
 
 	var sendSteps = mutableListOf<RD64H.BaseStep>()
 	var receiveSteps = mutableListOf<RD64H.BaseStep>()
-	var totalStep = 0
+	var totalReceiveCount = 0
+	var receivedCount = 0
 
 	// 溝通結束處理
 	private fun onCommEnd() = viewModelScope.launch {
@@ -309,7 +313,8 @@ class BluetoothViewModel @Inject constructor(
 		receiveSteps = mutableListOf(
 			RD64H.SingleRespStep()
 		)
-		totalStep = receiveSteps.size
+		totalReceiveCount = 1
+		receivedCount = 0
 		sendByStep()
 	}
 
@@ -328,7 +333,8 @@ class BluetoothViewModel @Inject constructor(
 			RD64H.D70Step(),
 			RD64H.D05Step(meterIds.size),
 		)
-		totalStep = receiveSteps.size
+		totalReceiveCount = 1 + meterIds.size
+		receivedCount = 0
 		sendByStep()
 	}
 
@@ -347,13 +353,13 @@ class BluetoothViewModel @Inject constructor(
 			}
 
 			is RD64H.__5Step -> {
-				commTextStateFlow.value = "通信中:5↔D70 (${receiveSteps.size} / $totalStep)"
+				commTextStateFlow.value = "通信中:5↔D70 ($progressText)"
 				val sendSP = RD64H.telegramConvert("5", "+s+p")
 				transceiver?.write(sendSP)
 			}
 
 			is RD64H.R80Step -> {
-				commTextStateFlow.value = "通信中:R80↔D05 (${receiveSteps.size} / $totalStep)"
+				commTextStateFlow.value = "通信中:R80↔D05 ($progressText)"
 				val btParentId = (commResult["D70"] as RD64H.D70Info).btParentId
 				val sendText = RD64H.createR80Text(btParentId, sendStep.meterIds)
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
@@ -368,14 +374,21 @@ class BluetoothViewModel @Inject constructor(
 			}
 
 			else -> {
-				throw Error("奇怪的OP: $sendStep")
+				throw Exception("例外的OP: $sendStep")
 			}
 		}
+	}
+
+	// 進度文字
+	private val progressText:String get() {
+		val percentage = (receivedCount.toDouble() / totalReceiveCount * 100).toInt()
+		return "$percentage%"
 	}
 
 	// 依步驟接收電文
 	private fun onReceiveByStep(readSP:ByteArray) = viewModelScope.launch {
 		try {
+			receivedCount++
 			if (receiveSteps.isEmpty()) throw Exception("無receiveSteps")
 			var continueSend = false
 			val receiveStep = receiveSteps[0]
@@ -402,6 +415,7 @@ class BluetoothViewModel @Inject constructor(
 				}
 
 				is RD64H.D05Step -> {
+					commTextStateFlow.value = "通信中:R80↔D05 ($progressText)"
 					when (val info = RD64H.getInfo(respText, RD64H.D05Info::class.java)) {
 						is RD64H.D05Info -> {
 							commResult["D05"] = info

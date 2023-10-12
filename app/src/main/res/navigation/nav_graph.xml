@@ -18,7 +18,7 @@
     android:name="com.wavein.gasmeter.ui.meterwork.MeterBaseFragment"
     android:label="MeterBaseFragment" />
   <fragment android:id="@+id/nav_testFragment"
-    android:name="com.wavein.gasmeter.ui.test.TestFragment"
+    android:name="com.wavein.gasmeter.ui.ncc.TestFragment"
     android:label="fragment_test"
     tools:layout="@layout/fragment_test" />
   <fragment android:id="@+id/nav_nccFragment"

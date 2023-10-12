@@ -18,8 +18,9 @@ data class MeterRow(
 
 	val meterId:String,                          // 瓦斯表ID
 	val meterDegree:Float? = null,               // 抄表值
-	val meterStateRaw:String? = null,            // 表狀態(16:メーター状態)
 	val meterReadTime:String? = null,            // 抄表時間
+	val meterState:String? = null,               // 表狀態 (メーター状態 16-02)
+	val alarmInfo1:String? = null,               // 告警設定 (アラーム情報1 03-01)
 
 	val batteryVoltageDropAlarm:Boolean? = null, // 電池電壓警報
 	val innerPipeLeakageAlarm:Boolean? = null,   // 洩漏警報
@@ -72,7 +73,7 @@ fun Map<String, String>.toMeterRow():MeterRow? {
 			custAddr = csvRow["地址"] ?: return null,
 			meterId = csvRow["瓦斯表ID"] ?: return null,
 			meterDegree = csvRow["抄表值"]?.toFloatOrNull(),
-			meterStateRaw = csvRow["表狀態"],
+			alarmInfo1 = csvRow["告警設定"],
 			meterReadTime = csvRow["抄表時間"],
 			batteryVoltageDropAlarm = csvRow["電池電壓警報"].toBoolean10(),
 			innerPipeLeakageAlarm = csvRow["洩漏警報"].toBoolean10(),
@@ -100,7 +101,7 @@ private fun MeterRow.toCsvRow():Map<String, String> {
 		"地址" to this.custAddr,
 		"瓦斯表ID" to this.meterId,
 		"抄表值" to (this.meterDegree?.toString() ?: ""),
-		"表狀態" to this.meterStateRaw.orEmpty(),
+		"告警設定" to this.alarmInfo1.orEmpty(),
 		"抄表時間" to this.meterReadTime.orEmpty(),
 		"電池電壓警報" to this.batteryVoltageDropAlarm.toString10(),
 		"洩漏警報" to this.innerPipeLeakageAlarm.toString10(),

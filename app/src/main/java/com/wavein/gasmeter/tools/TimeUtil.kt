@@ -6,7 +6,7 @@ import java.util.Locale
 
 object TimeUtil {
 
-	fun getCurrentTime(format: String): String {
+	fun getCurrentTime(format: String = "yyyy-MM-dd HH:mm:ss"): String {
 		val dateFormat = SimpleDateFormat(format, Locale.getDefault())
 		val currentTime = Date()
 		return dateFormat.format(currentTime)

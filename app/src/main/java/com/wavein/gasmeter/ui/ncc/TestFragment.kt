@@ -1,4 +1,4 @@
-package com.wavein.gasmeter.ui.test
+package com.wavein.gasmeter.ui.ncc
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -28,7 +28,6 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.IntentCompat
-import androidx.fragment.app.activityViewModels
 import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.databinding.FragmentTestBinding
 import com.wavein.gasmeter.tools.RD64H
@@ -46,7 +45,6 @@ class TestFragment : Fragment() {
 	// binding & viewModel
 	private var _binding:FragmentTestBinding? = null
 	private val binding get() = _binding!!
-	private val testVM by activityViewModels<TestViewModel>()
 
 	override fun onDestroyView() {
 		super.onDestroyView()

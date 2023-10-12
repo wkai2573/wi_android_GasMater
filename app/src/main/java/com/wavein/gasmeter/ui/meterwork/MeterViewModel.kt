@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class MeterViewModel : ViewModel() {
 
+	val meterRowsStateFlow = MutableStateFlow<List<MeterRow>>(emptyList())
+
 	// 選擇的group & meter
 	// group設定後要清除meter的選擇, 所以設為private
 	private val selectedMeterGroupFlow = MutableStateFlow<MeterGroup?>(null)

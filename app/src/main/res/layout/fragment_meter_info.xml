@@ -81,7 +81,7 @@
       android:layout_width="0dp"
       android:layout_height="wrap_content"
       android:layout_weight="1"
-      app:title="遮斷" />
+      app:title="遮斷模式" />
   </LinearLayout>
 
   <com.wavein.gasmeter.ui.component.Field

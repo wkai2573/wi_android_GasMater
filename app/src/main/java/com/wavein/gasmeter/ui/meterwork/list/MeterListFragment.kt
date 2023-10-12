@@ -16,9 +16,13 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.data.model.MeterGroup
 import com.wavein.gasmeter.data.model.toMeterGroups
 import com.wavein.gasmeter.databinding.FragmentMeterListBinding
+import com.wavein.gasmeter.tools.SharedEvent
+import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.meterwork.Filter
 import com.wavein.gasmeter.ui.meterwork.MeterBaseFragment
 import com.wavein.gasmeter.ui.meterwork.MeterViewModel
@@ -33,10 +37,12 @@ class MeterListFragment : Fragment() {
 	// binding & viewModel
 	private var _binding:FragmentMeterListBinding? = null
 	private val binding get() = _binding!!
-	private val meterVM by activityViewModels<MeterViewModel>()
+	private val blVM by activityViewModels<BluetoothViewModel>()
 	private val csvVM by activityViewModels<CsvViewModel>()
+	private val meterVM by activityViewModels<MeterViewModel>()
 
 	// 實例
+	private val meterBaseFragment:MeterBaseFragment get() = parentFragment as MeterBaseFragment
 	private lateinit var meterListAdapter:MeterListAdapter
 
 	override fun onDestroyView() {
@@ -84,6 +90,7 @@ class MeterListFragment : Fragment() {
 					initComboList()
 					setCombo(it)
 					submitList()
+					ifAllDoneShowAll()
 				}
 			}
 		}
@@ -101,29 +108,64 @@ class MeterListFragment : Fragment() {
 			}
 		}
 
-		// 群組抄表
+		// 群組抄表按鈕
 		binding.groupReadBtn.setOnClickListener {
-			// todo...
+			val meterGroup = meterVM.selectedMeterGroupStateFlow.value ?: return@setOnClickListener
+			val meterIds = meterGroup.meterRows.map { it.meterId }
+			if (meterIds.isEmpty()) return@setOnClickListener
+			val notReadMeterIds = meterGroup.meterRows.filter { !it.degreeRead }.map { it.meterId }
+			val allNotRead = notReadMeterIds.size == meterIds.size
+
+			MaterialAlertDialogBuilder(requireContext()).apply {
+				setTitle("群組抄表")
+				setMessage("請選擇群組抄表的對象")
+				setNeutralButton("取消") { dialog, which -> dialog.dismiss() }
+				setNegativeButton(if (allNotRead) "全部抄表" else "全部重新抄表") { dialog, which ->
+					dialog.dismiss()
+					readGroupMeters(meterIds)
+				}
+				if (notReadMeterIds.isNotEmpty() && !allNotRead) {
+					setPositiveButton("未抄表項目") { dialog, which ->
+						dialog.dismiss()
+						readGroupMeters(notReadMeterIds)
+					}
+				}
+				show()
+			}
 		}
 
-		// 如果全部抄表完成, 預設全部顯示
+		ifAllDoneShowAll()
+	}
+
+	// 群組抄表
+	private fun readGroupMeters(meterIds:List<String>) {
+		if (meterIds.isEmpty()) {
+			lifecycleScope.launch {
+				SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("未選擇任何瓦斯表", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
+			}
+		}
+		if (meterIds.size > 45) {
+			lifecycleScope.launch {
+				SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("一次最多對45台進行抄表", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
+			}
+		}
+		meterBaseFragment.checkBluetoothOn { blVM.sendR80Telegram(meterIds) }
+	}
+
+	// 如果全部抄表完成, 顯示全部
+	private fun ifAllDoneShowAll() {
 		val undoneSize = meterVM.selectedMeterGroupStateFlow.value?.meterRows?.filter { !it.degreeRead }?.size ?: 0
 		val allDone = undoneSize == 0
 		if (allDone) meterVM.metersFilterFlow.value = Filter.All
 	}
 
 	private fun initComboList() {
-		if (
-			binding.groupsCombo.listTv.adapter == null ||
-			(binding.groupsCombo.listTv.adapter as MeterGroupComboAdapter).count == 0
-		) {
-			val meterGroups = csvVM.meterRowsStateFlow.value.toMeterGroups()
-			val meterGroupComboAdapter = MeterGroupComboAdapter(requireContext(), R.layout.simple_dropdown_item_1line, meterGroups)
-			binding.groupsCombo.listTv.setAdapter(meterGroupComboAdapter)
-			binding.groupsCombo.listTv.setOnItemClickListener { parent, view, position, id ->
-				val meterGroup = meterGroupComboAdapter.getItem(position)
-				meterVM.setSelectedMeterGroup(meterGroup)
-			}
+		val meterGroups = meterVM.meterRowsStateFlow.value.toMeterGroups()
+		val meterGroupComboAdapter = MeterGroupComboAdapter(requireContext(), R.layout.simple_dropdown_item_1line, meterGroups)
+		binding.groupsCombo.listTv.setAdapter(meterGroupComboAdapter)
+		binding.groupsCombo.listTv.setOnItemClickListener { parent, view, position, id ->
+			val meterGroup = meterGroupComboAdapter.getItem(position)
+			meterVM.setSelectedMeterGroup(meterGroup)
 		}
 	}
 

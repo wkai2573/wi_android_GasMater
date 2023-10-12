@@ -1,5 +1,7 @@
 package com.wavein.gasmeter.tools
 
+import android.util.Log
+
 // RD64H 傳輸方法
 
 @OptIn(ExperimentalUnsignedTypes::class)
@@ -169,12 +171,12 @@ object RD64H {
 		var btParentInfo = ""
 		var entityCodeLast2 = ""
 		var meterId = ""
-		var meterDegree = ""
+		var meterDegree = 0f
 		var alarmInfo1 = ""
 		var alarmInfoDetail = mutableMapOf<String, Map<String, Boolean>>()
 
 		init {
-			val regex = Regex("^(.{2})(.{2})(.{14})(D05)(.{9})(.{8})\\s*$")
+			val regex = Regex("^(.{2})(.{2})(.{14})(D05)(\\d{9})(.{8})\\s*$")
 			val matchResult = regex.find(text)
 			if (matchResult != null) {
 				isCorrectParsed = true
@@ -182,17 +184,18 @@ object RD64H {
 				this.btParentInfo = btParentInfo
 				this.entityCodeLast2 = entityCodeLast2
 				this.meterId = meterId
-				this.meterDegree = meterDegree
+				this.meterDegree = meterDegree.toFloat() / 1000
 				this.alarmInfo1 = alarmInfo1
 				this.alarmInfoDetail = mutableMapOf()
 				for (i in alarmInfo1.indices) {
 					val infoDig = "A${8 - i}"
-					val b4 = alarmInfo1[i].code and 0b00000111 == 0
-					val b3 = alarmInfo1[i].code and 0b00001011 == 0
-					val b2 = alarmInfo1[i].code and 0b00001101 == 0
-					val b1 = alarmInfo1[i].code and 0b00001110 == 0
+					val b4 = alarmInfo1[i].code and 0b00001000 != 0
+					val b3 = alarmInfo1[i].code and 0b00000100 != 0
+					val b2 = alarmInfo1[i].code and 0b00000010 != 0
+					val b1 = alarmInfo1[i].code and 0b00000001 != 0
 					alarmInfoDetail[infoDig] = mapOf("b4" to b4, "b3" to b3, "b2" to b2, "b1" to b1)
 				}
+				Log.i("@@@", "${this.text}\n${this.alarmInfoDetail}")
 			}
 		}
 

@@ -93,7 +93,7 @@ class NccFragment : Fragment() {
 	private fun onPermissionsAllow() {
 		binding.permission.layout.visibility = View.GONE
 
-		// 註冊藍牙事件
+		// 訂閱藍牙事件
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.connectEventFlow.asSharedFlow().collectLatest { event ->
@@ -101,13 +101,13 @@ class NccFragment : Fragment() {
 						ConnectEvent.Connecting -> addMsg("連接中...", LogMsgType.System)
 						ConnectEvent.Connected -> addMsg("已連接", LogMsgType.System)
 						ConnectEvent.ConnectionFailed -> {
-							addMsg("連接失敗", LogMsgType.System)
+							addMsg("設備連接失敗", LogMsgType.System)
 							onConnectionFailed?.invoke()
 							onConnectionFailed = null
 						}
 
 						ConnectEvent.Listening -> {}
-						ConnectEvent.ConnectionLost -> addMsg("連接中斷", LogMsgType.System)
+						ConnectEvent.ConnectionLost -> addMsg("設備連接中斷", LogMsgType.System)
 						is ConnectEvent.BytesSent -> {
 							val sendSP = event.byteArray
 							val send = RD64H.telegramConvert(sendSP, "-s-p")
@@ -130,7 +130,7 @@ class NccFragment : Fragment() {
 			}
 		}
 
-		// 註冊溝通狀態
+		// 訂閱溝通狀態
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.commStateFlow.asStateFlow().collectLatest { state ->
@@ -153,7 +153,7 @@ class NccFragment : Fragment() {
 			}
 		}
 
-		// 註冊溝通結束事件
+		// 訂閱溝通結束事件
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.commEndSharedEvent.asSharedFlow().collectLatest { event ->
@@ -170,7 +170,7 @@ class NccFragment : Fragment() {
 			}
 		}
 
-		// 註冊通信中 進度文字
+		// 訂閱通信中 進度文字
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.commTextStateFlow.asStateFlow().collectLatest {

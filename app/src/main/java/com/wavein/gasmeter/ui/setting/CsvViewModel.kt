@@ -21,6 +21,7 @@ import com.wavein.gasmeter.data.model.MeterRow
 import com.wavein.gasmeter.data.model.toCsvRows
 import com.wavein.gasmeter.data.model.toMeterRows
 import com.wavein.gasmeter.tools.SharedEvent
+import com.wavein.gasmeter.ui.meterwork.MeterViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -42,7 +43,6 @@ class CsvViewModel @Inject constructor(
 
 	val readFileStateFlow = MutableStateFlow(ReadFileState())
 	val selectedFileStateFlow = MutableStateFlow(FileState())
-	val meterRowsStateFlow = MutableStateFlow<List<MeterRow>>(emptyList())
 
 	// 檔案選取器
 	fun openFilePicker(filePickerLauncher:ActivityResultLauncher<Intent>) {
@@ -54,12 +54,12 @@ class CsvViewModel @Inject constructor(
 	}
 
 	// 讀取csv檔案 by picker
-	fun readCsvByPicker(context:Context, result:ActivityResult) = viewModelScope.launch {
+	fun readCsvByPicker(context:Context, result:ActivityResult, meterVM:MeterViewModel) = viewModelScope.launch {
 		readFileStateFlow.value = ReadFileState(ReadFileState.Type.Reading)
 		if (result.resultCode == Activity.RESULT_OK) {
 			kotlin.runCatching {
 				val uri = result.data?.data!!
-				readCsv(context, uri)
+				readCsv(context, uri, meterVM)
 			}.onFailure {
 				it.printStackTrace()
 				readFileStateFlow.value = ReadFileState(ReadFileState.Type.ReadFailed, it.message)
@@ -71,13 +71,14 @@ class CsvViewModel @Inject constructor(
 	}
 
 	// 讀取csv檔案
-	fun readCsv(context:Context, uri:Uri, specifiedFilename:String = "") {
+	fun readCsv(context:Context, uri:Uri, meterVM:MeterViewModel, specifiedFilename:String = "") {
 		val parcelFileDescriptor = context.contentResolver.openFileDescriptor(uri, "r")
 		val inputStream = FileInputStream(parcelFileDescriptor!!.fileDescriptor)
 		val csvRows:List<Map<String, String>> = csvReader().readAllWithHeader(inputStream)
 		parcelFileDescriptor.close()
 		readFileStateFlow.value = ReadFileState(ReadFileState.Type.Idle)
-		meterRowsStateFlow.value = csvRows.toMeterRows()
+		meterVM.meterRowsStateFlow.value = csvRows.toMeterRows()
+		meterVM.setSelectedMeterGroup(null)
 		setFileState(context, uri, specifiedFilename)
 	}
 
@@ -103,9 +104,9 @@ class CsvViewModel @Inject constructor(
 	}
 
 	// 儲存選擇的檔案(本地)
-	fun saveCsv() {
+	fun saveCsv(meterVM:MeterViewModel) {
 		val fileState = selectedFileStateFlow.value
-		val csvRows = meterRowsStateFlow.value.toCsvRows()
+		val csvRows = meterVM.meterRowsStateFlow.value.toCsvRows()
 
 		// 轉成沒有key的csvRows:List<Map<string, string>>
 		val header = csvRows.firstOrNull()?.keys?.toList() ?: return
@@ -113,7 +114,6 @@ class CsvViewModel @Inject constructor(
 		val csvContent = csvWriter().writeAllAsString(rowsWithoutKey)
 		writeFile(fileState.relativePath, csvContent)
 	}
-
 
 	// 寫入檔案
 	private fun writeFile(relativePath:String, content:String) {
