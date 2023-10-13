@@ -2,19 +2,21 @@ package com.wavein.gasmeter.ui.meterwork.list
 
 import android.annotation.SuppressLint
 import android.graphics.Color
-import android.text.Spannable
-import android.text.SpannableString
-import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.wavein.gasmeter.data.model.MeterRow
 import com.wavein.gasmeter.databinding.ItemMeterRowBinding
-import com.wavein.gasmeter.tools.Color_Success
 
-class MeterListAdapter(private val onClick:(MeterRow) -> Unit) :
+enum class MeterRowRender { Simple, Detail }
+
+class MeterListAdapter(
+	private val render:MeterRowRender = MeterRowRender.Simple,
+	private val onClick:(MeterRow) -> Unit
+) :
 	ListAdapter<MeterRow, MeterListAdapter.ViewHolder>(DiffCallback()) {
 
 	override fun onCreateViewHolder(parent:ViewGroup, viewType:Int):ViewHolder {
@@ -30,6 +32,7 @@ class MeterListAdapter(private val onClick:(MeterRow) -> Unit) :
 
 	inner class ViewHolder(private val binding:ItemMeterRowBinding) : RecyclerView.ViewHolder(binding.root) {
 		init {
+			binding.groupMeterIdLayout.visibility = if (render == MeterRowRender.Simple) View.GONE else View.VISIBLE
 			itemView.setOnClickListener {
 				onClick(getItem(adapterPosition))
 			}
@@ -37,6 +40,8 @@ class MeterListAdapter(private val onClick:(MeterRow) -> Unit) :
 
 		@SuppressLint("MissingPermission")
 		fun bind(meterRow:MeterRow) {
+			binding.fieldGroup.setValue(meterRow.group)
+			binding.fieldMeterId.setValue(meterRow.meterId)
 			binding.fieldQueue.setValue("${meterRow.queue}")
 			binding.fieldCustName.setValue(meterRow.custName)
 			binding.fieldMeterDegree.setValue("${meterRow.meterDegree ?: "未抄表"}", if (meterRow.meterDegree == null) Color.RED else Color.BLACK)

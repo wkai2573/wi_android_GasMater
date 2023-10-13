@@ -8,7 +8,7 @@
   <fragment android:id="@+id/nav_logoFragment"
     android:name="com.wavein.gasmeter.ui.logo.LogoFragment"
     android:label="fragment_logo"
-    tools:layout="@layout/fragment_logo"/>
+    tools:layout="@layout/fragment_logo" />
 
   <fragment android:id="@+id/nav_settingFragment"
     android:name="com.wavein.gasmeter.ui.setting.SettingFragment"
@@ -16,7 +16,13 @@
     tools:layout="@layout/fragment_setting" />
   <fragment android:id="@+id/nav_meterBaseFragment"
     android:name="com.wavein.gasmeter.ui.meterwork.MeterBaseFragment"
-    android:label="MeterBaseFragment" />
+    android:label="fragment_meter_base"
+    tools:layout="@layout/fragment_meter_base" />
+  <fragment android:id="@+id/nav_meterSearchFragment"
+    android:name="com.wavein.gasmeter.ui.metersearch.MeterSearchFragment"
+    android:label="fragment_meter_search"
+    tools:layout="@layout/fragment_meter_search" />
+
   <fragment android:id="@+id/nav_testFragment"
     android:name="com.wavein.gasmeter.ui.ncc.TestFragment"
     android:label="fragment_test"

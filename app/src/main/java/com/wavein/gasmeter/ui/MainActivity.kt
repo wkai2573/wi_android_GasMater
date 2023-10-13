@@ -5,16 +5,14 @@ import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
-import android.view.WindowManager
 import android.widget.Button
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -23,7 +21,6 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.ActivityMainBinding
-import com.wavein.gasmeter.databinding.DialogLoadingBinding
 import com.wavein.gasmeter.tools.AppManager
 import com.wavein.gasmeter.tools.LanguageUtil
 import com.wavein.gasmeter.tools.NetworkInfo
@@ -46,6 +43,7 @@ class MainActivity : AppCompatActivity() {
 
 	// binding & viewModel
 	private lateinit var binding:ActivityMainBinding
+	private val navVM by viewModels<NavViewModel>()
 	private val ftpVM by viewModels<FtpViewModel>()
 	private val csvVM by viewModels<CsvViewModel>()
 
@@ -106,6 +104,7 @@ class MainActivity : AppCompatActivity() {
 				R.id.nav_logoFragment,
 				R.id.nav_settingFragment,
 				R.id.nav_meterBaseFragment,
+				R.id.nav_meterSearchFragment,
 				// R.id.nav_testFragment,
 				R.id.nav_nccFragment,
 			)
@@ -131,6 +130,22 @@ class MainActivity : AppCompatActivity() {
 								SharedEvent.ShowSnackbar("網路已斷線", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE)
 							)
 						}
+					}
+				}
+			}
+		}
+
+		// 訂閱全域loading
+		lifecycleScope.launch {
+			repeatOnLifecycle(Lifecycle.State.STARTED) {
+				SharedEvent.loadingFlow.asStateFlow().collectLatest { message ->
+					if (message.isNotEmpty()) {
+						if (loadingDialog == null) {
+							loadingDialog = LoadingDialogFragment.open(this@MainActivity)
+						}
+					} else {
+						loadingDialog?.dismiss()
+						loadingDialog = null
 					}
 				}
 			}
@@ -206,25 +221,16 @@ class MainActivity : AppCompatActivity() {
 						is SharedEvent.ShowDialogB -> {
 							event.builder.show()
 						}
-
-						else -> {}
 					}
 				}
 			}
 		}
 
-		// 訂閱全域loading
+		// 訂閱切換nav事件
 		lifecycleScope.launch {
 			repeatOnLifecycle(Lifecycle.State.STARTED) {
-				SharedEvent.loadingFlow.asStateFlow().collectLatest { message ->
-					if (message.isNotEmpty()) {
-						if (loadingDialog == null) {
-							loadingDialog = LoadingDialogFragment.open(this@MainActivity)
-						}
-					} else {
-						loadingDialog?.dismiss()
-						loadingDialog = null
-					}
+				navVM.navigateSharedFlow.collectLatest {
+					binding.navView.selectedItemId = it
 				}
 			}
 		}

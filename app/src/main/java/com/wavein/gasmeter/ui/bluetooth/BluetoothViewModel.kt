@@ -116,7 +116,7 @@ class BluetoothViewModel @Inject constructor(
 	}
 
 	// 選定為自動連結的設備
-	private fun setAutoConnectBluetoothDevice(device:BluetoothDevice) {
+	fun setAutoConnectBluetoothDevice(device:BluetoothDevice) {
 		autoConnectDeviceStateFlow.value = device
 	}
 

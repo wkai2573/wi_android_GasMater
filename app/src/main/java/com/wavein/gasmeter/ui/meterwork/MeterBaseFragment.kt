@@ -24,6 +24,7 @@ import com.wavein.gasmeter.databinding.FragmentMeterBaseBinding
 import com.wavein.gasmeter.tools.RD64H
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.TimeUtil
+import com.wavein.gasmeter.ui.NavViewModel
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.bluetooth.BtDialogFragment
 import com.wavein.gasmeter.ui.bluetooth.CommEndEvent
@@ -33,6 +34,7 @@ import com.wavein.gasmeter.ui.meterwork.groups.MeterGroupsFragment
 import com.wavein.gasmeter.ui.meterwork.list.MeterListFragment
 import com.wavein.gasmeter.ui.meterwork.row.MeterRowFragment
 import com.wavein.gasmeter.ui.setting.CsvViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -44,6 +46,7 @@ class MeterBaseFragment : Fragment() {
 	// binding & viewModel
 	private var _binding:FragmentMeterBaseBinding? = null
 	private val binding get() = _binding!!
+	private val navVM by activityViewModels<NavViewModel>()
 	private val blVM by activityViewModels<BluetoothViewModel>()
 	private val meterVM by activityViewModels<MeterViewModel>()
 	private val csvVM by activityViewModels<CsvViewModel>()
@@ -102,6 +105,18 @@ class MeterBaseFragment : Fragment() {
 			}
 		}
 
+		// 訂閱切換tab
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				navVM.meterBaseChangeTabStateFlow.asStateFlow().collectLatest { tabIndex ->
+					if (tabIndex == -1) return@collectLatest
+					delay(1)
+					changeTab(tabIndex, false)
+					navVM.meterBaseChangeTabStateFlow.value = -1
+				}
+			}
+		}
+
 		// 連線相關的訂閱
 		initConnSubscription()
 	}
@@ -122,8 +137,8 @@ class MeterBaseFragment : Fragment() {
 	}
 
 	// 切換tab (給子fragment呼叫)
-	fun changeTab(index:Int, smoothScroll:Boolean = true) {
-		binding.pager.setCurrentItem(index, smoothScroll)
+	fun changeTab(tabIndex:Int, smoothScroll:Boolean = true) {
+		binding.pager.setCurrentItem(tabIndex, smoothScroll)
 	}
 
 	//region__________連線方法__________

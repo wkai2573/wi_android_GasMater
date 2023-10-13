@@ -35,8 +35,8 @@
         android:id="@+id/areaContainer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingBottom="64dp"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingBottom="64dp">
 
         <!-- 藍牙裝置 -->
         <LinearLayout
@@ -115,19 +115,6 @@
             android:layout_marginVertical="8dp"
             android:text="選擇CSV"
             app:icon="@drawable/ic_insert_drive_file_24" />
-
-          <Button
-            android:id="@+id/test1Btn"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="測試1_顯示rows"/>
-          <Button
-            android:id="@+id/test2Btn"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="測試2_更新rows"/>
 
           <LinearLayout
             android:layout_width="match_parent"

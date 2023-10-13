@@ -82,6 +82,7 @@ class MeterInfoFragment : Fragment() {
 					dialog.dismiss()
 					val meterRow = meterVM.selectedMeterRowFlow.value ?: return@setPositiveButton
 					meterBaseFragment.checkBluetoothOn { blVM.sendR80Telegram(listOf(meterRow.meterId)) }
+					//todo 還要多查遮斷時間 (maybe五次遮斷履歷; or整個個別抄表要用R87的方式查)
 				}
 				.show()
 		}
@@ -91,39 +92,6 @@ class MeterInfoFragment : Fragment() {
 		null -> ""
 		true -> "是"
 		false -> "否"
-	}
-
-	// todo 測試抄表成功
-	fun mockRead() {
-		val d05m = RD64H.D05mInfo().apply {
-			list = mutableListOf(
-				RD64H.D05Info(text = "90N100000002306003D05000012889@BB@C@H@             "),
-				RD64H.D05Info(text = "90N100000002306004D05000012716@@B@B@I@             "),
-			)
-		}
-		val result:Map<String, Any> = mapOf(
-			"D70" to RD64H.D70Info(text = "ZA00000000000000D70"),
-			"D05" to d05m.list[0],
-			"D05m" to d05m
-		)
-		val d05mList = (result["D05m"] as RD64H.D05mInfo).list
-
-		val nowMeterGroup = meterVM.selectedMeterGroupStateFlow.value
-		val nowMeterRow = meterVM.selectedMeterRowFlow.value
-
-		val newCsvRows = meterVM.meterRowsStateFlow.value.map { meterRow ->
-			val d05Info = d05mList.find { it.meterId == meterRow.meterId }
-			if (d05Info != null) {
-				meterRow.copy(meterDegree = d05Info.meterDegree)
-			} else {
-				meterRow
-			}
-		}
-		meterVM.meterRowsStateFlow.value = newCsvRows
-		meterVM.setSelectedMeterGroup(newCsvRows.toMeterGroups()
-			.find { it.group == nowMeterGroup?.group })
-		meterVM.selectedMeterRowFlow.value = meterVM.selectedMeterGroupStateFlow.value?.meterRows
-			?.find { it.queue == nowMeterRow?.queue }
 	}
 
 }

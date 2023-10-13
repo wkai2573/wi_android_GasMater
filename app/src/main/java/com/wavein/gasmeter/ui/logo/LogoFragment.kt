@@ -14,6 +14,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.FragmentLogoBinding
+import com.wavein.gasmeter.ui.NavViewModel
 import com.wavein.gasmeter.ui.bluetooth.CommState
 import com.wavein.gasmeter.ui.setting.SettingViewModel
 import kotlinx.coroutines.delay
@@ -27,6 +28,7 @@ class LogoFragment : Fragment() {
 	// binding & viewModel
 	private var _binding:FragmentLogoBinding? = null
 	private val binding get() = _binding!!
+	private val navVM by activityViewModels<NavViewModel>()
 	private val settingVM by activityViewModels<SettingViewModel>()
 
 	// 防止內存洩漏
@@ -68,8 +70,7 @@ class LogoFragment : Fragment() {
 		super.onResume()
 		viewLifecycleOwner.lifecycleScope.launch {
 			delay(1400)
-			findNavController().navigate(R.id.nav_settingFragment)
-//			findNavController().navigate(R.id.nav_nccFragment)
+			navVM.navigate(R.id.nav_settingFragment)
 		}
 	}
 }

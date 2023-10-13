@@ -79,7 +79,10 @@ class BtDialogFragment(
 
 	// 初始化已配對設備
 	private fun initBondedDevice() {
-		bondedDeviceListAdapter = DeviceListAdapter { connectDevice(it) }
+		bondedDeviceListAdapter = DeviceListAdapter {
+			blVM.setAutoConnectBluetoothDevice(it)
+			dialog?.dismiss()
+		}
 		// 已配對的設備
 		binding!!.bondedDeviceRv.apply {
 			layoutManager = LinearLayoutManager(requireContext())
@@ -108,7 +111,9 @@ class BtDialogFragment(
 
 		// 搜尋藍牙設備
 		binding!!.scanBtn.setOnClickListener { blVM.toggleDiscovery() }
-		scannedDeviceListAdapter = DeviceListAdapter { connectDevice(it) }
+		scannedDeviceListAdapter = DeviceListAdapter {
+			connectDevice(it)
+		}
 		binding!!.scannedDeviceRv.apply {
 			layoutManager = LinearLayoutManager(requireContext())
 			// addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)) //分隔線

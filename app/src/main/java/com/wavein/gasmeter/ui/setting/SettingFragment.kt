@@ -156,47 +156,22 @@ class SettingFragment : Fragment() {
 			FtpSettingDialogFragment.open(
 				context = requireContext(),
 				ftpInfo = ftpVM.downloadFtpInfo,
-				onSaveCallback = {
-					ftpVM.saveFtpInfo(it)
-				})
+				onSaveCallback = { ftpVM.saveFtpInfo(it) })
 		}
 
 		binding.uploadFtpSettingBtn.setOnClickListener {
 			FtpSettingDialogFragment.open(
 				context = requireContext(),
 				ftpInfo = ftpVM.uploadFtpInfo,
-				onSaveCallback = {
-					ftpVM.saveFtpInfo(it)
-				})
+				onSaveCallback = { ftpVM.saveFtpInfo(it) })
 		}
 
 		binding.systemFtpSettingBtn.setOnClickListener {
 			FtpSettingDialogFragment.open(
 				context = requireContext(),
 				ftpInfo = ftpVM.systemFtpInfo,
-				onSaveCallback = {
-					ftpVM.saveFtpInfo(it)
-				})
+				onSaveCallback = { ftpVM.saveFtpInfo(it) })
 		}
-
-		//todo 測試
-		binding.test1Btn.setOnClickListener {
-			lifecycleScope.launch {
-				SharedEvent.eventFlow.emit(SharedEvent.ShowDialog("title", meterVM.meterRowsStateFlow.value.toString()))
-			}
-		}
-
-		binding.test2Btn.setOnClickListener {
-			//csvVM.writeFile(fileInfo.relativePath, "隨機數,欄位2,\n${Random.nextInt(1, 100)},內容2")
-
-			val meterRows = meterVM.meterRowsStateFlow.value.toMutableList()
-			// rows.add(
-			// 	mapOf("header1" to "AAA", "header2" to "中文", "header3" to "♥\n🙄🙄🙄\n這樣也\"可以\"??")
-			// )
-			meterVM.meterRowsStateFlow.value = meterRows
-			csvVM.saveCsv(meterVM)
-		}
-
 
 		// 產品註冊__________
 

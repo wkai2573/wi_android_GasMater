@@ -78,10 +78,6 @@ class MeterRowFragment : Fragment() {
 				else -> tab.text = "UNKNOWN: $position"
 			}
 		}.attach()
-
-		// todo ...
-
-
 	}
 
 	private fun initComboList() {
