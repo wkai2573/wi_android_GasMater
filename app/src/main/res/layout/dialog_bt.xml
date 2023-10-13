@@ -53,7 +53,7 @@
       android:layout_height="wrap_content"
       android:layout_weight="1"
       android:clickable="true"
-      android:text="掃描裝置"
+      android:text="掃描設備"
       android:textColor="?attr/colorPrimary"
       android:textSize="16sp" />
 

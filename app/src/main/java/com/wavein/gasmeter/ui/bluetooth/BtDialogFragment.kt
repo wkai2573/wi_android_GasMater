@@ -80,8 +80,7 @@ class BtDialogFragment(
 	// 初始化已配對設備
 	private fun initBondedDevice() {
 		bondedDeviceListAdapter = DeviceListAdapter {
-			blVM.setAutoConnectBluetoothDevice(it)
-			dialog?.dismiss()
+			connectDevice(it)
 		}
 		// 已配對的設備
 		binding!!.bondedDeviceRv.apply {

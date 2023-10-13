@@ -195,7 +195,6 @@ object RD64H {
 					val b1 = alarmInfo1[i].code and 0b00000001 != 0
 					alarmInfoDetail[infoDig] = mapOf("b4" to b4, "b3" to b3, "b2" to b2, "b1" to b1)
 				}
-				Log.i("@@@", "${this.text}\n${this.alarmInfoDetail}")
 			}
 		}
 
