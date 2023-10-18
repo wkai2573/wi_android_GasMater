@@ -13,5 +13,4 @@
     android:layout_height="wrap_content"
     android:text="施工中..."
     android:textSize="30sp" />
-
 </LinearLayout>
