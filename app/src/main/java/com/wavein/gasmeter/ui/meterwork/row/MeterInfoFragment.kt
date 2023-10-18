@@ -12,8 +12,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.wavein.gasmeter.databinding.FragmentMeterInfoBinding
-import com.wavein.gasmeter.tools.rd64h.R87R05Step
-import com.wavein.gasmeter.tools.rd64h.R87R23Step
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.meterwork.MeterBaseFragment
 import com.wavein.gasmeter.ui.meterwork.MeterViewModel
@@ -61,7 +59,6 @@ class MeterInfoFragment : Fragment() {
 						binding.fieldAlarm1.setValue(booleanRender(it.batteryVoltageDropAlarm))
 						binding.fieldAlarm2.setValue(booleanRender(it.innerPipeLeakageAlarm))
 						binding.fieldAlarm3.setValue(booleanRender(it.shutoff))
-						binding.fieldShutoffTime.setValue("${it.shutoffTime}")
 					}
 				}
 			}
@@ -78,16 +75,7 @@ class MeterInfoFragment : Fragment() {
 				.setPositiveButton("確定") { dialog, which ->
 					dialog.dismiss()
 					val meterRow = meterVM.selectedMeterRowFlow.value ?: return@setPositiveButton
-					//todo 還要多查遮斷時間 (需改用R87的方式查)
 					meterBaseFragment.checkBluetoothOn { blVM.sendR80Telegram(listOf(meterRow.meterId)) }
-//					meterBaseFragment.checkBluetoothOn {
-//						blVM.sendR87Telegram(
-//							meterRow.meterId, listOf(
-//								R87R05Step(meterRow.meterId),
-//								R87R23Step(meterRow.meterId)
-//							)
-//						)
-//					}
 				}
 				.show()
 		}

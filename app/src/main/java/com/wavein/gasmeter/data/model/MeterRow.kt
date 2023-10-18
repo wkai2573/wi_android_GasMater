@@ -25,7 +25,6 @@ data class MeterRow(
 	val batteryVoltageDropAlarm:Boolean? = null, // 電池電壓警報
 	val innerPipeLeakageAlarm:Boolean? = null,   // 洩漏警報
 	val shutoff:Boolean? = null,                 // 遮斷
-	val shutoffTime:String? = null,              // 遮斷時間
 ) {
 
 	// 已抄數量提示
@@ -46,11 +45,6 @@ data class MeterRow(
 	override fun toString():String {
 		return "$queue" // "$queue ($meterId)"
 	}
-
-
-
-	// val batteryVoltageDropShutoff:Boolean,
-	// val innerPipeLeakageShutoff:Boolean,
 
 	init {
 		// 分析meterStateRaw 做成其他變數
@@ -78,7 +72,6 @@ fun Map<String, String>.toMeterRow():MeterRow? {
 			batteryVoltageDropAlarm = csvRow["電池電壓警報"].toBoolean10(),
 			innerPipeLeakageAlarm = csvRow["洩漏警報"].toBoolean10(),
 			shutoff = csvRow["遮斷"].toBoolean10(),
-			shutoffTime = csvRow["遮斷時間"],
 		)
 	} catch (e:Exception) {
 		e.printStackTrace()
@@ -106,7 +99,6 @@ private fun MeterRow.toCsvRow():Map<String, String> {
 		"電池電壓警報" to this.batteryVoltageDropAlarm.toString10(),
 		"洩漏警報" to this.innerPipeLeakageAlarm.toString10(),
 		"遮斷" to this.shutoff.toString10(),
-		"遮斷時間" to this.shutoffTime.orEmpty(),
 	)
 }
 

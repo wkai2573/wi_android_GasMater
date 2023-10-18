@@ -340,7 +340,7 @@ class BluetoothViewModel @Inject constructor(
 	}
 
 	// 發送R87電文組合
-	fun sendR87Telegram(meterId:String, steps:List<BaseStep>) = viewModelScope.launch {
+	fun sendR87Telegram(meterId:String, r87Steps:List<R87Step>) = viewModelScope.launch {
 		if (commStateFlow.value != CommState.ReadyCommunicate) return@launch
 		commStateFlow.value = CommState.Communicating
 		commResult = mutableMapOf()
@@ -349,12 +349,12 @@ class BluetoothViewModel @Inject constructor(
 			__5Step(),
 			R89Step(meterId),
 			//如果需分割, 要在下方補n個 R70
-			*steps.flatMap {
-				when (it) {
+			*r87Steps.flatMapIndexed { index, step ->
+				when (step.op) {
 					// 2分割
-					is R87R23Step -> listOf(it.copy(cc = "!@\u0000\u0010"), it.copy(cc = "!@\u0000\u0011"), R70Step(it.meterId))
+					"R23" -> listOf(step.copy(cc = "\u0021\u0040${index.toChar()}\u0000"), R70Step(step.adr))
 					// 無分割
-					else -> listOf(it)
+					else -> listOf(step.copy(cc = "\u0021\u0040${index.toChar()}\u0000"))
 				}
 			}.toTypedArray(),
 			__AStep(),
@@ -362,11 +362,11 @@ class BluetoothViewModel @Inject constructor(
 		receiveSteps = mutableListOf(
 			D70Step(),
 			D36Step(),
-			*steps.flatMap {
-				when (it) {
-					is R87R01Step -> listOf(D87D01Step())
-					is R87R05Step -> listOf(D87D05Step())
-					is R87R23Step -> listOf(D70Step(), D87D23Step(part = 1), D87D23Step(part = 2))
+			*r87Steps.flatMapIndexed { index, step ->
+				when (step.op) {
+					"R01" -> listOf(D87D01Step())
+					"R05" -> listOf(D87D05Step())
+					"R23" -> listOf(D87D23Step(part = 1), D87D23Step(part = 2))
 					else -> listOf()
 				}
 			}.toTypedArray()
@@ -387,14 +387,14 @@ class BluetoothViewModel @Inject constructor(
 				val sendText = sendStep.text
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
 				commTextStateFlow.value = Tip("通信中: $sendText [${sendSP.toHexString()}]")
-				delay(2000L)
+				wt134()
 				transceiver?.write(sendSP)
 			}
 
 			is __5Step -> {
 				commTextStateFlow.value = Tip("正在與母機建立連結", "5↔D70", progressText)
 				val sendSP = RD64H.telegramConvert("5", "+s+p")
-				delay(2000L)
+				wt134()
 				transceiver?.write(sendSP)
 			}
 
@@ -403,53 +403,37 @@ class BluetoothViewModel @Inject constructor(
 				val btParentId = (commResult["D70"] as D70Info).btParentId
 				val sendText = RD64H.createR80Text(btParentId, sendStep.meterIds)
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
-				delay(2000L)
+				wt134()
 				transceiver?.write(sendSP)
 			}
 
 			is __AStep -> {
 				val sendSP = RD64H.telegramConvert("A", "+s+p")
-				delay(3500L)
+				wt2()
 				transceiver?.write(sendSP)
 				delay(1000L)
 				onCommEnd()
 			}
 
 			is R89Step -> {
-				commTextStateFlow.value = Tip("正在與母機建立連結", "R89↔D36", progressText)
+				commTextStateFlow.value = Tip("正在要求設定", "R89↔D36", progressText)
 				val sendText = "ZA${sendStep.meterId}R8966ZD${sendStep.meterId}R36"
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
-				delay(2000L)
+				wt134()
 				transceiver?.write(sendSP)
 			}
 
-			is R87R01Step -> {
-				commTextStateFlow.value = Tip("正在取得讀數", "R87R01", progressText)
-				val r87 = "ZD${sendStep.meterId}R87"
-				val aLine = RD64H.createR87Aline(adr = sendStep.meterId, op = "R01", data = "")
+			is R87Step -> {
+				when (sendStep.op) {
+					"R01" -> commTextStateFlow.value = Tip("正在取得讀數", "R87R01", progressText)
+					"R05" -> commTextStateFlow.value = Tip("正在取得讀數", "R87R05", progressText)
+					"R23" -> commTextStateFlow.value = Tip("正在取得五回遮斷履歷", "R87R23", progressText)
+				}
+				val r87 = "ZD${sendStep.adr}R87"
+				val aLine = RD64H.createR87Aline(cc = sendStep.cc, adr = sendStep.adr, op = sendStep.op, data = sendStep.data)
 				val sendText = r87 + aLine.toByteArray().toText()
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
-				delay(2000L)
-				transceiver?.write(sendSP)
-			}
-
-			is R87R05Step -> {
-				commTextStateFlow.value = Tip("正在取得讀數", "R87R05", progressText)
-				val r87 = "ZD${sendStep.meterId}R87"
-				val aLine = RD64H.createR87Aline(adr = sendStep.meterId, op = "R05", data = "")
-				val sendText = r87 + aLine.toByteArray().toText()
-				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
-				delay(2000L)
-				transceiver?.write(sendSP)
-			}
-
-			is R87R23Step -> {
-				commTextStateFlow.value = Tip("正在取得五回遮斷履歷", "R87R23", progressText)
-				val r87 = "ZD${sendStep.meterId}R87"
-				val aLine = RD64H.createR87Aline(adr = sendStep.meterId, op = "R23", data = "", cc = sendStep.cc)
-				val sendText = r87 + aLine.toByteArray().toText()
-				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
-				delay(2000L)
+				wt2()
 				transceiver?.write(sendSP)
 			}
 
@@ -457,7 +441,7 @@ class BluetoothViewModel @Inject constructor(
 				commTextStateFlow.value = commTextStateFlow.value.copy(subtitle = "R70", progress = progressText)
 				val sendText = "ZD${sendStep.meterId}R70"
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
-				delay(2000L)
+				wt2()
 				transceiver?.write(sendSP)
 			}
 
@@ -465,6 +449,14 @@ class BluetoothViewModel @Inject constructor(
 				throw Exception("例外的OP: $sendStep")
 			}
 		}
+	}
+
+	private suspend inline fun wt134() {
+		delay(1000L)
+	}
+
+	private suspend inline fun wt2() {
+		delay(3500L)
 	}
 
 	// 依步驟接收電文 !!!電文處理中途

@@ -228,8 +228,8 @@ class NccFragment : Fragment() {
 			checkBluetoothOn {
 				blVM.sendR87Telegram(
 					meterId, listOf(
-						R87R05Step(meterId),
-						R87R23Step(meterId)
+					 	R87Step(adr = meterId, op = "R05"), // 讀數&狀態
+						R87Step(adr = meterId, op = "R23"), // 五回遮斷履歷
 					)
 				)
 			}

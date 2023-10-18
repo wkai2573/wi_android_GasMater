@@ -84,10 +84,4 @@
       app:title="遮斷模式" />
   </LinearLayout>
 
-  <com.wavein.gasmeter.ui.component.Field
-    android:id="@+id/field_shutoffTime"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    app:title="遮斷時間" />
-
 </LinearLayout>

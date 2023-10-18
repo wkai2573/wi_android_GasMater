@@ -92,15 +92,15 @@ object RD64H {
 
 	/** 產生 R87_ALine部分的字串
 	 *
-	 * @param cc   可選, 預設 "!@\u0000\u0000" (21400000)
+	 * @param cc   可選, 預設 "\u0021\u0040\u0000\u0000" 字串[!@\0\0] bytes[21400000]
 	 * @param adr  必填, 瓦斯表ID
-	 * @param dp   可選, 事業體, 通常固定為 "\u0000EN1" (00454>31)
+	 * @param dp   可選, 事業體, 通常固定為 "\u0000EN1" 字串[00454>31]
 	 * @param op   必填, 瓦斯表的操作代碼
 	 * @param data 可選, 操作代碼附屬的資料, 會自動補空白到64位
 	 * @returns R87_ALine字串
 	 */
 	fun createR87Aline(
-		cc:String = "!@\u0000\u0000",
+		cc:String = "\u0021\u0040\u0000\u0000",
 		adr:String,
 		dp:String = "\u0000EN1",
 		op:String,
