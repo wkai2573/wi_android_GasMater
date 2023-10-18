@@ -20,8 +20,10 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.DialogBtBinding
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -121,16 +123,22 @@ class BtDialogFragment(
 		}
 	}
 
-	// 配對並連線設備
+	// 設定頁-> 選定為連線的設備
+	// 抄表頁-> 選定為連線的設備 & 配對並連線設備
 	private fun connectDevice(device:BluetoothDevice) {
-		when (device.bondState) {
-			// 已配對, 連接設備
-			BluetoothDevice.BOND_BONDED -> {
-				blVM.connectDevice(device)
-				dialog?.dismiss()
+		if (findNavController().currentDestination?.id == R.id.nav_settingFragment) {
+			blVM.setAutoConnectBluetoothDevice(device)
+			dialog?.dismiss()
+		} else {
+			when (device.bondState) {
+				// 已配對, 連接設備
+				BluetoothDevice.BOND_BONDED -> {
+					blVM.connectDevice(device)
+					dialog?.dismiss()
+				}
+				// 未配對, 配對設備
+				BluetoothDevice.BOND_NONE -> device.createBond()
 			}
-			// 未配對, 配對設備
-			BluetoothDevice.BOND_NONE -> device.createBond()
 		}
 	}
 

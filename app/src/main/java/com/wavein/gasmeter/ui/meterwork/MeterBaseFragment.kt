@@ -21,15 +21,16 @@ import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.wavein.gasmeter.data.model.toMeterGroups
 import com.wavein.gasmeter.databinding.FragmentMeterBaseBinding
-import com.wavein.gasmeter.tools.RD64H
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.TimeUtil
+import com.wavein.gasmeter.tools.rd64h.info.D05mInfo
 import com.wavein.gasmeter.ui.NavViewModel
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.bluetooth.BtDialogFragment
 import com.wavein.gasmeter.ui.bluetooth.CommEndEvent
 import com.wavein.gasmeter.ui.bluetooth.CommState
 import com.wavein.gasmeter.ui.bluetooth.ConnectEvent
+import com.wavein.gasmeter.ui.loading.Tip
 import com.wavein.gasmeter.ui.meterwork.groups.MeterGroupsFragment
 import com.wavein.gasmeter.ui.meterwork.list.MeterListFragment
 import com.wavein.gasmeter.ui.meterwork.row.MeterRowFragment
@@ -150,10 +151,11 @@ class MeterBaseFragment : Fragment() {
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.commTextStateFlow.asStateFlow().collectLatest {
-					Log.i("@@@通信狀態", it)
-					SharedEvent.loadingFlow.value = when (it) {
-						"未連結設備", "設備已連結", "通信完畢" -> ""
-						else -> it
+					Log.i("@@@通信狀態", it.title)
+					SharedEvent.loadingFlow.value = when (it.title) {
+						"未連結設備", "通信完畢" -> Tip()
+						"設備已連結" -> Tip("設備已連結，準備通信")
+						else -> it.copy()
 					}
 				}
 			}
@@ -270,9 +272,10 @@ class MeterBaseFragment : Fragment() {
 		}
 	}
 
-	// 根據結果更新csvRows //todo & ftp 紀錄log
+	// 根據結果更新csvRows & ftp紀錄log
 	private fun updateCsvRows(commResult:Map<String, Any>) {
-		val d05mList = (commResult["D05m"] as RD64H.D05mInfo).list
+		//todo 目前只有處理D05m
+		val d05mList = (commResult["D05m"] as D05mInfo).list
 		val newCsvRows = meterVM.meterRowsStateFlow.value.map { meterRow ->
 			val d05Info = d05mList.find { it.meterId == meterRow.meterId }
 			if (d05Info != null) {

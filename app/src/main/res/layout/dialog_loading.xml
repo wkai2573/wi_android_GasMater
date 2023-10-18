@@ -18,7 +18,8 @@
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:gravity="center"
-      android:orientation="vertical">
+      android:orientation="vertical"
+      android:padding="8dp">
 
       <com.google.android.material.progressindicator.CircularProgressIndicator
         android:layout_width="64dp"
@@ -27,12 +28,22 @@
         android:padding="12dp" />
 
       <TextView
-        android:id="@+id/loadingTv"
+        android:id="@+id/titleTv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:padding="12dp"
+        android:textColor="?attr/colorTertiary"
         android:textSize="18sp"
         tools:text="讀取文字" />
+
+      <TextView
+        android:id="@+id/subtitleTv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:textColor="?attr/colorSecondary"
+        android:textSize="14sp"
+        tools:text="副標題" />
     </LinearLayout>
 
   </androidx.cardview.widget.CardView>

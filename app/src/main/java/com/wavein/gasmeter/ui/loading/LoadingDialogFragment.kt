@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.DialogInterface
 import android.graphics.Color
 import android.os.Bundle
+import android.view.View
 import androidx.activity.ComponentDialog
 import androidx.activity.addCallback
 import androidx.fragment.app.FragmentActivity
@@ -51,8 +52,10 @@ class LoadingDialogFragment(
 		// 訂閱loading文字
 		lifecycleScope.launch {
 			activity.repeatOnLifecycle(Lifecycle.State.STARTED) {
-				SharedEvent.loadingFlow.asStateFlow().collectLatest { message ->
-					binding?.loadingTv?.text = message
+				SharedEvent.loadingFlow.asStateFlow().collectLatest {
+					binding?.titleTv?.text = it.title
+					binding?.subtitleTv?.visibility = if (it.subtitle.isEmpty()) View.GONE else View.VISIBLE
+					binding?.subtitleTv?.text = it.subtitle
 				}
 			}
 		}

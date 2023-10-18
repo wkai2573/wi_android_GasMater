@@ -138,8 +138,8 @@ class MainActivity : AppCompatActivity() {
 		// 訂閱全域loading
 		lifecycleScope.launch {
 			repeatOnLifecycle(Lifecycle.State.STARTED) {
-				SharedEvent.loadingFlow.asStateFlow().collectLatest { message ->
-					if (message.isNotEmpty()) {
+				SharedEvent.loadingFlow.asStateFlow().collectLatest {
+					if (it.title.isNotEmpty()) {
 						if (loadingDialog == null) {
 							loadingDialog = LoadingDialogFragment.open(this@MainActivity)
 						}

@@ -124,9 +124,14 @@ class MeterSearchFragment : Fragment() {
 				}
 			}
 		}
-		if (searchState.lowBattery) meterRows = meterRows.filter { it.batteryVoltageDropAlarm == true }
-		if (searchState.innerPipeLeakage) meterRows = meterRows.filter { it.innerPipeLeakageAlarm == true }
-		if (searchState.shutoff) meterRows = meterRows.filter { it.shutoff == true }
+		if (searchState.lowBattery || searchState.innerPipeLeakage || searchState.shutoff) {
+			meterRows = meterRows.filter {
+				val cond1 = if (searchState.lowBattery) it.batteryVoltageDropAlarm == true else false
+				val cond2 = if (searchState.innerPipeLeakage) it.innerPipeLeakageAlarm == true else false
+				val cond3 = if (searchState.shutoff) it.shutoff == true else false
+				cond1 || cond2 || cond3
+			}
+		}
 		meterRows = meterRows.sortedWith(compareBy<MeterRow> { it.group }.thenBy { it.queue })
 
 		meterListAdapter.submitList(meterRows)

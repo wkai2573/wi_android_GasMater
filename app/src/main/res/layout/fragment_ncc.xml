@@ -122,6 +122,20 @@
     <LinearLayout
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
+      android:visibility="visible"
+      tools:visibility="visible">
+
+      <Button
+        android:id="@+id/testBtn"
+        style="?attr/materialButtonOutlinedStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="測試" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
       android:gravity="center"
       android:visibility="gone"
       tools:visibility="visible">

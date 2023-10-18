@@ -2,6 +2,8 @@ package com.wavein.gasmeter.ui.ncc
 
 import android.Manifest
 import android.app.Activity
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -17,9 +19,11 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -28,11 +32,10 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.FragmentNccBinding
 import com.wavein.gasmeter.tools.Preference
-import com.wavein.gasmeter.tools.RD64H
-import com.wavein.gasmeter.tools.toHexString
-import com.wavein.gasmeter.tools.toText
-import com.wavein.gasmeter.ui.bluetooth.BtDialogFragment
+import com.wavein.gasmeter.tools.rd64h.*
+import com.wavein.gasmeter.tools.rd64h.info.*
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
+import com.wavein.gasmeter.ui.bluetooth.BtDialogFragment
 import com.wavein.gasmeter.ui.bluetooth.CommEndEvent
 import com.wavein.gasmeter.ui.bluetooth.CommState
 import com.wavein.gasmeter.ui.bluetooth.ConnectEvent
@@ -46,6 +49,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+
+@ExperimentalUnsignedTypes
 class NccFragment : Fragment() {
 
 	// binding & viewModel
@@ -217,12 +222,30 @@ class NccFragment : Fragment() {
 			onResume()
 			val meterId = binding.meterEt.text.toString()
 			Preference[Preference.NCC_METER_ID] = meterId //紀錄本次輸入
-			checkBluetoothOn { blVM.sendR80Telegram(listOf(meterId)) }
+			// R80方式
+			// checkBluetoothOn { blVM.sendR80Telegram(listOf(meterId)) }
+			// R87方式
+			checkBluetoothOn {
+				blVM.sendR87Telegram(
+					meterId, listOf(
+						R87R05Step(meterId),
+						R87R23Step(meterId)
+					)
+				)
+			}
 		}
 		// UI: R80群組抄表按鈕
 		binding.action2Btn.setOnClickListener {
 			onResume()
 			checkBluetoothOn { blVM.sendR80Telegram(listOf("00000002306003", "00000002306004")) }
+		}
+
+		// UI: 測試按鈕
+		binding.testBtn.setOnClickListener {
+			val respText =
+				"ZD00000002306003D87120001003030303030303032333036303033303030303030303233303630303300454>314430353030303031323838394042424043404840202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202079"
+			val info = BaseInfo.get(respText, D87D05Info::class.java) as D87D05Info
+			addMsg(info.text)
 		}
 	}
 
@@ -349,6 +372,13 @@ class LogAdapter(context:Context, resource:Int, groups:List<LogMsg>) : ArrayAdap
 		val view:TextView = super.getView(position, convertView, parent) as TextView
 		val logMsg:LogMsg = getItem(position)!!
 		view.text = logMsg.spannable
+		view.setOnClickListener {
+			// 點擊複製至剪貼簿
+			val clipboard:ClipboardManager? = ContextCompat.getSystemService(context, ClipboardManager::class.java)
+			val clip = ClipData.newPlainText("label", view.text.toString())
+			clipboard?.setPrimaryClip(clip)
+			Toast.makeText(context, "已複製至剪貼簿", Toast.LENGTH_SHORT).show()
+		}
 		return view
 	}
 }

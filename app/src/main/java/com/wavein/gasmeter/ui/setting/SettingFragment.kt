@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,6 +25,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.FragmentSettingBinding
 import com.wavein.gasmeter.tools.NetworkInfo
@@ -31,11 +33,14 @@ import com.wavein.gasmeter.tools.Preference
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.bluetooth.BtDialogFragment
+import com.wavein.gasmeter.ui.bluetooth.ConnectEvent
 import com.wavein.gasmeter.ui.ftp.AppState
 import com.wavein.gasmeter.ui.ftp.FtpConnState
 import com.wavein.gasmeter.ui.ftp.FtpSettingDialogFragment
 import com.wavein.gasmeter.ui.ftp.FtpViewModel
+import com.wavein.gasmeter.ui.loading.Tip
 import com.wavein.gasmeter.ui.meterwork.MeterViewModel
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -77,6 +82,10 @@ class SettingFragment : Fragment() {
 
 		// 藍牙設備__________
 
+		binding.btSelectBtn.setOnClickListener {
+			checkBluetoothOn { BtDialogFragment.open(requireContext()) }
+		}
+
 		// 訂閱藍牙設備
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -92,9 +101,6 @@ class SettingFragment : Fragment() {
 					}
 				}
 			}
-		}
-		binding.btSelectBtn.setOnClickListener {
-			checkBluetoothOn { BtDialogFragment.open(requireContext()) }
 		}
 
 		// 檔案管理__________
@@ -194,11 +200,11 @@ class SettingFragment : Fragment() {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				ftpVM.ftpConnStateFlow.asStateFlow().collectLatest {
 					when (it) {
-						is FtpConnState.Idle -> SharedEvent.loadingFlow.value = ""
+						is FtpConnState.Idle -> SharedEvent.loadingFlow.value = Tip()
 						is FtpConnState.Connecting -> SharedEvent.loadingFlow.value =
-							if (ftpVM.appStateFlow.value == AppState.Checking) "序號驗證中" else "連線FTP中"
+							Tip(if (ftpVM.appStateFlow.value == AppState.Checking) "序號驗證中" else "連線FTP中")
 
-						is FtpConnState.Connected -> SharedEvent.loadingFlow.value = ""
+						is FtpConnState.Connected -> SharedEvent.loadingFlow.value = Tip()
 					}
 				}
 			}
@@ -235,7 +241,7 @@ class SettingFragment : Fragment() {
 							binding.appActivatedTv.text = text
 							binding.appActivatedTv.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.md_theme_light_tertiary))
 							binding.appkeyLayout.visibility = View.GONE
-							binding.btArea.visibility = View.VISIBLE
+							binding.btArea.visibility = View.VISIBLE // todo bt設定永不顯示可能比較好?
 							binding.fileArea.visibility = View.VISIBLE
 						}
 					}

@@ -2,7 +2,6 @@ package com.wavein.gasmeter.ui.meterwork.row
 
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,15 +11,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.wavein.gasmeter.data.model.MeterRow
-import com.wavein.gasmeter.data.model.toMeterGroups
 import com.wavein.gasmeter.databinding.FragmentMeterInfoBinding
-import com.wavein.gasmeter.tools.RD64H
+import com.wavein.gasmeter.tools.rd64h.R87R05Step
+import com.wavein.gasmeter.tools.rd64h.R87R23Step
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.meterwork.MeterBaseFragment
 import com.wavein.gasmeter.ui.meterwork.MeterViewModel
 import com.wavein.gasmeter.ui.setting.CsvViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -81,8 +78,16 @@ class MeterInfoFragment : Fragment() {
 				.setPositiveButton("確定") { dialog, which ->
 					dialog.dismiss()
 					val meterRow = meterVM.selectedMeterRowFlow.value ?: return@setPositiveButton
+					//todo 還要多查遮斷時間 (需改用R87的方式查)
 					meterBaseFragment.checkBluetoothOn { blVM.sendR80Telegram(listOf(meterRow.meterId)) }
-					//todo 還要多查遮斷時間 (maybe五次遮斷履歷; or整個個別抄表要用R87的方式查)
+//					meterBaseFragment.checkBluetoothOn {
+//						blVM.sendR87Telegram(
+//							meterRow.meterId, listOf(
+//								R87R05Step(meterRow.meterId),
+//								R87R23Step(meterRow.meterId)
+//							)
+//						)
+//					}
 				}
 				.show()
 		}

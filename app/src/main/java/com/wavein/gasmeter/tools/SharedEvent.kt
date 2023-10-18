@@ -4,6 +4,7 @@ import android.content.DialogInterface
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import com.google.android.material.snackbar.Snackbar
+import com.wavein.gasmeter.ui.loading.Tip
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 
@@ -38,6 +39,6 @@ sealed class SharedEvent {
 		val eventFlow = MutableSharedFlow<SharedEvent>()
 
 		// 可觀察變數
-		val loadingFlow = MutableStateFlow("")
+		val loadingFlow = MutableStateFlow(Tip())
 	}
 }

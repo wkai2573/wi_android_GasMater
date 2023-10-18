@@ -10,10 +10,10 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.material.snackbar.Snackbar
-import com.wavein.gasmeter.tools.RD64H
 import com.wavein.gasmeter.tools.SharedEvent
-import com.wavein.gasmeter.tools.toHexString
-import com.wavein.gasmeter.tools.toText
+import com.wavein.gasmeter.tools.rd64h.*
+import com.wavein.gasmeter.tools.rd64h.info.*
+import com.wavein.gasmeter.ui.loading.Tip
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -28,6 +28,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 @SuppressLint("MissingPermission")
+@OptIn(ExperimentalUnsignedTypes::class)
 class BluetoothViewModel @Inject constructor(
 	private val savedStateHandle:SavedStateHandle, //導航參數(hilt注入)
 	// 注入實例
@@ -135,7 +136,7 @@ class BluetoothViewModel @Inject constructor(
 		parentDeviceClient = null
 		transceiver = null
 		commStateFlow.value = CommState.NotConnected
-		commTextStateFlow.value = "未連結設備"
+		commTextStateFlow.value = Tip("未連結設備")
 	}
 
 	//endregion
@@ -157,7 +158,7 @@ class BluetoothViewModel @Inject constructor(
 			ConnectEvent.Connecting -> {
 				connectEventFlow.emit(ConnectEvent.Connecting)
 				commStateFlow.value = CommState.Connecting
-				commTextStateFlow.value = "設備連結中"
+				commTextStateFlow.value = Tip("設備連結中")
 			}
 
 			ConnectEvent.ConnectionFailed -> {
@@ -173,7 +174,7 @@ class BluetoothViewModel @Inject constructor(
 			ConnectEvent.Connected -> {
 				connectEventFlow.emit(ConnectEvent.Connected)
 				commStateFlow.value = CommState.ReadyCommunicate
-				commTextStateFlow.value = "設備已連結"
+				commTextStateFlow.value = Tip("設備已連結")
 			}
 
 			ConnectEvent.Listening -> {
@@ -280,12 +281,12 @@ class BluetoothViewModel @Inject constructor(
 
 	// 相關屬性
 	val commStateFlow = MutableStateFlow<CommState>(CommState.NotConnected)
-	val commTextStateFlow = MutableStateFlow("未連結設備")
+	val commTextStateFlow = MutableStateFlow(Tip("未連結設備"))
 	val commEndSharedEvent = MutableSharedFlow<CommEndEvent>()
-	var commResult:MutableMap<String, RD64H.BaseInfo> = mutableMapOf()
+	var commResult:MutableMap<String, BaseInfo> = mutableMapOf()
 
-	var sendSteps = mutableListOf<RD64H.BaseStep>()
-	var receiveSteps = mutableListOf<RD64H.BaseStep>()
+	var sendSteps = mutableListOf<BaseStep>()
+	var receiveSteps = mutableListOf<BaseStep>()
 	var totalReceiveCount = 0
 	var receivedCount = 0
 
@@ -297,7 +298,7 @@ class BluetoothViewModel @Inject constructor(
 			commEndSharedEvent.emit(CommEndEvent.Success(commResult))
 		}
 		commStateFlow.value = CommState.ReadyCommunicate
-		commTextStateFlow.value = "通信完畢"
+		commTextStateFlow.value = Tip("通信完畢")
 	}
 
 	// 發送自訂電文組合
@@ -307,11 +308,11 @@ class BluetoothViewModel @Inject constructor(
 		commResult = mutableMapOf()
 
 		sendSteps = mutableListOf(
-			RD64H.SingleSendStep(toSendText),
-			RD64H.__AStep()
+			RTestStep(toSendText),
+			__AStep()
 		)
 		receiveSteps = mutableListOf(
-			RD64H.SingleRespStep()
+			DTestStep()
 		)
 		totalReceiveCount = 1
 		receivedCount = 0
@@ -325,52 +326,139 @@ class BluetoothViewModel @Inject constructor(
 		commResult = mutableMapOf()
 
 		sendSteps = mutableListOf(
-			RD64H.__5Step(),
-			RD64H.R80Step(meterIds),
-			RD64H.__AStep(),
+			__5Step(),
+			R80Step(meterIds),
+			__AStep(),
 		)
 		receiveSteps = mutableListOf(
-			RD64H.D70Step(),
-			RD64H.D05Step(meterIds.size),
+			D70Step(),
+			D05Step(meterIds.size),
 		)
 		totalReceiveCount = 1 + meterIds.size
 		receivedCount = 0
 		sendByStep()
 	}
 
-	// 依步驟發送電文
+	// 發送R87電文組合
+	fun sendR87Telegram(meterId:String, steps:List<BaseStep>) = viewModelScope.launch {
+		if (commStateFlow.value != CommState.ReadyCommunicate) return@launch
+		commStateFlow.value = CommState.Communicating
+		commResult = mutableMapOf()
+
+		sendSteps = mutableListOf(
+			__5Step(),
+			R89Step(meterId),
+			//如果需分割, 要在下方補n個 R70
+			*steps.flatMap {
+				when (it) {
+					// 2分割
+					is R87R23Step -> listOf(it, R70Step(it.meterId))
+					// 無分割
+					else -> listOf(it)
+				}
+			}.toTypedArray(),
+			__AStep(),
+		)
+		receiveSteps = mutableListOf(
+			D70Step(),
+			D36Step(),
+			*steps.flatMap {
+				when (it) {
+					is R87R01Step -> listOf(D87D01Step())
+					is R87R05Step -> listOf(D87D05Step())
+					is R87R23Step -> listOf(D87D23Step(part = 1), D87D23Step(part = 2))
+					else -> listOf()
+				}
+			}.toTypedArray()
+		)
+		totalReceiveCount = receiveSteps.size
+		receivedCount = 0
+		sendByStep()
+	}
+
+	// 依步驟發送電文 !!!電文處理中途
 	private suspend fun sendByStep() {
 		if (sendSteps.isEmpty()) {
 			onCommEnd()
 			return
 		}
 		when (val sendStep = sendSteps.removeAt(0)) {
-			is RD64H.SingleSendStep -> {
+			is RTestStep -> {
 				val sendText = sendStep.text
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
-				commTextStateFlow.value = "通信中: $sendText [${sendSP.toHexString()}]"
+				commTextStateFlow.value = Tip("通信中: $sendText [${sendSP.toHexString()}]")
+				delay(2000L)
 				transceiver?.write(sendSP)
 			}
 
-			is RD64H.__5Step -> {
-				commTextStateFlow.value = "通信中:5↔D70 ($progressText)"
+			is __5Step -> {
+				commTextStateFlow.value = Tip("通信中:5↔D70", "($progressText)") //todo 與母機建立連結
 				val sendSP = RD64H.telegramConvert("5", "+s+p")
+				delay(2000L)
 				transceiver?.write(sendSP)
 			}
 
-			is RD64H.R80Step -> {
-				commTextStateFlow.value = "通信中:R80↔D05 ($progressText)"
-				val btParentId = (commResult["D70"] as RD64H.D70Info).btParentId
+			is R80Step -> {
+				commTextStateFlow.value = Tip("通信中:R80↔D05", "($progressText)") //todo 準備群組抄表
+				val btParentId = (commResult["D70"] as D70Info).btParentId
 				val sendText = RD64H.createR80Text(btParentId, sendStep.meterIds)
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
+				delay(2000L)
 				transceiver?.write(sendSP)
 			}
 
-			is RD64H.__AStep -> {
+			is __AStep -> {
 				val sendSP = RD64H.telegramConvert("A", "+s+p")
+				delay(3500L)
 				transceiver?.write(sendSP)
-				delay(1000)
+				delay(1000L)
 				onCommEnd()
+			}
+
+			is R89Step -> {
+				commTextStateFlow.value = Tip("通信中:R89↔D36", "($progressText)") //todo 與母機建立連結
+				val sendText = "ZA${sendStep.meterId}R8966ZD${sendStep.meterId}R36"
+				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
+				delay(2000L)
+				transceiver?.write(sendSP)
+			}
+
+			is R87R01Step -> {
+				commTextStateFlow.value = Tip("通信中:R87R01↔R87D05", "($progressText)") //todo 取得讀數中
+				val r87 = "ZD${sendStep.meterId}R87"
+				val aLine = RD64H.createR87Aline(adr = sendStep.meterId, op = "R01", data = "")
+				val sendText = r87 + aLine.toByteArray().toText()
+				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
+				delay(2000L)
+				transceiver?.write(sendSP)
+			}
+
+			is R87R05Step -> {
+				commTextStateFlow.value = Tip("通信中:R87R05↔R87D05", "($progressText)") //todo 取得讀數中
+				val r87 = "ZD${sendStep.meterId}R87"
+				val aLine = RD64H.createR87Aline(adr = sendStep.meterId, op = "R05", data = "")
+				val sendText = r87 + aLine.toByteArray().toText()
+				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
+				delay(2000L)
+				transceiver?.write(sendSP)
+			}
+
+			is R87R23Step -> {
+				commTextStateFlow.value = Tip("通信中:R87R23↔R87D23", "($progressText)") //todo 取得五回遮斷中
+				val r87 = "ZD${sendStep.meterId}R87"
+				val aLine = RD64H.createR87Aline(adr = sendStep.meterId, op = "R23", data = "")
+				val sendText = r87 + aLine.toByteArray().toText()
+				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
+				delay(2000L)
+				transceiver?.write(sendSP)
+			}
+
+			is R70Step -> {
+				commTextStateFlow.value = commTextStateFlow.value.copy(subtitle = "($progressText)") //todo 取得五回遮斷中
+				val sendText = "ZD${sendStep.meterId}R70"
+				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
+				delay(2000L)
+				transceiver?.write(sendSP)
 			}
 
 			else -> {
@@ -379,81 +467,95 @@ class BluetoothViewModel @Inject constructor(
 		}
 	}
 
-	// 進度文字
-	private val progressText:String get() {
-		val percentage = (receivedCount.toDouble() / totalReceiveCount * 100).toInt()
-		return "$percentage%"
-	}
-
-	// 依步驟接收電文
+	// 依步驟接收電文 !!!電文處理中途
 	private fun onReceiveByStep(readSP:ByteArray) = viewModelScope.launch {
-		try {
-			receivedCount++
-			if (receiveSteps.isEmpty()) throw Exception("無receiveSteps")
-			var continueSend = false
-			val receiveStep = receiveSteps[0]
-			val read = RD64H.telegramConvert(readSP, "-s-p")
-			val respText = read.toText()
+		receivedCount++
+		if (receiveSteps.isEmpty()) throw Exception("無receiveSteps")
+		var continueSend = false
+		val receiveStep = receiveSteps[0]
+		val read = RD64H.telegramConvert(readSP, "-s-p")
+		val respText = read.toText()
 
+		try {
 			when (receiveStep) {
-				is RD64H.SingleRespStep -> {
-					commResult["single"] = RD64H.BaseInfo(respText)
+				is DTestStep -> {
+					commResult["single"] = BaseInfo(respText)
 					receiveSteps.removeAt(0)
 					continueSend = true
 				}
 
-				is RD64H.D70Step -> {
-					when (val info = RD64H.getInfo(respText, RD64H.D70Info::class.java)) {
-						is RD64H.D70Info -> {
-							commResult["D70"] = info
-							receiveSteps.removeAt(0)
-							continueSend = true
-						}
+				is D70Step -> {
+					val info = BaseInfo.get(respText, D70Info::class.java) as D70Info
+					commResult["D70"] = info
+					receiveSteps.removeAt(0)
+					continueSend = true
+				}
 
-						else -> exceptionInfoHandle(info, respText)
+				is D05Step -> {
+					commTextStateFlow.value = commTextStateFlow.value.copy(subtitle = "($progressText)")
+					val info = BaseInfo.get(respText, D05Info::class.java) as D05Info
+					commResult["D05"] = info
+					if (!commResult.containsKey("D05m")) commResult["D05m"] = D05mInfo()
+					val d05InfoList = (commResult["D05m"] as D05mInfo).list
+					d05InfoList.add(info)
+					if (d05InfoList.size == receiveStep.count) {
+						receiveSteps.removeAt(0)
+						continueSend = true
 					}
 				}
 
-				is RD64H.D05Step -> {
-					commTextStateFlow.value = "通信中:R80↔D05 ($progressText)"
-					when (val info = RD64H.getInfo(respText, RD64H.D05Info::class.java)) {
-						is RD64H.D05Info -> {
-							commResult["D05"] = info
-							if (!commResult.containsKey("D05m")) commResult["D05m"] = RD64H.D05mInfo()
-							val d05InfoList = (commResult["D05m"] as RD64H.D05mInfo).list
-							d05InfoList.add(info)
-							if (d05InfoList.size == receiveStep.count) {
-								receiveSteps.removeAt(0)
-								continueSend = true
-							}
-						}
+				is D36Step -> {
+					val info = BaseInfo.get(respText, D36Info::class.java) as D36Info
+					commResult["D36"] = info
+					receiveSteps.removeAt(0)
+					continueSend = true
+				}
 
-						else -> exceptionInfoHandle(info, respText)
-					}
+				is D87D01Step -> {
+					val info = BaseInfo.get(respText, D87D01Info::class.java) as D87D01Info
+					commResult["D87D01"] = info
+					receiveSteps.removeAt(0)
+					continueSend = true
+				}
+
+				is D87D05Step -> {
+					val info = BaseInfo.get(respText, D87D05Info::class.java) as D87D05Info
+					commResult["D87D05"] = info
+					receiveSteps.removeAt(0)
+					continueSend = true
+				}
+
+				is D87D23Step -> {
+					val info = (
+							if (commResult.containsKey("D87D23")) commResult["D87D23"]
+							else BaseInfo.get(respText, D87D23Info::class.java)
+							) as D87D23Info
+					info.writePart(respText)
+					commResult["D87D23"] = info
+					receiveSteps.removeAt(0)
+					continueSend = true
 				}
 			}
 
 			if (continueSend) sendByStep()
 		} catch (error:Exception) {
 			error.printStackTrace()
-			errHandle(error.message ?: "")
+			// 錯誤處理: 檢查是不是D16
+			kotlin.runCatching {
+				val info = BaseInfo.get(respText, D16Info::class.java) as D16Info
+				commResult["D16"] = info
+			}
+			commResult["Error"] = BaseInfo(respText)
+			onCommEnd()
 		}
 	}
 
-	// 異常回傳結果(Info)處理
-	private fun exceptionInfoHandle(info:RD64H.BaseInfo, respText:String) {
-		if (info is RD64H.D16Info) {
-			commResult["D16"] = info
-			throw Error("D16")
+	// 進度文字
+	private val progressText:String
+		get() {
+			val percentage = (receivedCount.toDouble() / totalReceiveCount * 100).toInt()
+			return "$percentage%"
 		}
-		throw Error("異常接收訊息錯誤: $respText")
-	}
-
-	// 錯誤處理
-	private fun errHandle(respText:String) {
-		commResult["Error"] = RD64H.BaseInfo(respText)
-		onCommEnd()
-	}
 
 	//endregion
 }

@@ -30,9 +30,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.IntentCompat
 import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.databinding.FragmentTestBinding
-import com.wavein.gasmeter.tools.RD64H
-import com.wavein.gasmeter.tools.toHexString
-import com.wavein.gasmeter.tools.toText
+import com.wavein.gasmeter.tools.rd64h.RD64H
+import com.wavein.gasmeter.tools.rd64h.toHexString
+import com.wavein.gasmeter.tools.rd64h.toText
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
