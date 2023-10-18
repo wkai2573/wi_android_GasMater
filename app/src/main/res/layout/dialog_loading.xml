@@ -28,10 +28,18 @@
         android:padding="12dp" />
 
       <TextView
+        android:id="@+id/progressTv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="?attr/colorTertiary"
+        android:textSize="14sp"
+        tools:text="33%" />
+
+      <TextView
         android:id="@+id/titleTv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="12dp"
+        android:padding="6dp"
         android:textColor="?attr/colorTertiary"
         android:textSize="18sp"
         tools:text="讀取文字" />

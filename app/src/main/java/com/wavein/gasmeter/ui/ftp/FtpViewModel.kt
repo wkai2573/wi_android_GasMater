@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.os.Environment
-import android.provider.DocumentsContract
 import android.view.View
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -258,6 +257,14 @@ class FtpViewModel @Inject constructor(
 	}
 
 	// ==DOWNLOAD==
+	// 根目錄
+	private val rootDirectory get() = Environment.getExternalStorageDirectory()
+
+	// Download資料夾
+	private val downloadDirectory get() = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+	// 外部空間根目錄/NXU Gas Meter
+	// private val directory get() = File(rootDirectory, "NXU Gas Meter")
+
 	fun downloadFileOpenFolder(context:Context, csvVM:CsvViewModel, meterVM:MeterViewModel) {
 		ftpProcess(downloadFtpInfo, "") { ftpClient ->
 			ftpClient.setFileType(FTP.BINARY_FILE_TYPE)
@@ -273,9 +280,9 @@ class FtpViewModel @Inject constructor(
 				val builder = MaterialAlertDialogBuilder(context)
 					.setTitle("選擇檔案")
 					.setItems(fileArray) { dialogInterface, index ->
-						val filename = fileArray[index]
-						downloadFile(context, csvVM, meterVM, filename)
 						dialogInterface.dismiss()
+						val filename = fileArray[index]
+						downloadFileCheckOverwrite(context, csvVM, meterVM, filename)
 					}
 					.create()
 				SharedEvent.eventFlow.emit(SharedEvent.ShowDialogB(builder))
@@ -283,21 +290,36 @@ class FtpViewModel @Inject constructor(
 		}
 	}
 
+	private fun downloadFileCheckOverwrite(context:Context, csvVM:CsvViewModel, meterVM:MeterViewModel, filename:String) {
+		downloadDirectory.mkdirs()
+		val localFile = File(downloadDirectory, filename)
+		if (localFile.exists()) {
+			viewModelScope.launch {
+				val builder = MaterialAlertDialogBuilder(context)
+					.setTitle("檔案已存在")
+					.setMessage("是否覆蓋 \"$filename\"")
+					.setNegativeButton("取消") { dialog, which -> dialog.dismiss() }
+					.setPositiveButton("確定") { dialog, which ->
+						dialog.dismiss()
+						downloadFile(context, csvVM, meterVM, filename)
+					}
+					.create()
+				SharedEvent.eventFlow.emit(SharedEvent.ShowDialogB(builder))
+			}
+		} else {
+			downloadFile(context, csvVM, meterVM, filename)
+		}
+	}
+
 	private fun downloadFile(context:Context, csvVM:CsvViewModel, meterVM:MeterViewModel, filename:String) {
 		ftpProcess(downloadFtpInfo, "") { ftpClient ->
-			val rootDirectory = Environment.getExternalStorageDirectory()
-			// 下載到Download資料夾
-			 val directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-			// 下載到"外部空間根目錄/NXU Gas Meter"
-			// val directory = File(rootDirectory, "NXU Gas Meter")
-			directory.mkdirs()
-
-			val localFile = File(directory, filename)
+			downloadDirectory.mkdirs()
+			val localFile = File(downloadDirectory, filename)
 			val outputStream = FileOutputStream(localFile)
 			val success = ftpClient.retrieveFile(encode(filename), outputStream)
 			outputStream.close()
 			if (success) {
-				showSnack("\"$filename\" 已保存於 \"/${directory.toRelativeString(rootDirectory)}\"", SharedEvent.Color.Success)
+				showSnack("\"$filename\" 已保存於 \"/${downloadDirectory.toRelativeString(rootDirectory)}\"", SharedEvent.Color.Success)
 				csvVM.readCsv(context, Uri.fromFile(localFile), meterVM, filename)
 			} else {
 				showSnack("下載失敗")

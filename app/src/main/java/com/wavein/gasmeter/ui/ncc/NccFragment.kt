@@ -179,7 +179,7 @@ class NccFragment : Fragment() {
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.commTextStateFlow.asStateFlow().collectLatest {
-					val text = "通信狀態🔹 $it"
+					val text = "通信狀態🔹 ${it.title} ${it.subtitle} ${it.progress}"
 					binding.commTv.text = text
 				}
 			}

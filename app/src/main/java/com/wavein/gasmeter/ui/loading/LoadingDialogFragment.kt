@@ -52,10 +52,12 @@ class LoadingDialogFragment(
 		// 訂閱loading文字
 		lifecycleScope.launch {
 			activity.repeatOnLifecycle(Lifecycle.State.STARTED) {
-				SharedEvent.loadingFlow.asStateFlow().collectLatest {
-					binding?.titleTv?.text = it.title
-					binding?.subtitleTv?.visibility = if (it.subtitle.isEmpty()) View.GONE else View.VISIBLE
-					binding?.subtitleTv?.text = it.subtitle
+				SharedEvent.loadingFlow.asStateFlow().collectLatest { tip ->
+					binding?.titleTv?.text = tip.title
+					binding?.subtitleTv?.visibility = if (tip.subtitle.isEmpty()) View.GONE else View.VISIBLE
+					binding?.subtitleTv?.text = tip.subtitle
+					binding?.progressTv?.visibility = if (tip.progress.isEmpty()) View.GONE else View.VISIBLE
+					binding?.progressTv?.text = tip.progress
 				}
 			}
 		}

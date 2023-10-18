@@ -352,7 +352,7 @@ class BluetoothViewModel @Inject constructor(
 			*steps.flatMap {
 				when (it) {
 					// 2分割
-					is R87R23Step -> listOf(it, R70Step(it.meterId))
+					is R87R23Step -> listOf(it.copy(cc = "!@\u0000\u0010"), it.copy(cc = "!@\u0000\u0011"), R70Step(it.meterId))
 					// 無分割
 					else -> listOf(it)
 				}
@@ -366,7 +366,7 @@ class BluetoothViewModel @Inject constructor(
 				when (it) {
 					is R87R01Step -> listOf(D87D01Step())
 					is R87R05Step -> listOf(D87D05Step())
-					is R87R23Step -> listOf(D87D23Step(part = 1), D87D23Step(part = 2))
+					is R87R23Step -> listOf(D70Step(), D87D23Step(part = 1), D87D23Step(part = 2))
 					else -> listOf()
 				}
 			}.toTypedArray()
@@ -392,14 +392,14 @@ class BluetoothViewModel @Inject constructor(
 			}
 
 			is __5Step -> {
-				commTextStateFlow.value = Tip("通信中:5↔D70", "($progressText)") //todo 與母機建立連結
+				commTextStateFlow.value = Tip("正在與母機建立連結", "5↔D70", progressText)
 				val sendSP = RD64H.telegramConvert("5", "+s+p")
 				delay(2000L)
 				transceiver?.write(sendSP)
 			}
 
 			is R80Step -> {
-				commTextStateFlow.value = Tip("通信中:R80↔D05", "($progressText)") //todo 準備群組抄表
+				commTextStateFlow.value = Tip("群組抄表中", "R80↔D05", progressText)
 				val btParentId = (commResult["D70"] as D70Info).btParentId
 				val sendText = RD64H.createR80Text(btParentId, sendStep.meterIds)
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
@@ -416,7 +416,7 @@ class BluetoothViewModel @Inject constructor(
 			}
 
 			is R89Step -> {
-				commTextStateFlow.value = Tip("通信中:R89↔D36", "($progressText)") //todo 與母機建立連結
+				commTextStateFlow.value = Tip("正在與母機建立連結", "R89↔D36", progressText)
 				val sendText = "ZA${sendStep.meterId}R8966ZD${sendStep.meterId}R36"
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
 				delay(2000L)
@@ -424,7 +424,7 @@ class BluetoothViewModel @Inject constructor(
 			}
 
 			is R87R01Step -> {
-				commTextStateFlow.value = Tip("通信中:R87R01↔R87D05", "($progressText)") //todo 取得讀數中
+				commTextStateFlow.value = Tip("正在取得讀數", "R87R01", progressText)
 				val r87 = "ZD${sendStep.meterId}R87"
 				val aLine = RD64H.createR87Aline(adr = sendStep.meterId, op = "R01", data = "")
 				val sendText = r87 + aLine.toByteArray().toText()
@@ -434,7 +434,7 @@ class BluetoothViewModel @Inject constructor(
 			}
 
 			is R87R05Step -> {
-				commTextStateFlow.value = Tip("通信中:R87R05↔R87D05", "($progressText)") //todo 取得讀數中
+				commTextStateFlow.value = Tip("正在取得讀數", "R87R05", progressText)
 				val r87 = "ZD${sendStep.meterId}R87"
 				val aLine = RD64H.createR87Aline(adr = sendStep.meterId, op = "R05", data = "")
 				val sendText = r87 + aLine.toByteArray().toText()
@@ -444,9 +444,9 @@ class BluetoothViewModel @Inject constructor(
 			}
 
 			is R87R23Step -> {
-				commTextStateFlow.value = Tip("通信中:R87R23↔R87D23", "($progressText)") //todo 取得五回遮斷中
+				commTextStateFlow.value = Tip("正在取得五回遮斷履歷", "R87R23", progressText)
 				val r87 = "ZD${sendStep.meterId}R87"
-				val aLine = RD64H.createR87Aline(adr = sendStep.meterId, op = "R23", data = "")
+				val aLine = RD64H.createR87Aline(adr = sendStep.meterId, op = "R23", data = "", cc = sendStep.cc)
 				val sendText = r87 + aLine.toByteArray().toText()
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
 				delay(2000L)
@@ -454,7 +454,7 @@ class BluetoothViewModel @Inject constructor(
 			}
 
 			is R70Step -> {
-				commTextStateFlow.value = commTextStateFlow.value.copy(subtitle = "($progressText)") //todo 取得五回遮斷中
+				commTextStateFlow.value = commTextStateFlow.value.copy(subtitle = "R70", progress = progressText)
 				val sendText = "ZD${sendStep.meterId}R70"
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
 				delay(2000L)
@@ -492,7 +492,7 @@ class BluetoothViewModel @Inject constructor(
 				}
 
 				is D05Step -> {
-					commTextStateFlow.value = commTextStateFlow.value.copy(subtitle = "($progressText)")
+					commTextStateFlow.value = commTextStateFlow.value.copy(progress = progressText)
 					val info = BaseInfo.get(respText, D05Info::class.java) as D05Info
 					commResult["D05"] = info
 					if (!commResult.containsKey("D05m")) commResult["D05m"] = D05mInfo()
