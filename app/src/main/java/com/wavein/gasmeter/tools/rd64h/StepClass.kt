@@ -19,7 +19,7 @@ data class R70Step(val meterId:String) : BaseStep()
 data class R87Step(val cc:String = "\u0021\u0040\u0000\u0000", val adr:String, val op:String, val data:String = "") : BaseStep()
 class D87D01Step : BaseStep()
 class D87D05Step : BaseStep()
-class D87D23Step(val part:Int) : BaseStep()
+class D87D23Step : BaseStep()
 
 
 

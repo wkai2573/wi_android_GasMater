@@ -17,14 +17,15 @@ import androidx.lifecycle.viewModelScope
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import com.github.doyaaaaaken.kotlincsv.dsl.csvWriter
 import com.google.android.material.snackbar.Snackbar
-import com.wavein.gasmeter.data.model.MeterRow
 import com.wavein.gasmeter.data.model.toCsvRows
 import com.wavein.gasmeter.data.model.toMeterRows
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.ui.meterwork.MeterViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileDescriptor
 import java.io.FileInputStream
@@ -116,38 +117,38 @@ class CsvViewModel @Inject constructor(
 	}
 
 	// 寫入檔案
-	private fun writeFile(relativePath:String, content:String) {
+	private fun writeFile(relativePath:String, content:String) = viewModelScope.launch {
 		// 分解路徑 -> dirs & filename
 		val relativeFile = File(relativePath)
 		val dirs = relativeFile.parent?.split(File.separator) ?: emptyList()
 		val filename = relativeFile.name
 		if (filename.isEmpty()) {
-			viewModelScope.launch {
-				SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("缺少檔名", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
-			}
-			return
+			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("缺少檔名", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
 		}
 		// 進入該目錄 & 寫入檔案
-		val externalStorageState = Environment.getExternalStorageState()
-		if (Environment.MEDIA_MOUNTED == externalStorageState) {
-			val rootDirectory = Environment.getExternalStorageDirectory()
-			var directory = rootDirectory
-			for (dir in dirs) {
-				directory = File(directory, dir)
-				directory.mkdirs()
-			}
-			val file = File(directory, filename)
-			val outputStream = FileOutputStream(file)
-			try {
-				// 寫入的字碼格式為 utf8 with bom
-				outputStream.write(bom + content.toByteArray())
-			} catch (e:IOException) {
-				e.printStackTrace()
-			} finally {
-				outputStream.close()
+		withContext(Dispatchers.IO) {
+			val externalStorageState = Environment.getExternalStorageState()
+			if (Environment.MEDIA_MOUNTED == externalStorageState) {
+				val rootDirectory = Environment.getExternalStorageDirectory()
+				var directory = rootDirectory
+				for (dir in dirs) {
+					directory = File(directory, dir)
+					directory.mkdirs()
+				}
+				val file = File(directory, filename)
+				val outputStream = FileOutputStream(file)
+				try {
+					// 寫入的字碼格式為 utf8 with bom
+					outputStream.write(bom + content.toByteArray())
+				} catch (e:IOException) {
+					e.printStackTrace()
+				} finally {
+					outputStream.close()
+				}
 			}
 		}
 	}
+
 }
 
 // 檔案資訊

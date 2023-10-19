@@ -351,9 +351,9 @@ class BluetoothViewModel @Inject constructor(
 			//如果需分割, 要在下方補n個 R70
 			*r87Steps.flatMapIndexed { index, step ->
 				when (step.op) {
-					// 2分割
+					// 2part
 					"R23" -> listOf(step.copy(cc = "\u0021\u0040${index.toChar()}\u0000"), R70Step(step.adr))
-					// 無分割
+					// 1part
 					else -> listOf(step.copy(cc = "\u0021\u0040${index.toChar()}\u0000"))
 				}
 			}.toTypedArray(),
@@ -366,7 +366,7 @@ class BluetoothViewModel @Inject constructor(
 				when (step.op) {
 					"R01" -> listOf(D87D01Step())
 					"R05" -> listOf(D87D05Step())
-					"R23" -> listOf(D87D23Step(part = 1), D87D23Step(part = 2))
+					"R23" -> listOf(D87D23Step(), D87D23Step()) //R23有2part
 					else -> listOf()
 				}
 			}.toTypedArray()
@@ -399,7 +399,7 @@ class BluetoothViewModel @Inject constructor(
 			}
 
 			is R80Step -> {
-				commTextStateFlow.value = Tip("群組抄表中", "R80↔D05", progressText)
+				commTextStateFlow.value = Tip("抄表中", "R80↔D05", progressText)
 				val btParentId = (commResult["D70"] as D70Info).btParentId
 				val sendText = RD64H.createR80Text(btParentId, sendStep.meterIds)
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
