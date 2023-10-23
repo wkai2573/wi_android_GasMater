@@ -40,6 +40,7 @@
 
 
   <com.google.android.material.textfield.TextInputLayout
+    android:id="@+id/hostInput"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="12dp"
@@ -47,7 +48,6 @@
     android:hint="主機 Host">
 
     <com.google.android.material.textfield.TextInputEditText
-      android:id="@+id/hostEt"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:layout_marginBottom="4dp"
@@ -55,6 +55,7 @@
   </com.google.android.material.textfield.TextInputLayout>
 
   <com.google.android.material.textfield.TextInputLayout
+    android:id="@+id/usernameInput"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="12dp"
@@ -62,7 +63,6 @@
     android:hint="使用者 User Name">
 
     <com.google.android.material.textfield.TextInputEditText
-      android:id="@+id/usernameEt"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:layout_marginBottom="4dp"
@@ -70,6 +70,7 @@
   </com.google.android.material.textfield.TextInputLayout>
 
   <com.google.android.material.textfield.TextInputLayout
+    android:id="@+id/passwordInput"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="12dp"
@@ -78,7 +79,6 @@
     app:endIconMode="password_toggle">
 
     <com.google.android.material.textfield.TextInputEditText
-      android:id="@+id/passwordEt"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:layout_marginBottom="4dp"
@@ -94,13 +94,13 @@
     android:gravity="center">
 
     <com.google.android.material.textfield.TextInputLayout
+      android:id="@+id/remoteDirectoryInput"
       android:layout_width="0dp"
       android:layout_height="wrap_content"
       android:layout_weight="1"
       android:hint="目錄 Directory">
 
       <com.google.android.material.textfield.TextInputEditText
-        android:id="@+id/remoteDirectoryEt"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="4dp"

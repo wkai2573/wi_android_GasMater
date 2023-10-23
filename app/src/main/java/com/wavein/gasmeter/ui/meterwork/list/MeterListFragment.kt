@@ -111,24 +111,31 @@ class MeterListFragment : Fragment() {
 		// 群組抄表按鈕
 		binding.groupReadBtn.setOnClickListener {
 			val meterGroup = meterVM.selectedMeterGroupStateFlow.value ?: return@setOnClickListener
-			val meterIds = meterGroup.meterRows.map { it.meterId }
-			if (meterIds.isEmpty()) return@setOnClickListener
+			if (meterGroup.allRead) {
+				lifecycleScope.launch {
+					SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("該群組已抄表完畢", SharedEvent.Color.Info))
+				}
+				return@setOnClickListener
+			}
 			val notReadMeterIds = meterGroup.meterRows.filter { !it.degreeRead }.map { it.meterId }
-			val allNotRead = notReadMeterIds.size == meterIds.size
+			if (notReadMeterIds.size > 45) {
+				lifecycleScope.launch {
+					SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("一次最多對45台進行抄表", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
+				}
+				return@setOnClickListener
+			}
+			val estimatedTime = (notReadMeterIds.size - 1) * 3 + when {
+				notReadMeterIds.size <= 15 -> 37
+				else -> 50
+			}
 
 			MaterialAlertDialogBuilder(requireContext()).apply {
 				setTitle("群組抄表")
-				setMessage("請選擇群組抄表的對象")
+				setMessage("準備進行群組抄表\n共${notReadMeterIds.size}台，耗時約${estimatedTime}秒")
 				setNeutralButton("取消") { dialog, which -> dialog.dismiss() }
-				setNegativeButton(if (allNotRead) "全部抄表" else "全部重新抄表") { dialog, which ->
+				setPositiveButton("確定") { dialog, which ->
 					dialog.dismiss()
-					readGroupMeters(meterIds)
-				}
-				if (notReadMeterIds.isNotEmpty() && !allNotRead) {
-					setPositiveButton("未抄表項目") { dialog, which ->
-						dialog.dismiss()
-						readGroupMeters(notReadMeterIds)
-					}
+					readGroupMeters(notReadMeterIds)
 				}
 				show()
 			}
@@ -139,16 +146,6 @@ class MeterListFragment : Fragment() {
 
 	// 群組抄表
 	private fun readGroupMeters(meterIds:List<String>) {
-		if (meterIds.isEmpty()) {
-			lifecycleScope.launch {
-				SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("未選擇任何瓦斯表", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
-			}
-		}
-		if (meterIds.size > 45) {
-			lifecycleScope.launch {
-				SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("一次最多對45台進行抄表", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
-			}
-		}
 		meterBaseFragment.checkBluetoothOn { blVM.sendR80Telegram(meterIds) }
 	}
 

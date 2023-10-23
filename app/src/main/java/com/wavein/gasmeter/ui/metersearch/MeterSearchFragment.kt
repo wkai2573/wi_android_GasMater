@@ -68,12 +68,14 @@ class MeterSearchFragment : Fragment() {
 		binding.noCsvTipTv.visibility = if (meterVM.meterRowsStateFlow.value.isEmpty()) View.VISIBLE else View.GONE
 
 		// search ui
-		binding.searchEt.textChanges()
-			.debounce(300)
-			.onEach {
-				searchVM.searchStateFlow.value = searchVM.searchStateFlow.value.copy(text = it.toString())
-			}
-			.launchIn(lifecycleScope)
+		binding.searchInput.editText?.let {
+			it.textChanges()
+				.debounce(300)
+				.onEach {
+					searchVM.searchStateFlow.value = searchVM.searchStateFlow.value.copy(text = it.toString())
+				}
+				.launchIn(lifecycleScope)
+		}
 		binding.lowBatteryCheckbox.setOnCheckedChangeListener { buttonView, isChecked ->
 			searchVM.searchStateFlow.value = searchVM.searchStateFlow.value.copy(lowBattery = isChecked)
 		}

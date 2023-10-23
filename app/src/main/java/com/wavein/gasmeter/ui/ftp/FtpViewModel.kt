@@ -8,6 +8,7 @@ import android.view.View
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.doyaaaaaken.kotlincsv.dsl.csvWriter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.tools.Preference
@@ -172,7 +173,7 @@ class FtpViewModel @Inject constructor(
 
 	// ==SYSTEM==
 	// 檢查產品開通
-	fun checkAppActivate(uuid:String, appkey:String) {
+	fun checkAppActivate(uuid:String, appkey:String, company:String, dep:String, username:String) {
 		appStateFlow.value = AppState.Checking
 		if (uuid.isEmpty() || appkey.isEmpty()) {
 			appStateFlow.value = AppState.Inactivated
@@ -188,15 +189,20 @@ class FtpViewModel @Inject constructor(
 					onAppkeyVerifyFail("序號錯誤")
 					return@ftpProcess
 				}
-				val uuidFilename = "$uuid.uuid"
+				val uuidFilename = "$uuid.txt"
 				val files = ftpClient.listFiles()
 				when {
 					// 序號未被註冊，該序號綁定此裝置
 					files.isEmpty() -> {
 						ftpClient.setFileType(FTP.ASCII_FILE_TYPE)
-						val emptyInputStream = "".byteInputStream()
+						val uuidRows = listOf(
+							listOf("公司", "部門", "使用者"),
+							listOf(company, dep, username),
+						)
+						val uuidContent = csvWriter().writeAllAsString(uuidRows)
+						val emptyInputStream = uuidContent.byteInputStream()
 						if (ftpClient.storeFile(encode(uuidFilename), emptyInputStream)) {
-							onAppkeyVerifySuccess("產品開通成功", appkey)
+							onAppkeyVerifySuccess("產品開通成功", appkey, company, dep, username)
 						} else {
 							onAppkeyVerifyFail("產品開通失敗 (無法建立uuid檔案於FTP)")
 						}
@@ -205,6 +211,9 @@ class FtpViewModel @Inject constructor(
 					decode(files[0].name) == uuidFilename -> {
 						Preference[Preference.APP_KEY] = appkey
 						Preference[Preference.APP_ACTIVATED] = true
+						Preference[Preference.USER_COMPANY] = company
+						Preference[Preference.USER_DEP] = dep
+						Preference[Preference.USER_NAME] = username
 						appStateFlow.value = AppState.Activated
 					}
 					// 檢查序號錯誤，該序號已被其他裝置綁定
@@ -213,10 +222,13 @@ class FtpViewModel @Inject constructor(
 			})
 	}
 
-	private fun onAppkeyVerifySuccess(msg:String, appkey:String) {
+	private fun onAppkeyVerifySuccess(msg:String, appkey:String, company:String, dep:String, username:String) {
 		showSnack(msg, SharedEvent.Color.Success)
 		Preference[Preference.APP_KEY] = appkey
 		Preference[Preference.APP_ACTIVATED] = true
+		Preference[Preference.USER_COMPANY] = company
+		Preference[Preference.USER_DEP] = dep
+		Preference[Preference.USER_NAME] = username
 		appStateFlow.value = AppState.Activated
 	}
 
@@ -224,6 +236,9 @@ class FtpViewModel @Inject constructor(
 		showSnack(msg)
 		Preference[Preference.APP_KEY] = ""
 		Preference[Preference.APP_ACTIVATED] = false
+		Preference[Preference.USER_COMPANY] = ""
+		Preference[Preference.USER_DEP] = ""
+		Preference[Preference.USER_NAME] = ""
 		appStateFlow.value = AppState.Inactivated
 	}
 

@@ -212,15 +212,15 @@ class NccFragment : Fragment() {
 		// UI: 發送按鈕
 		binding.sendBtn.setOnClickListener {
 			onResume()
-			val toSendText = binding.sendEt.text.toString()
+			val toSendText = binding.sendInput.editText?.text.toString()
 			checkBluetoothOn { blVM.sendSingleTelegram(toSendText) }
 		}
 
 		// UI: R80個別抄表按鈕
-		binding.meterEt.setText(Preference[Preference.NCC_METER_ID, "00000002306003"]) //讀取上次輸入
+		binding.meterInput.editText?.setText(Preference[Preference.NCC_METER_ID, "00000002306003"]) //讀取上次輸入
 		binding.action1Btn.setOnClickListener {
 			onResume()
-			val meterId = binding.meterEt.text.toString()
+			val meterId = binding.meterInput.editText?.text.toString()
 			Preference[Preference.NCC_METER_ID] = meterId //紀錄本次輸入
 			// R80方式
 			// checkBluetoothOn { blVM.sendR80Telegram(listOf(meterId)) }
@@ -253,8 +253,8 @@ class NccFragment : Fragment() {
 		super.onResume()
 		// 關閉軟鍵盤
 		val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-		imm?.hideSoftInputFromWindow(binding.sendEt.windowToken, 0)
-		binding.sendEt.clearFocus()
+		imm?.hideSoftInputFromWindow(binding.sendInput.editText?.windowToken, 0)
+		binding.sendInput.editText?.clearFocus()
 	}
 
 	// 藍牙請求器

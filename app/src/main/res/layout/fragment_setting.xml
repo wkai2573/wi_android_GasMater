@@ -198,37 +198,70 @@
             android:textColor="?attr/colorError"
             android:textSize="16sp" />
 
-          <LinearLayout
-            android:id="@+id/appkeyLayout"
+          <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/appkeyInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="24dp"
-            android:layout_marginVertical="8dp"
-            android:gravity="center">
+            android:hint="序號">
 
-            <com.google.android.material.textfield.TextInputLayout
-              android:layout_width="0dp"
+            <com.google.android.material.textfield.TextInputEditText
+              android:layout_width="match_parent"
               android:layout_height="wrap_content"
-              android:layout_marginEnd="8dp"
-              android:layout_weight="1"
-              android:hint="輸入序號">
+              android:layout_marginBottom="4dp"
+              android:inputType="text" />
+          </com.google.android.material.textfield.TextInputLayout>
 
-              <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/appkeyEt"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp"
-                android:inputType="text" />
-            </com.google.android.material.textfield.TextInputLayout>
+          <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/companyInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:hint="公司名稱">
 
-            <Button
-              android:id="@+id/appActivateBtn"
-              style="@style/Widget.Material3.Button.OutlinedButton"
-              android:layout_width="wrap_content"
+            <com.google.android.material.textfield.TextInputEditText
+              android:layout_width="match_parent"
               android:layout_height="wrap_content"
-              android:text="註冊"
-              app:icon="@drawable/ic_key_24" />
-          </LinearLayout>
+              android:layout_marginBottom="4dp"
+              android:inputType="text" />
+          </com.google.android.material.textfield.TextInputLayout>
+
+          <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/depInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:hint="部門">
+
+            <com.google.android.material.textfield.TextInputEditText
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:layout_marginBottom="4dp"
+              android:inputType="text" />
+          </com.google.android.material.textfield.TextInputLayout>
+
+          <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/usernameInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:hint="姓名">
+
+            <com.google.android.material.textfield.TextInputEditText
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:layout_marginBottom="4dp"
+              android:inputType="text" />
+          </com.google.android.material.textfield.TextInputLayout>
+
+          <Button
+            android:id="@+id/appActivateBtn"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:text="註冊"
+            app:icon="@drawable/ic_key_24" />
 
           <com.google.android.material.divider.MaterialDivider
             android:layout_width="match_parent"

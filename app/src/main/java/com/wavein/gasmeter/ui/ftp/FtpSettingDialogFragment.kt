@@ -57,10 +57,10 @@ class FtpSettingDialogFragment(
 		ftpVM.snackbarView = binding.root
 		ftpVM.snackbarAnchorView = binding.buttonsLayout
 
-		binding.hostEt.setText(ftpInfo.host)
-		binding.usernameEt.setText(ftpInfo.username)
-		binding.passwordEt.setText(ftpInfo.password)
-		binding.remoteDirectoryEt.setText(ftpInfo.root)
+		binding.hostInput.editText?.setText(ftpInfo.host)
+		binding.usernameInput.editText?.setText(ftpInfo.username)
+		binding.passwordInput.editText?.setText(ftpInfo.password)
+		binding.remoteDirectoryInput.editText?.setText(ftpInfo.root)
 		binding.closeBtn.setOnClickListener { dialog?.dismiss() }
 
 		binding.testFtpBtn.setOnClickListener {
@@ -76,10 +76,10 @@ class FtpSettingDialogFragment(
 
 	private val copiedFtpInfo
 		get() = ftpInfo.copy(
-			host = binding.hostEt.text.toString(),
-			username = binding.usernameEt.text.toString(),
-			password = binding.passwordEt.text.toString(),
-			root = binding.remoteDirectoryEt.text.toString(),
+			host = binding.hostInput.editText?.text.toString(),
+			username = binding.usernameInput.editText?.text.toString(),
+			password = binding.passwordInput.editText?.text.toString(),
+			root = binding.remoteDirectoryInput.editText?.text.toString(),
 		)
 
 	companion object {

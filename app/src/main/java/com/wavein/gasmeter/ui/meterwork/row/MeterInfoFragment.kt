@@ -68,7 +68,7 @@ class MeterInfoFragment : Fragment() {
 		binding.meterDegreeReadBtn.setOnClickListener {
 			MaterialAlertDialogBuilder(requireContext())
 				.setTitle("個別抄表")
-				.setMessage("是否進行個別抄表")
+				.setMessage("準備進行個別抄表\n耗時約37秒")
 				.setNegativeButton("取消") { dialog, which ->
 					dialog.dismiss()
 				}

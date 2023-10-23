@@ -183,16 +183,32 @@ class SettingFragment : Fragment() {
 
 		// ui
 		val savedAppkey = Preference[Preference.APP_KEY, ""]!!
-		binding.appkeyEt.setText(savedAppkey)
+		val savedCompany = Preference[Preference.USER_COMPANY, ""]!!
+		val savedDep = Preference[Preference.USER_DEP, ""]!!
+		val savedUsername = Preference[Preference.USER_NAME, ""]!!
+		binding.appkeyInput.editText?.setText(savedAppkey)
+		binding.companyInput.editText?.setText(savedCompany)
+		binding.depInput.editText?.setText(savedDep)
+		binding.usernameInput.editText?.setText(savedUsername)
 		binding.appActivateBtn.setOnClickListener {
 			var uuid = settingVM.uuidStateFlow.value
 			if (uuid.isEmpty()) settingVM.initUuid()
 			uuid = settingVM.uuidStateFlow.value
-			val appkey = binding.appkeyEt.text.toString()
-			ftpVM.checkAppActivate(uuid, appkey)
+			val appkey = binding.appkeyInput.editText?.text.toString()
+			val company = binding.companyInput.editText?.text.toString()
+			val dep = binding.depInput.editText?.text.toString()
+			val username = binding.usernameInput.editText?.text.toString()
+			binding.appkeyInput.error = if (appkey.isEmpty()) "請輸入序號" else ""
+			binding.companyInput.error = if (company.isEmpty()) "請輸入公司名稱" else ""
+			binding.depInput.error = if (dep.isEmpty()) "請輸入部門" else ""
+			binding.usernameInput.error = if (username.isEmpty()) "請輸入姓名" else ""
+			if (appkey.isEmpty() || company.isEmpty() || dep.isEmpty() || username.isEmpty()) {
+				return@setOnClickListener
+			}
+			ftpVM.checkAppActivate(uuid, appkey, company, dep, username)
 			// 關閉軟鍵盤
 			val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-			imm?.hideSoftInputFromWindow(binding.appkeyEt.windowToken, 0)
+			imm?.hideSoftInputFromWindow(binding.appkeyInput.editText?.windowToken, 0)
 		}
 
 		// 訂閱FTP連接狀態 (loading)
@@ -218,10 +234,16 @@ class SettingFragment : Fragment() {
 						AppState.NotChecked -> {
 							binding.appActivatedTv.text = "產品未開通"
 							binding.appActivatedTv.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.md_theme_light_error))
-							binding.appkeyLayout.visibility = View.VISIBLE
+							binding.appkeyInput.visibility = View.VISIBLE
+							binding.companyInput.visibility = View.VISIBLE
+							binding.depInput.visibility = View.VISIBLE
+							binding.usernameInput.visibility = View.VISIBLE
+							binding.appActivateBtn.visibility = View.VISIBLE
 							binding.btArea.visibility = View.GONE
 							binding.fileArea.visibility = View.GONE
-							binding.appActivateBtn.callOnClick()
+							if (Preference[Preference.APP_ACTIVATED, false]!!) {
+								binding.appActivateBtn.callOnClick()
+							}
 						}
 
 						AppState.Checking -> {}
@@ -229,19 +251,27 @@ class SettingFragment : Fragment() {
 						AppState.Inactivated -> {
 							binding.appActivatedTv.text = "產品未開通"
 							binding.appActivatedTv.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.md_theme_light_error))
-							binding.appkeyLayout.visibility = View.VISIBLE
+							binding.appkeyInput.visibility = View.VISIBLE
+							binding.companyInput.visibility = View.VISIBLE
+							binding.depInput.visibility = View.VISIBLE
+							binding.usernameInput.visibility = View.VISIBLE
+							binding.appActivateBtn.visibility = View.VISIBLE
 							binding.btArea.visibility = View.GONE
 							binding.fileArea.visibility = View.GONE
 						}
 
 						AppState.Activated -> {
 							val uuid = settingVM.uuidStateFlow.value
-							val appkey = binding.appkeyEt.text.toString()
+							val appkey = binding.appkeyInput.editText?.text.toString()
 							val text = "產品已開通\n裝置UUID: $uuid\n產品序號: $appkey"
 							binding.appActivatedTv.text = text
 							binding.appActivatedTv.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.md_theme_light_tertiary))
-							binding.appkeyLayout.visibility = View.GONE
-							binding.btArea.visibility = View.VISIBLE // todo bt設定永不顯示可能比較好?
+							binding.appkeyInput.visibility = View.GONE
+							binding.companyInput.visibility = View.GONE
+							binding.depInput.visibility = View.GONE
+							binding.usernameInput.visibility = View.GONE
+							binding.appActivateBtn.visibility = View.GONE
+							binding.btArea.visibility = View.VISIBLE
 							binding.fileArea.visibility = View.VISIBLE
 						}
 					}

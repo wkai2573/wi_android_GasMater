@@ -90,20 +90,20 @@ class TestFragment : Fragment() {
 			}
 		}
 		binding.button6.setOnClickListener { 傳送並接收訊息() }
-		binding.button7.setOnClickListener { binding.sendEt.setText("5") }                       // ZA00000000000000D70
-		binding.button8.setOnClickListener { binding.sendEt.setText("A") }
+		binding.button7.setOnClickListener { binding.sendInput.editText?.setText("5") }                       // ZA00000000000000D70
+		binding.button8.setOnClickListener { binding.sendInput.editText?.setText("A") }
 		binding.button9.setOnClickListener {
-			binding.sendEt.setText(
+			binding.sendInput.editText?.setText(
 				"ZA00000000000101R85125"
 			)
 		}  // G200000000000101D05000000101@@@BA@@3G13AB@I (S-18)
 		binding.button10.setOnClickListener {
-			binding.sendEt.setText(
+			binding.sendInput.editText?.setText(
 				"ZA00000000000101R16"
 			)
 		}    // ZA00000000000000D16@@9  アラーム情報(S-14頁)
 		binding.button11.setOnClickListener {
-			binding.sendEt.setText(
+			binding.sendInput.editText?.setText(
 				"ZA00000000000000R84121000000000000101????00000000000102????00000000000103????00000000000104????00000000000105????00000000000106????00000000000107????00000000000108????00000000000109????00000000000110????"
 			)
 		}
@@ -305,7 +305,7 @@ class TestFragment : Fragment() {
 
 	private fun 傳送並接收訊息() {
 //		if (sendReceive == null) return
-		val sendText = binding.sendEt.editableText.toString()
+		val sendText = binding.sendInput.editText?.editableText.toString()
 		if (sendText.isEmpty()) return
 
 		binding.msgTv.text = "🔽接收到的訊息🔽"
@@ -319,7 +319,7 @@ class TestFragment : Fragment() {
 
 		// 關閉軟鍵盤
 		val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-		imm?.hideSoftInputFromWindow(binding.sendEt.windowToken, 0)
+		imm?.hideSoftInputFromWindow(binding.sendInput.editText?.windowToken, 0)
 	}
 
 	//endregion
