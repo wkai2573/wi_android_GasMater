@@ -106,14 +106,37 @@
             android:layout_marginHorizontal="24dp"
             android:layout_marginVertical="8dp" />
 
-          <Button
-            android:id="@+id/selectCsvFromLocalBtn"
-            android:layout_width="wrap_content"
+          <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="24dp"
             android:layout_marginVertical="8dp"
-            android:text="選擇CSV"
-            app:icon="@drawable/ic_insert_drive_file_24" />
+            android:gravity="center">
+
+            <Button
+              android:id="@+id/selectCsvFromLocalBtn"
+              android:layout_width="0dp"
+              android:layout_height="wrap_content"
+              android:layout_marginEnd="8dp"
+              android:layout_weight="1"
+              android:text="選擇CSV"
+              app:icon="@drawable/ic_insert_drive_file_24" />
+
+            <Button
+              android:id="@+id/resetDegreeBtn"
+              style="@style/Widget.Material3.Button.OutlinedButton"
+              android:layout_width="0dp"
+              android:layout_height="wrap_content"
+              android:layout_marginEnd="8dp"
+              android:layout_weight="1"
+              android:backgroundTint="?attr/colorErrorContainer"
+              android:text="重置抄表值"
+              android:textColor="?attr/colorError"
+              app:icon="@drawable/ic_insert_drive_file_24"
+              app:iconTint="?attr/colorError"
+              app:iconTintMode="multiply"
+              app:strokeColor="?attr/colorError" />
+          </LinearLayout>
 
           <LinearLayout
             android:layout_width="match_parent"

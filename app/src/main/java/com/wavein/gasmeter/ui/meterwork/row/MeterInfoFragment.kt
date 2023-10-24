@@ -1,10 +1,13 @@
 package com.wavein.gasmeter.ui.meterwork.row
 
+import android.app.AlertDialog
 import android.graphics.Color
 import android.os.Bundle
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -12,6 +15,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.wavein.gasmeter.databinding.FragmentMeterInfoBinding
+import com.wavein.gasmeter.databinding.InputLayoutBinding
+import com.wavein.gasmeter.tools.SharedEvent
+import com.wavein.gasmeter.tools.TimeUtil
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.meterwork.MeterBaseFragment
 import com.wavein.gasmeter.ui.meterwork.MeterViewModel
@@ -19,6 +25,7 @@ import com.wavein.gasmeter.ui.setting.CsvViewModel
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+
 
 class MeterInfoFragment : Fragment() {
 
@@ -50,15 +57,24 @@ class MeterInfoFragment : Fragment() {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				meterVM.selectedMeterRowFlow.asStateFlow().collectLatest {
 					it?.let {
-						binding.fieldCustId.setValue(it.custId)
-						binding.fieldCustName.setValue(it.custName)
-						binding.fieldCustAddr.setValue(it.custAddr)
 						binding.fieldMeterId.setValue(it.meterId)
-						binding.fieldMeterDegree.setValue("${it.meterDegree ?: "未抄表"}", if (it.meterDegree == null) Color.RED else Color.BLACK)
+						binding.meterDegreeReadLayout.visibility = if (it.degreeRead) View.GONE else View.VISIBLE
+						val meterDegreeText = if (it.meterDegree == null) "未抄表" else
+							("${it.meterDegree} ${if (it.isManualMeterDegree == true) " (人工輸入)" else ""}")
+						binding.fieldMeterDegree.setValue(meterDegreeText, if (it.meterDegree == null) Color.RED else Color.BLACK)
+						binding.fieldLastMeterDegree.setValue(it.lastMeterDegree?.toString() ?: "")
+						binding.fieldDegreesUsed.setValue(it.degreesUsed?.toString() ?: "")
 						binding.fieldMeterReadTime.setValue("${it.meterReadTime}")
+						binding.fieldLastMeterReadTime.setValue("${it.lastMeterReadTime}")
 						binding.fieldAlarm1.setValue(booleanRender(it.batteryVoltageDropAlarm))
 						binding.fieldAlarm2.setValue(booleanRender(it.innerPipeLeakageAlarm))
 						binding.fieldAlarm3.setValue(booleanRender(it.shutoff))
+						binding.fieldCustId.setValue(it.custId)
+						binding.fieldCustName.setValue(it.custName)
+						binding.fieldCustAddr.setValue(it.custAddr)
+						binding.fieldRemark.setValue("${it.remark}")
+						// todo 電波強度用bar顯示
+						binding.fieldElectricFieldStrength.setValue(it.electricFieldStrength ?: "")
 					}
 				}
 			}
@@ -66,6 +82,12 @@ class MeterInfoFragment : Fragment() {
 
 		// 個別抄表按鈕
 		binding.meterDegreeReadBtn.setOnClickListener {
+			if (meterVM.selectedMeterRowFlow.value?.degreeRead == true) {
+				lifecycleScope.launch {
+					SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("此表已經完成抄表", SharedEvent.Color.Info))
+				}
+				return@setOnClickListener
+			}
 			MaterialAlertDialogBuilder(requireContext())
 				.setTitle("個別抄表")
 				.setMessage("準備進行個別抄表\n耗時約37秒")
@@ -78,6 +100,75 @@ class MeterInfoFragment : Fragment() {
 					meterBaseFragment.checkBluetoothOn { blVM.sendR80Telegram(listOf(meterRow.meterId)) }
 				}
 				.show()
+		}
+
+		// 手動抄表按鈕
+		binding.manualMeterDegreeBtn.setOnClickListener {
+			val inputLayoutBinding = InputLayoutBinding.inflate(LayoutInflater.from(requireContext()))
+			val inputLayout = inputLayoutBinding.textInput.apply {
+				hint = "抄表值"
+				editText?.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_NORMAL
+			}
+
+			MaterialAlertDialogBuilder(requireContext())
+				.setTitle("人工輸入抄表值")
+				.setView(inputLayout)
+				.setNegativeButton("取消") { dialog, which ->
+					dialog.dismiss()
+				}
+				.setPositiveButton("確定", null)
+				.create()
+				.apply {
+					setOnShowListener {
+						inputLayout.editText?.requestFocus()
+						// 覆寫確定按鈕
+						getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+							try {
+								val newDegree = inputLayout.editText?.text.toString().toFloat()
+								val newMeterRow = meterVM.selectedMeterRowFlow.value?.copy(
+									isManualMeterDegree = true,
+									meterDegree = newDegree,
+									meterReadTime = TimeUtil.getCurrentTime(),
+								)!!
+								meterBaseFragment.updateCsvRowManual(newMeterRow)
+								this.dismiss()
+							} catch (e:Exception) {
+								inputLayout.error = "格式不符"
+							}
+						}
+					}
+					show()
+				}
+		}
+
+		// 編輯備註按鈕
+		binding.remarkBtn.setOnClickListener {
+			val inputLayoutBinding = InputLayoutBinding.inflate(LayoutInflater.from(requireContext()))
+			val inputLayout = inputLayoutBinding.textInput.apply {
+				hint = "備註"
+				editText?.setText(meterVM.selectedMeterRowFlow.value?.remark ?: "")
+			}
+
+			MaterialAlertDialogBuilder(requireContext())
+				.setTitle("編輯備註")
+				.setView(inputLayout)
+				.setNegativeButton("取消") { dialog, which ->
+					dialog.dismiss()
+				}
+				.setPositiveButton("確定") { dialog, which ->
+					dialog.dismiss()
+					val newMeterRow = meterVM.selectedMeterRowFlow.value?.copy(
+						remark = inputLayout.editText?.text.toString()
+					) ?: return@setPositiveButton
+					meterBaseFragment.updateCsvRowManual(newMeterRow)
+				}
+				.create()
+				.apply {
+					setOnShowListener {
+						inputLayout.editText?.requestFocus()
+					}
+					show()
+				}
 		}
 	}
 

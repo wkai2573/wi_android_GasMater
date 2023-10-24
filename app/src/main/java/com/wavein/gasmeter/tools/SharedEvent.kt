@@ -3,10 +3,12 @@ package com.wavein.gasmeter.tools
 import android.content.DialogInterface
 import android.view.View
 import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.ui.loading.Tip
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 
 // 共用事件
 sealed class SharedEvent {
@@ -40,5 +42,23 @@ sealed class SharedEvent {
 
 		// 可觀察變數
 		val loadingFlow = MutableStateFlow(Tip())
+
+		// 顯示錯誤dialog
+		suspend fun showErrDialog(e:Exception) {
+			var errMessage = e.message ?: "unknown error"
+			for (element in e.stackTrace) {
+				errMessage += "\nat ${element.fileName}:${element.lineNumber}"
+			}
+			eventFlow.emit(SharedEvent.ShowDialog("Error", errMessage))
+		}
+
+		// 若處理中有發生錯誤, 顯示錯誤dialog
+		suspend fun catching(handle:() -> Unit) {
+			try {
+				handle()
+			} catch (e:Exception) {
+				showErrDialog(e)
+			}
+		}
 	}
 }

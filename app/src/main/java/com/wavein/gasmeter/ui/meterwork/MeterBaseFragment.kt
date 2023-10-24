@@ -19,7 +19,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
-import com.wavein.gasmeter.data.model.toMeterGroups
+import com.wavein.gasmeter.data.model.MeterRow
 import com.wavein.gasmeter.databinding.FragmentMeterBaseBinding
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.TimeUtil
@@ -40,6 +40,8 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.io.PrintWriter
+import java.io.StringWriter
 
 
 class MeterBaseFragment : Fragment() {
@@ -210,7 +212,7 @@ class MeterBaseFragment : Fragment() {
 					when (event) {
 						is CommEndEvent.Success -> {
 							SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("通信成功", SharedEvent.Color.Success))
-							updateCsvRows(event.commResult) // 依據結果更新csvRows
+							updateCsvRowsByCommResult(event.commResult) // 依據結果更新csvRows
 						}
 
 						is CommEndEvent.Error -> {
@@ -273,44 +275,52 @@ class MeterBaseFragment : Fragment() {
 	}
 
 	// 根據結果更新csvRows & ftp紀錄log
-	private fun updateCsvRows(commResult:Map<String, Any>) {
-		//todo 目前只有處理D05m
-		val d05mList = (commResult["D05m"] as D05mInfo).list
-		val newCsvRows = meterVM.meterRowsStateFlow.value.map { meterRow ->
-			val d05Info = d05mList.find { it.meterId == meterRow.meterId }
-			if (d05Info != null) {
-				val batteryVoltageDropAlarm = try {
-					d05Info.alarmInfoDetail["A8"]!!["b4"]!! ||
-							d05Info.alarmInfoDetail["A4"]!!["b4"]!! ||
-							d05Info.alarmInfoDetail["A4"]!!["b3"]!!
-				} catch (e:Exception) {
-					null
+	private suspend fun updateCsvRowsByCommResult(commResult:Map<String, Any>) {
+		SharedEvent.catching {
+			//todo 目前只有處理D05m
+			val d05mList = (commResult["D05m"] as D05mInfo).list
+			val newCsvRows = meterVM.meterRowsStateFlow.value.map { meterRow ->
+				val d05Info = d05mList.find { it.meterId == meterRow.meterId }
+				if (d05Info != null) {
+					val batteryVoltageDropAlarm = try {
+						d05Info.alarmInfoDetail["A8"]!!["b4"]!! ||
+								d05Info.alarmInfoDetail["A4"]!!["b4"]!! ||
+								d05Info.alarmInfoDetail["A4"]!!["b3"]!!
+					} catch (e:Exception) {
+						null
+					}
+					meterRow.copy(
+						isManualMeterDegree = false,
+						meterDegree = d05Info.meterDegree,
+						meterReadTime = TimeUtil.getCurrentTime(),
+						alarmInfo1 = d05Info.alarmInfo1,
+						batteryVoltageDropAlarm = batteryVoltageDropAlarm,
+						innerPipeLeakageAlarm = d05Info.alarmInfoDetail["A5"]?.get("b1"),
+						shutoff = d05Info.alarmInfoDetail["A1"]?.get("b1")?.not(),
+						electricFieldStrength = d05Info.electricFieldStrength,
+					)
+				} else {
+					meterRow
 				}
-				meterRow.copy(
-					meterDegree = d05Info.meterDegree,
-					meterReadTime = TimeUtil.getCurrentTime(),
-					alarmInfo1 = d05Info.alarmInfo1,
-					batteryVoltageDropAlarm = batteryVoltageDropAlarm,
-					innerPipeLeakageAlarm = d05Info.alarmInfoDetail["A5"]?.get("b1"),
-					shutoff = d05Info.alarmInfoDetail["A1"]?.get("b1")?.not(),
-				)
+			}
+			// todo ftp log 紀錄有更新瓦斯表的功能
+			// ...
+			// 更新ui並儲存csv
+			csvVM.updateSaveCsv(newCsvRows, meterVM)
+		}
+	}
+
+	// 手動更新csv (用group & meterId找)
+	fun updateCsvRowManual(newMeterRow:MeterRow) {
+		val newCsvRows = meterVM.meterRowsStateFlow.value.map { meterRow ->
+			if (meterRow.group == newMeterRow.group && meterRow.meterId == newMeterRow.meterId) {
+				newMeterRow
 			} else {
 				meterRow
 			}
 		}
-		// 更新stateFlow
-		val nowMeterGroup = meterVM.selectedMeterGroupStateFlow.value
-		val nowMeterRow = meterVM.selectedMeterRowFlow.value
-		meterVM.meterRowsStateFlow.value = newCsvRows
-		meterVM.setSelectedMeterGroup(newCsvRows.toMeterGroups()
-			.find { it.group == nowMeterGroup?.group })
-		meterVM.selectedMeterRowFlow.value = meterVM.selectedMeterGroupStateFlow.value?.meterRows
-			?.find { it.queue == nowMeterRow?.queue }
-		// 更新本地csv檔案
-		csvVM.saveCsv(meterVM)
-		// todo ftp 紀錄log
+		csvVM.updateSaveCsv(newCsvRows, meterVM)
 	}
-
 	//endregion
 }
 

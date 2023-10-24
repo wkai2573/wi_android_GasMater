@@ -3,6 +3,8 @@ package com.wavein.gasmeter.tools.rd64h.info
 data class D05Info(override val text:String) : BaseInfo(text) {
 	override var isCorrectParsed = false
 	var btParentInfo = ""
+	var electricFieldStrength = ""
+	var btParentLowBattery = ""
 	var entityCodeLast2 = ""
 	var meterId = ""
 	var meterDegree = 0f
@@ -10,11 +12,13 @@ data class D05Info(override val text:String) : BaseInfo(text) {
 	var alarmInfoDetail = mutableMapOf<String, Map<String, Boolean>>()
 
 	init {
-		val regex = Regex("^(.{2})(.{2})(.{14})(D05)(\\d{9}.{8})\\s*$")
+		val regex = Regex("^(.)(.)(.{2})(.{14})(D05)(\\d{9}.{8})\\s*$")
 		val matchResult = regex.find(text)
 		if (matchResult != null) {
-			val (btParentInfo, entityCodeLast2, meterId, OP, data) = matchResult.destructured
-			this.btParentInfo = btParentInfo
+			val (electricFieldStrength, btParentLowBattery, entityCodeLast2, meterId, OP, data) = matchResult.destructured
+			this.electricFieldStrength = electricFieldStrength
+			this.btParentLowBattery = btParentLowBattery
+			this.btParentInfo = electricFieldStrength + btParentLowBattery
 			this.entityCodeLast2 = entityCodeLast2
 			this.meterId = meterId
 			parseData(data)

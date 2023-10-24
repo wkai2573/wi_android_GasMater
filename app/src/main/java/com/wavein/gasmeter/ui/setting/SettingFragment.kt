@@ -25,6 +25,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.FragmentSettingBinding
@@ -113,11 +114,13 @@ class SettingFragment : Fragment() {
 						binding.selectedCsv.layout.visibility = View.GONE
 						binding.selectCsvFromLocalBtn.text = "選擇CSV"
 						binding.uploadCsvBtn.isEnabled = false
+						binding.resetDegreeBtn.isEnabled = false
 					} else {
 						binding.selectedCsv.layout.visibility = View.VISIBLE
 						binding.selectedCsv.infoTv.text = fileState.name
 						binding.selectCsvFromLocalBtn.text = "重新選擇CSV"
 						binding.uploadCsvBtn.isEnabled = true
+						binding.resetDegreeBtn.isEnabled = true
 					}
 				}
 			}
@@ -125,6 +128,33 @@ class SettingFragment : Fragment() {
 
 		binding.selectCsvFromLocalBtn.setOnClickListener {
 			csvVM.openFilePicker(filePickerLauncher)
+		}
+
+		binding.resetDegreeBtn.setOnClickListener {
+			MaterialAlertDialogBuilder(requireContext())
+				.setTitle("重置抄表值")
+				.setMessage("確定要重置抄表值？")
+				.setNegativeButton("取消") { dialog, which -> }
+				.setPositiveButton("確定") { dialog, which ->
+					val newCsvRows = meterVM.meterRowsStateFlow.value.map { meterRow ->
+						if (meterRow.degreeRead) {
+							meterRow.copy(
+								isManualMeterDegree = false,
+								meterDegree = null,
+								lastMeterDegree = meterRow.meterDegree,
+								meterReadTime = null,
+								lastMeterReadTime = meterRow.meterReadTime,
+							)
+						} else {
+							meterRow
+						}
+					}
+					csvVM.updateSaveCsv(newCsvRows, meterVM)
+					lifecycleScope.launch {
+						SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("csv抄表值已重置", SharedEvent.Color.Success))
+					}
+				}
+				.show()
 		}
 
 		binding.downloadCsvBtn.setOnClickListener {

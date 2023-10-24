@@ -31,7 +31,7 @@ data class MeterRow(
 
 	val lastMeterDegree:Float? = null,           // 前次抄表值 *前次數值
 	val lastMeterReadTime:String? = null,        // 前次抄表時間 *前次日期
-	val manualMeterDegree:Float? = null,         // 人工輸入 *人工输入
+	val isManualMeterDegree:Boolean? = null,     // 人工輸入 *人工输入
 
 	// 原csv欄位,未使用
 	val callingChannel:String? = null,           // 通信CH
@@ -46,7 +46,9 @@ data class MeterRow(
 	// todo 壓力數值
 
 	// 其他欄位
+	var electricFieldStrength:String? = null,    // 電波強度
 	val meterState:String? = null,               // 表狀態  (メーター状態 16-02)
+
 ) {
 	// 使用量
 	val degreesUsed get() = if (meterDegree == null || lastMeterDegree == null) null else meterDegree - lastMeterDegree
@@ -97,7 +99,7 @@ fun Map<String, String>.toMeterRow():MeterRow? {
 			areaRelayNo = csvRow["區域中繼No"] ?: return null,
 			areaRelayName = csvRow["區域中繼名稱"] ?: return null,
 			meterDegree = csvRow["抄錶數值"]?.toFloatOrNull(),
-			manualMeterDegree = csvRow["人工输入"]?.toFloatOrNull(),
+			isManualMeterDegree = csvRow["人工输入"].toBoolean10(),
 			meterReadTime = csvRow["抄錶日期"] ?: return null,
 			batteryVoltageDropAlarm = csvRow["電池電壓警報"].toBoolean10(),
 			innerPipeLeakageAlarm = csvRow["洩漏警報"].toBoolean10(),
@@ -138,7 +140,7 @@ private fun MeterRow.toCsvRow():Map<String, String> {
 		"區域中繼No" to this.areaRelayNo.orEmpty(),
 		"區域中繼名稱" to this.areaRelayName.orEmpty(),
 		"抄錶數值" to (this.meterDegree?.toString() ?: ""),
-		"人工输入" to (this.manualMeterDegree?.toString() ?: ""),
+		"人工输入" to this.isManualMeterDegree.toString10(),
 		"抄錶日期" to this.meterReadTime.orEmpty(),
 		"電池電壓警報" to this.batteryVoltageDropAlarm.toString10(),
 		"洩漏警報" to this.innerPipeLeakageAlarm.toString10(),

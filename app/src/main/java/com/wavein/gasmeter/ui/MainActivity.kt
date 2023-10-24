@@ -208,14 +208,15 @@ class MainActivity : AppCompatActivity() {
 							event.neutralButton?.let {
 								builder.setNeutralButton(it.first, it.second)
 							}
-							val alertDialog = builder.create()
-							alertDialog.setOnShowListener {
-								val btnPositive:Button = alertDialog.getButton(Dialog.BUTTON_POSITIVE)
-								btnPositive.textSize = 24f
-								val btnNegative:Button = alertDialog.getButton(Dialog.BUTTON_NEGATIVE)
-								btnNegative.textSize = 24f
+							builder.create().apply {
+								setOnShowListener {
+									val btnPositive = getButton(Dialog.BUTTON_POSITIVE)
+									btnPositive.textSize = 24f
+									val btnNegative = getButton(Dialog.BUTTON_NEGATIVE)
+									btnNegative.textSize = 24f
+								}
+								show()
 							}
-							alertDialog.show()
 						}
 						// 訊息對話框 by builder
 						is SharedEvent.ShowDialogB -> {

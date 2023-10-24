@@ -17,7 +17,9 @@ import androidx.lifecycle.viewModelScope
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import com.github.doyaaaaaken.kotlincsv.dsl.csvWriter
 import com.google.android.material.snackbar.Snackbar
+import com.wavein.gasmeter.data.model.MeterRow
 import com.wavein.gasmeter.data.model.toCsvRows
+import com.wavein.gasmeter.data.model.toMeterGroups
 import com.wavein.gasmeter.data.model.toMeterRows
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.ui.meterwork.MeterViewModel
@@ -104,8 +106,23 @@ class CsvViewModel @Inject constructor(
 		selectedFileStateFlow.value = fileState
 	}
 
-	// 儲存選擇的檔案(本地)
-	fun saveCsv(meterVM:MeterViewModel) {
+	// 更新ui並儲存csv
+	fun updateSaveCsv(newCsvRows:List<MeterRow>, meterVM:MeterViewModel) {
+		// 更新stateFlow
+		val nowMeterGroup = meterVM.selectedMeterGroupStateFlow.value
+		val nowMeterRow = meterVM.selectedMeterRowFlow.value
+		meterVM.meterRowsStateFlow.value = newCsvRows
+		meterVM.setSelectedMeterGroup(
+			newCsvRows.toMeterGroups()
+				.find { it.group == nowMeterGroup?.group })
+		meterVM.selectedMeterRowFlow.value = meterVM.selectedMeterGroupStateFlow.value?.meterRows
+			?.find { it.queue == nowMeterRow?.queue }
+		// 儲存本地csv檔案
+		saveCsv(meterVM)
+	}
+
+	// 儲存csv
+	private fun saveCsv(meterVM:MeterViewModel) {
 		val fileState = selectedFileStateFlow.value
 		val csvRows = meterVM.meterRowsStateFlow.value.toCsvRows()
 
@@ -127,23 +144,21 @@ class CsvViewModel @Inject constructor(
 		}
 		// 進入該目錄 & 寫入檔案
 		withContext(Dispatchers.IO) {
-			val externalStorageState = Environment.getExternalStorageState()
-			if (Environment.MEDIA_MOUNTED == externalStorageState) {
-				val rootDirectory = Environment.getExternalStorageDirectory()
-				var directory = rootDirectory
-				for (dir in dirs) {
-					directory = File(directory, dir)
-					directory.mkdirs()
-				}
-				val file = File(directory, filename)
-				val outputStream = FileOutputStream(file)
-				try {
+			SharedEvent.catching {
+				val externalStorageState = Environment.getExternalStorageState()
+				if (Environment.MEDIA_MOUNTED == externalStorageState) {
+					val rootDirectory = Environment.getExternalStorageDirectory()
+					var directory = rootDirectory
+					for (dir in dirs) {
+						directory = File(directory, dir)
+						directory.mkdirs()
+					}
+					val file = File(directory, filename)
+					val outputStream = FileOutputStream(file)
 					// 寫入的字碼格式為 utf8 with bom
-					outputStream.write(bom + content.toByteArray())
-				} catch (e:IOException) {
-					e.printStackTrace()
-				} finally {
-					outputStream.close()
+					outputStream.use { it ->
+						it.write(bom + content.toByteArray())
+					}
 				}
 			}
 		}
