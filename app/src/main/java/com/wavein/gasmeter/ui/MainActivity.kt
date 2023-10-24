@@ -5,14 +5,12 @@ import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -220,7 +218,7 @@ class MainActivity : AppCompatActivity() {
 						}
 						// 訊息對話框 by builder
 						is SharedEvent.ShowDialogB -> {
-							event.builder.show()
+							event.alertDialog.show()
 						}
 					}
 				}

@@ -3,12 +3,10 @@ package com.wavein.gasmeter.tools
 import android.content.DialogInterface
 import android.view.View
 import androidx.appcompat.app.AlertDialog
-import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.ui.loading.Tip
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 
 // 共用事件
 sealed class SharedEvent {
@@ -33,7 +31,7 @@ sealed class SharedEvent {
 	) : SharedEvent()
 
 	data class ShowDialogB(
-		val builder:AlertDialog,
+		val alertDialog:AlertDialog,
 	) : SharedEvent()
 
 	companion object {

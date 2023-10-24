@@ -64,17 +64,17 @@ class MeterInfoFragment : Fragment() {
 						binding.fieldMeterDegree.setValue(meterDegreeText, if (it.meterDegree == null) Color.RED else Color.BLACK)
 						binding.fieldLastMeterDegree.setValue(it.lastMeterDegree?.toString() ?: "")
 						binding.fieldDegreesUsed.setValue(it.degreesUsed?.toString() ?: "")
-						binding.fieldMeterReadTime.setValue("${it.meterReadTime}")
-						binding.fieldLastMeterReadTime.setValue("${it.lastMeterReadTime}")
+						binding.fieldMeterReadTime.setValue(it.meterReadTime ?: "")
+						binding.fieldLastMeterReadTime.setValue(it.lastMeterReadTime ?: "")
 						binding.fieldAlarm1.setValue(booleanRender(it.batteryVoltageDropAlarm))
 						binding.fieldAlarm2.setValue(booleanRender(it.innerPipeLeakageAlarm))
 						binding.fieldAlarm3.setValue(booleanRender(it.shutoff))
 						binding.fieldCustId.setValue(it.custId)
 						binding.fieldCustName.setValue(it.custName)
 						binding.fieldCustAddr.setValue(it.custAddr)
-						binding.fieldRemark.setValue("${it.remark}")
-						// todo 電波強度用bar顯示
-						binding.fieldElectricFieldStrength.setValue(it.electricFieldStrength ?: "")
+						binding.fieldRemark.setValue(it.remark ?: "")
+						binding.electricFieldStrengthTv.text = it.electricFieldStrength ?: ""
+						binding.electricFieldStrengthProgressBar.progress = it.electricFieldStrength?.toInt() ?: 0
 					}
 				}
 			}
