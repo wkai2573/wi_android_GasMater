@@ -1,6 +1,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-  <style name="Base.Theme.GasMeter" parent="Theme.Material3.DayNight.NoActionBar">
+  <!-- 要自動切換黑暗模式 請將 .Dark 刪掉 -->
+  <style name="Base.Theme.GasMeter.Dark" parent="Theme.Material3.DayNight.NoActionBar">
     <item name="colorPrimary">@color/md_theme_dark_primary</item>
     <item name="colorOnPrimary">@color/md_theme_dark_onPrimary</item>
     <item name="colorPrimaryContainer">@color/md_theme_dark_primaryContainer</item>

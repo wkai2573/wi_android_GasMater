@@ -190,7 +190,7 @@ class BtDialogFragment(
 
 			ScanState.Error -> {
 				blVM.scanStateFlow.value = ScanState.Idle
-				Toast.makeText(requireActivity(), "掃描失敗", Toast.LENGTH_SHORT).show()
+				Toast.makeText(requireActivity(), "掃描失敗，請從設定→藍牙→手動配對設備", Toast.LENGTH_SHORT).show()
 			}
 		}
 	}

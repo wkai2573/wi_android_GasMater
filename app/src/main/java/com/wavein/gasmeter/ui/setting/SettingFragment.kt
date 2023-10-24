@@ -393,7 +393,6 @@ class SettingFragment : Fragment() {
 	} else {
 		arrayOf(
 			Manifest.permission.ACCESS_FINE_LOCATION,
-			Manifest.permission.MANAGE_DOCUMENTS
 		)
 	}
 

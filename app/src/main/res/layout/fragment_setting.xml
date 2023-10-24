@@ -132,7 +132,7 @@
               android:backgroundTint="?attr/colorErrorContainer"
               android:text="重置抄表值"
               android:textColor="?attr/colorError"
-              app:icon="@drawable/ic_insert_drive_file_24"
+              app:icon="@drawable/ic_refresh_24"
               app:iconTint="?attr/colorError"
               app:iconTintMode="multiply"
               app:strokeColor="?attr/colorError" />

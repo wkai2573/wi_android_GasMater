@@ -7,7 +7,6 @@ import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -107,7 +106,7 @@ class MeterInfoFragment : Fragment() {
 			val inputLayoutBinding = InputLayoutBinding.inflate(LayoutInflater.from(requireContext()))
 			val inputLayout = inputLayoutBinding.textInput.apply {
 				hint = "抄表值"
-				editText?.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_NORMAL
+				editText?.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
 			}
 
 			MaterialAlertDialogBuilder(requireContext())
