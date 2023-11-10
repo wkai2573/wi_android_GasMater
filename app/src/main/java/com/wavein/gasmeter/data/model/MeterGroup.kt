@@ -9,7 +9,7 @@ import com.wavein.gasmeter.tools.Color_Success
 
 data class MeterGroup(
 	val group:String,
-	val meterRows:List<MeterRow>
+	val meterRows:List<MeterRow>,
 ) {
 	// 總數 & 已抄表
 	private val totalCount:Int get() = meterRows.count()

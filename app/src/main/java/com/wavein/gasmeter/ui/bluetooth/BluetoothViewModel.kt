@@ -167,6 +167,23 @@ class BluetoothViewModel @Inject constructor(
 			}
 
 			ConnectEvent.ConnectionLost -> {
+				// todo 如果是通信中途發生中斷, 要處理結果
+				if (commStateFlow.value == CommState.Communicating) {
+					val metaInfo = commResult["meta"] as MetaInfo
+					when (metaInfo.op) {
+						"R80" -> {
+							val d05mList = if (commResult.containsKey("D05m")) {
+								(commResult["D05m"] as D05mInfo).list
+							} else {
+								emptyList()
+							}
+							val notReadNumber = (metaInfo.meterIds?.size ?: 0) - d05mList.size
+							commResult["error"] = BaseInfo("$notReadNumber 台抄表失敗\n請檢查該群組瓦斯表")
+						}
+						"R87" -> {}
+					}
+					onCommEnd()
+				}
 				connectEventFlow.emit(ConnectEvent.ConnectionLost)
 				disconnectDevice()
 			}
@@ -285,6 +302,7 @@ class BluetoothViewModel @Inject constructor(
 	val commEndSharedEvent = MutableSharedFlow<CommEndEvent>()
 	var commResult:MutableMap<String, BaseInfo> = mutableMapOf()
 
+	// 溝通中處理變數
 	var sendSteps = mutableListOf<BaseStep>()
 	var receiveSteps = mutableListOf<BaseStep>()
 	var totalReceiveCount = 0
@@ -292,7 +310,7 @@ class BluetoothViewModel @Inject constructor(
 
 	// 溝通結束處理
 	private fun onCommEnd() = viewModelScope.launch {
-		if (commResult.containsKey("Error")) {
+		if (commResult.containsKey("error")) {
 			commEndSharedEvent.emit(CommEndEvent.Error(commResult))
 		} else {
 			commEndSharedEvent.emit(CommEndEvent.Success(commResult))
@@ -323,7 +341,7 @@ class BluetoothViewModel @Inject constructor(
 	fun sendR80Telegram(meterIds:List<String>) = viewModelScope.launch {
 		if (commStateFlow.value != CommState.ReadyCommunicate) return@launch
 		commStateFlow.value = CommState.Communicating
-		commResult = mutableMapOf()
+		commResult = mutableMapOf("meta" to MetaInfo("", "R80", meterIds))
 
 		sendSteps = mutableListOf(
 			__5Step(),
@@ -343,7 +361,7 @@ class BluetoothViewModel @Inject constructor(
 	fun sendR87Telegram(meterId:String, r87Steps:List<R87Step>) = viewModelScope.launch {
 		if (commStateFlow.value != CommState.ReadyCommunicate) return@launch
 		commStateFlow.value = CommState.Communicating
-		commResult = mutableMapOf()
+		commResult = mutableMapOf("meta" to MetaInfo("", "R87", null))
 
 		sendSteps = mutableListOf(
 			__5Step(),

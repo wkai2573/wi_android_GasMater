@@ -12,16 +12,11 @@
     android:orientation="vertical"
     android:padding="8dp">
 
-    <com.wavein.gasmeter.ui.component.Field
-      android:id="@+id/field_meterId"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      app:title="表ID (通信ID, 需要家ID)" />
-
     <LinearLayout
       android:id="@+id/meterDegreeReadLayout"
       android:layout_width="match_parent"
-      android:layout_height="wrap_content">
+      android:layout_height="wrap_content"
+      android:layout_marginBottom="16dp">
 
       <Button
         android:id="@+id/meterDegreeReadBtn"
@@ -39,6 +34,28 @@
         android:layout_marginStart="8dp"
         android:layout_weight="1"
         android:text="人工輸入"
+        app:icon="@drawable/ic_edit_24" />
+    </LinearLayout>
+
+    <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:gravity="center">
+
+      <com.wavein.gasmeter.ui.component.Field
+        android:id="@+id/field_meterId"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_weight="1"
+        app:title="通信ID (表ID, 需要家ID)" />
+
+      <Button
+        android:id="@+id/meterIdBtn"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="編輯"
         app:icon="@drawable/ic_edit_24" />
     </LinearLayout>
 
@@ -86,6 +103,39 @@
       android:layout_height="wrap_content"
       app:title="使用量" />
 
+    <TextView
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="8dp"
+      android:text="電波強度"
+      android:textColor="?attr/colorPrimary"
+      android:textSize="12sp" />
+
+    <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginHorizontal="8dp"
+      android:layout_marginVertical="16dp"
+      android:gravity="center">
+
+      <TextView
+        android:id="@+id/electricFieldStrengthTv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        tools:text="5" />
+
+      <ProgressBar
+        android:id="@+id/electricFieldStrength_progressBar"
+        style="@style/MacroHorizontalProgressBarStyle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:max="9"
+        android:progressDrawable="@drawable/progress_bar"
+        tools:progress="5" />
+    </LinearLayout>
+
     <LinearLayout
       android:layout_width="match_parent"
       android:layout_height="wrap_content">
@@ -130,50 +180,26 @@
       android:layout_height="wrap_content"
       app:title="地址" />
 
-    <com.wavein.gasmeter.ui.component.Field
-      android:id="@+id/field_remark"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      app:title="備註" />
-
-    <Button
-      android:id="@+id/remarkBtn"
-      style="@style/Widget.Material3.Button.OutlinedButton"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:text="編輯備註"
-      app:icon="@drawable/ic_edit_24" />
-
-    <TextView
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_marginTop="8dp"
-      android:text="電波強度"
-      android:textColor="?attr/colorPrimary"
-      android:textSize="12sp" />
-
     <LinearLayout
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
-      android:layout_margin="8dp"
       android:gravity="center">
 
-      <TextView
-        android:id="@+id/electricFieldStrengthTv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        tools:text="5" />
-
-      <ProgressBar
-        android:id="@+id/electricFieldStrength_progressBar"
-        style="@style/MacroHorizontalProgressBarStyle"
+      <com.wavein.gasmeter.ui.component.Field
+        android:id="@+id/field_remark"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
         android:layout_weight="1"
-        android:max="9"
-        android:progressDrawable="@drawable/progress_bar"
-        tools:progress="5" />
+        app:title="備註" />
+
+      <Button
+        android:id="@+id/remarkBtn"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="編輯"
+        app:icon="@drawable/ic_edit_24" />
     </LinearLayout>
 
   </LinearLayout>

@@ -34,12 +34,18 @@
   </com.google.android.material.button.MaterialButtonToggleGroup>
 
   <include
+    android:id="@+id/selectedCsv"
+    layout="@layout/item_csv"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp" />
+
+  <include
     android:id="@+id/groups_combo"
     layout="@layout/combo_subtitle"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="8dp"
-    android:layout_marginTop="8dp"
     android:layout_marginEnd="8dp" />
 
   <Button

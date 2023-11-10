@@ -1,5 +1,6 @@
 package com.wavein.gasmeter.tools.rd64h.info
 
+// 電文處理基底
 open class BaseInfo(open val text:String) {
 	override fun toString():String = text
 	open var isCorrectParsed = false

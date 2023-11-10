@@ -14,7 +14,6 @@
     android:layout_marginStart="8dp"
     android:layout_marginTop="8dp"
     android:layout_marginEnd="8dp"
-    android:layout_marginBottom="8dp"
     app:singleSelection="true">
 
     <com.google.android.material.button.MaterialButton
@@ -33,6 +32,14 @@
       android:layout_weight="1"
       android:text="全部顯示" />
   </com.google.android.material.button.MaterialButtonToggleGroup>
+
+  <include
+    android:id="@+id/selectedCsv"
+    layout="@layout/item_csv"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginBottom="8dp" />
 
   <FrameLayout
     android:layout_width="match_parent"

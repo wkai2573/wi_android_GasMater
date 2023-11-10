@@ -40,8 +40,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.io.PrintWriter
-import java.io.StringWriter
 
 
 class MeterBaseFragment : Fragment() {
@@ -175,9 +173,7 @@ class MeterBaseFragment : Fragment() {
 						}
 
 						ConnectEvent.Listening -> {}
-						ConnectEvent.ConnectionLost -> {
-							SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("設備已中斷連線", SharedEvent.Color.Info))
-						}
+						ConnectEvent.ConnectionLost -> {}
 
 						is ConnectEvent.BytesSent -> {}
 						is ConnectEvent.BytesReceived -> {}
@@ -217,6 +213,7 @@ class MeterBaseFragment : Fragment() {
 
 						is CommEndEvent.Error -> {
 							SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(event.commResult.toString(), SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
+							updateCsvRowsByCommResult(event.commResult) // 依據結果更新csvRows
 						}
 
 						else -> {}
@@ -311,9 +308,10 @@ class MeterBaseFragment : Fragment() {
 	}
 
 	// 手動更新csv (用group & meterId找)
-	fun updateCsvRowManual(newMeterRow:MeterRow) {
+	fun updateCsvRowManual(newMeterRow:MeterRow, _origMeterId:String? = null) {
+		val origMeterId = _origMeterId ?: newMeterRow.meterId
 		val newCsvRows = meterVM.meterRowsStateFlow.value.map { meterRow ->
-			if (meterRow.group == newMeterRow.group && meterRow.meterId == newMeterRow.meterId) {
+			if (meterRow.group == newMeterRow.group && meterRow.meterId == origMeterId) {
 				newMeterRow
 			} else {
 				meterRow

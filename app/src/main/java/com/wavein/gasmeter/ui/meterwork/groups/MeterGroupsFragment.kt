@@ -12,6 +12,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.wavein.gasmeter.data.model.MeterGroup
+import com.wavein.gasmeter.data.model.Selectable
 import com.wavein.gasmeter.data.model.toMeterGroups
 import com.wavein.gasmeter.databinding.FragmentMeterGroupsBinding
 import com.wavein.gasmeter.ui.meterwork.Filter
@@ -68,6 +70,16 @@ class MeterGroupsFragment : Fragment() {
 			adapter = meterGroupListAdapter
 		}
 
+		// 訂閱Csv檔案
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				csvVM.selectedFileStateFlow.asStateFlow().collectLatest { fileState ->
+					val text = "檔名:${fileState.name}"
+					binding.selectedCsv.infoTv.text = text
+				}
+			}
+		}
+
 		// 訂閱rows更新
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -91,6 +103,15 @@ class MeterGroupsFragment : Fragment() {
 			}
 		}
 
+		// 訂閱選擇的group: 換底色
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				meterVM.selectedMeterGroupStateFlow.collectLatest {
+					submitList()
+				}
+			}
+		}
+
 		ifAllDoneShowAll()
 	}
 
@@ -107,7 +128,10 @@ class MeterGroupsFragment : Fragment() {
 			Filter.All -> meterRows.toMeterGroups()
 			Filter.Undone -> meterRows.toMeterGroups().filter { !it.allRead }
 		}
-		meterGroupListAdapter.submitList(meterGroups)
+		val sMeterGroups = meterGroups.map {
+			Selectable(selected = meterVM.selectedMeterGroupStateFlow.value == it, data = it)
+		}
+		meterGroupListAdapter.submitList(sMeterGroups)
 		// 全完成提示
 		binding.allDoneCongratsTip.visibility = if (meterGroups.isEmpty()) View.VISIBLE else View.GONE
 	}

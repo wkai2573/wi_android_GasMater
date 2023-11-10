@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.wavein.gasmeter.R
 import com.wavein.gasmeter.data.model.MeterRow
+import com.wavein.gasmeter.data.model.Selectable
 import com.wavein.gasmeter.data.model.toMeterGroups
 import com.wavein.gasmeter.databinding.FragmentMeterSearchBinding
 import com.wavein.gasmeter.tools.textChanges
@@ -135,7 +136,8 @@ class MeterSearchFragment : Fragment() {
 			}
 		}
 		meterRows = meterRows.sortedWith(compareBy<MeterRow> { it.group }.thenBy { it.queue })
+		val sMeterRows = meterRows.map { Selectable(data = it) }
 
-		meterListAdapter.submitList(meterRows)
+		meterListAdapter.submitList(sMeterRows)
 	}
 }

@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.data.model.MeterGroup
+import com.wavein.gasmeter.data.model.Selectable
 import com.wavein.gasmeter.data.model.toMeterGroups
 import com.wavein.gasmeter.databinding.FragmentMeterListBinding
 import com.wavein.gasmeter.tools.SharedEvent
@@ -83,6 +84,16 @@ class MeterListFragment : Fragment() {
 			adapter = meterListAdapter
 		}
 
+		// 訂閱Csv檔案
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				csvVM.selectedFileStateFlow.asStateFlow().collectLatest { fileState ->
+					val text = "檔名:${fileState.name}"
+					binding.selectedCsv.infoTv.text = text
+				}
+			}
+		}
+
 		// 訂閱選擇的group
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -108,6 +119,15 @@ class MeterListFragment : Fragment() {
 			}
 		}
 
+		// 訂閱選擇的row: 換底色
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				meterVM.selectedMeterRowFlow.collectLatest {
+					submitList()
+				}
+			}
+		}
+
 		// 群組抄表按鈕
 		binding.groupReadBtn.setOnClickListener {
 			val meterGroup = meterVM.selectedMeterGroupStateFlow.value ?: return@setOnClickListener
@@ -124,10 +144,12 @@ class MeterListFragment : Fragment() {
 				}
 				return@setOnClickListener
 			}
-			val estimatedTime = (notReadMeterIds.size - 1) * 3 + when {
-				notReadMeterIds.size <= 15 -> 37
-				else -> 50
-			}
+			val estimatedTime = 2 +
+					when {
+						notReadMeterIds.size <= 15 -> 37
+						else -> 50
+					} +
+					(notReadMeterIds.size - 1) * 3
 
 			MaterialAlertDialogBuilder(requireContext()).apply {
 				setTitle("群組抄表")
@@ -184,7 +206,10 @@ class MeterListFragment : Fragment() {
 			Filter.All -> meterGroup.meterRows
 			Filter.Undone -> meterGroup.meterRows.filter { !it.degreeRead }
 		}.sortedBy { it.queue }
-		meterListAdapter.submitList(meterRows)
+		val sMeterRows = meterRows.map {
+			Selectable(selected = meterVM.selectedMeterRowFlow.value == it, data = it)
+		}
+		meterListAdapter.submitList(sMeterRows)
 		// 全完成提示
 		binding.allDoneCongratsTip.visibility = if (meterRows.isEmpty()) View.VISIBLE else View.GONE
 	}
