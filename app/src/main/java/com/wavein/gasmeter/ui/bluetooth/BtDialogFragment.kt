@@ -20,10 +20,8 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.DialogBtBinding
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch

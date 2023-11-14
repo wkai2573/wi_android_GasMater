@@ -8,13 +8,17 @@ import androidx.security.crypto.MasterKey
 // APP儲存資料: 參考jim的PreferenceProvider
 object Preference {
 
-	// 外部使用的key
+	// 儲存的key
 	const val NCC_METER_ID = "nccMeterId"
-	const val APP_KEY = "Appkey"
-	const val APP_ACTIVATED = "AppActivated"
-	const val USER_COMPANY = "UserCompany"
-	const val USER_DEP = "UserDep"
-	const val USER_NAME = "Username"
+
+	const val APP_KEY = "appkey"
+	const val APP_ACTIVATED = "appActivated"
+	const val USER_COMPANY = "userCompany"
+	const val USER_DEP = "userDep"
+	const val USER_NAME = "userName"
+
+	const val LAST_BT_DEVICE_MAC = "lastBtDeviceMac"
+
 	const val FTP_DOWNLOAD_HOST = "ftpDownloadHost"
 	const val FTP_DOWNLOAD_USERNAME = "ftpDownloadUsername"
 	const val FTP_DOWNLOAD_PASSWORD = "ftpDownloadPassword"

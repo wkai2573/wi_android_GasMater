@@ -10,6 +10,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.material.snackbar.Snackbar
+import com.wavein.gasmeter.tools.Preference
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.rd64h.*
 import com.wavein.gasmeter.tools.rd64h.info.*
@@ -125,6 +126,7 @@ class BluetoothViewModel @Inject constructor(
 	fun connectDevice(device:BluetoothDevice? = autoConnectDeviceStateFlow.value) = viewModelScope.launch {
 		if (bluetoothOffTip()) return@launch
 		if (device == null) return@launch
+		Preference[Preference.LAST_BT_DEVICE_MAC] = device.address
 		setAutoConnectBluetoothDevice(device)
 		parentDeviceClient = ParentDeviceClient(device)
 		parentDeviceClient?.start()

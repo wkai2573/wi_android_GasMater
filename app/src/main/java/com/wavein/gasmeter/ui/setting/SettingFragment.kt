@@ -85,6 +85,17 @@ class SettingFragment : Fragment() {
 
 		// 藍牙設備__________
 
+		// APP開啟時自動選擇上次設備
+		val lastBtDeviceMac = Preference[Preference.LAST_BT_DEVICE_MAC, ""]!!
+		if (lastBtDeviceMac.isNotEmpty()) {
+			checkBluetoothOn {
+				val lastDevice = blVM.getBondedRD64HDevices().find { it.address == lastBtDeviceMac }
+				if (lastDevice != null) {
+					blVM.connectDevice(lastDevice)
+				}
+			}
+		}
+
 		binding.btSelectBtn.setOnClickListener {
 			checkBluetoothOn { BtDialogFragment.open(requireContext()) }
 		}
@@ -111,12 +122,17 @@ class SettingFragment : Fragment() {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.connectEventFlow.asSharedFlow().collectLatest { event ->
 					when (event) {
-						ConnectEvent.Connecting -> {}
+						ConnectEvent.Connecting -> {
+							SharedEvent.loadingFlow.value = Tip("設備連結中")
+						}
+
 						ConnectEvent.Connected -> {
+							SharedEvent.loadingFlow.value = Tip("")
 							blVM.disconnectDevice()
 						}
+
 						ConnectEvent.ConnectionFailed -> {
-							SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("設備連結失敗", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
+							SharedEvent.loadingFlow.value = Tip("")
 						}
 
 						ConnectEvent.Listening -> {}
@@ -153,7 +169,7 @@ class SettingFragment : Fragment() {
 		}
 
 		binding.selectCsvFromLocalBtn.setOnClickListener {
-			 csvVM.openFilePicker(filePickerLauncher)
+			csvVM.openFilePicker(filePickerLauncher)
 		}
 
 		binding.resetDegreeBtn.setOnClickListener {
