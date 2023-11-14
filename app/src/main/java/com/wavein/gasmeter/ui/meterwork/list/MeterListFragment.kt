@@ -72,7 +72,7 @@ class MeterListFragment : Fragment() {
 		}
 
 		// combo
-		binding.groupsCombo.layout.hint = "群組"
+		binding.groupsCombo.layout.hint = "群組號(區域名稱)"
 
 		// rv
 		meterListAdapter = MeterListAdapter {
@@ -193,7 +193,7 @@ class MeterListFragment : Fragment() {
 
 	private fun setCombo(meterGroup:MeterGroup?) {
 		meterGroup?.let {
-			binding.groupsCombo.listTv.setText(it.group, false)
+			binding.groupsCombo.listTv.setText(it.toString(), false)
 			binding.groupsCombo.subTitleTv.text = it.readTip
 			binding.groupsCombo.subTitleTv.setTextColor(it.readTipColor)
 		}

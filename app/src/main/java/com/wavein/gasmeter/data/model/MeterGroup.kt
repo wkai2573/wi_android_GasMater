@@ -40,8 +40,8 @@ data class MeterGroup(
 			}
 		}
 
-	// combo下拉時顯示內容
+	// combo下拉時顯示內容: 群組號(區域名稱)
 	override fun toString():String {
-		return this.group
+		return "${this.group}(${this.meterRows[0].groupName})"
 	}
 }

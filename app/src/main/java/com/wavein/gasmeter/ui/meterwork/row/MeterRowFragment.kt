@@ -44,7 +44,7 @@ class MeterRowFragment : Fragment() {
 		super.onViewCreated(view, savedInstanceState)
 
 		// group & combo
-		binding.queueCombo.layout.hint = "抄表順序"
+		binding.queueCombo.layout.hint = "抄表順路"
 
 		// 訂閱選擇的group
 		viewLifecycleOwner.lifecycleScope.launch {

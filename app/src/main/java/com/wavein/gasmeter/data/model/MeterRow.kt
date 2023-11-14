@@ -83,7 +83,7 @@ data class MeterRow(
 
 	// combo下拉時顯示內容
 	override fun toString():String {
-		return "$queue" // "$queue ($meterId)"
+		return queue
 	}
 
 	init {

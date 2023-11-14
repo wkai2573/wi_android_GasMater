@@ -58,7 +58,7 @@ class MeterListAdapter(
 			binding.fieldGroup.setValue(meterRow.group)
 			binding.fieldMeterId.setValue(meterRow.meterId)
 			binding.fieldQueue.setValue(meterRow.queue)
-			binding.fieldCustName.setValue(meterRow.custName)
+			binding.fieldCustId.setValue(meterRow.custId)
 			val degreeColor = if (meterRow.degreeRead) Color.BLACK else Color.RED
 			binding.fieldMeterDegree.setValue("${meterRow.meterDegree ?: "未抄表"}", degreeColor)
 			binding.errTv.setText(meterRow.error)

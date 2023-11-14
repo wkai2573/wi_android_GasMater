@@ -20,7 +20,7 @@
       android:layout_width="0dp"
       android:layout_height="wrap_content"
       android:layout_weight="2"
-      app:title="群組"
+      app:title="群組號"
       tools:value="00001" />
 
     <com.wavein.gasmeter.ui.component.Field
@@ -41,16 +41,16 @@
       android:layout_width="0dp"
       android:layout_height="wrap_content"
       android:layout_weight="2"
-      app:title="抄表順序"
+      app:title="抄表順路"
       tools:value="00001" />
 
     <com.wavein.gasmeter.ui.component.Field
-      android:id="@+id/field_custName"
+      android:id="@+id/field_custId"
       android:layout_width="0dp"
       android:layout_height="wrap_content"
-      android:layout_weight="3"
-      app:title="客戶姓名"
-      tools:value="客戶BBB" />
+      android:layout_weight="5"
+      app:title="客戶編號"
+      tools:value="100000000000003" />
 
     <com.wavein.gasmeter.ui.component.Field
       android:id="@+id/field_meterDegree"

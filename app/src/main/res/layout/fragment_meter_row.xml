@@ -19,7 +19,7 @@
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:layout_marginEnd="8dp"
-      app:title="群組" />
+      app:title="群組號" />
 
     <include
       android:id="@+id/queue_combo"
