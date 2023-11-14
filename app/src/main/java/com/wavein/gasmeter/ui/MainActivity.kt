@@ -28,10 +28,12 @@ import com.wavein.gasmeter.tools.LanguageUtil
 import com.wavein.gasmeter.tools.NetworkInfo
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.allowInfiniteLines
+import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.ftp.FtpViewModel
 import com.wavein.gasmeter.ui.loading.LoadingDialogFragment
 import com.wavein.gasmeter.ui.setting.CsvViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -46,6 +48,7 @@ class MainActivity : AppCompatActivity() {
 	// binding & viewModel
 	private lateinit var binding:ActivityMainBinding
 	private val navVM by viewModels<NavViewModel>()
+	private val blVM by viewModels<BluetoothViewModel>()
 	private val ftpVM by viewModels<FtpViewModel>()
 	private val csvVM by viewModels<CsvViewModel>()
 
@@ -87,7 +90,7 @@ class MainActivity : AppCompatActivity() {
 				R.id.nav_logoFragment -> {}
 				else -> setBackPressedDispatcherAppToBack()
 			}
-			// 連點5次設定 顯示系統設定
+			// 連線頁: 連點5次設定 顯示系統設定
 			if (destination.id == R.id.nav_settingFragment) {
 				showSystemAreaClickCountdown -= 1
 				if (!ftpVM.systemAreaOpenedStateFlow.value && showSystemAreaClickCountdown == 0) {
@@ -98,6 +101,17 @@ class MainActivity : AppCompatActivity() {
 				}
 			} else {
 				showSystemAreaClickCountdown = 5
+			}
+			// 抄表&查詢頁面: 未選擇設備 & csv 返回連線頁
+			if (destination.id == R.id.nav_meterBaseFragment || destination.id == R.id.nav_meterSearchFragment) {
+				if (blVM.autoConnectDeviceStateFlow.value == null || !csvVM.selectedFileStateFlow.value.isOpened) {
+					lifecycleScope.launch {
+						SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("請先選擇 設備 & CSV檔案", SharedEvent.Color.Error))
+						binding.navView.selectedItemId = R.id.nav_settingFragment
+						delay(100)
+						binding.navView.selectedItemId = R.id.nav_settingFragment
+					}
+				}
 			}
 		}
 		appBarConfiguration = AppBarConfiguration(

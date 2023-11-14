@@ -64,6 +64,11 @@ class SettingFragment : Fragment() {
 	// cb
 	private var onBluetoothOn:(() -> Unit)? = null
 
+	// 靜態變數
+	companion object {
+		var firstSelectLastBtDevice = true // 首次選擇上次設備
+	}
+
 	override fun onDestroyView() {
 		super.onDestroyView()
 		_binding = null
@@ -85,13 +90,16 @@ class SettingFragment : Fragment() {
 
 		// 藍牙設備__________
 
-		// APP開啟時自動選擇上次設備
-		val lastBtDeviceMac = Preference[Preference.LAST_BT_DEVICE_MAC, ""]!!
-		if (lastBtDeviceMac.isNotEmpty()) {
-			checkBluetoothOn {
-				val lastDevice = blVM.getBondedRD64HDevices().find { it.address == lastBtDeviceMac }
-				if (lastDevice != null) {
-					blVM.connectDevice(lastDevice)
+		// APP開啟時 首次選擇上次設備
+		if (SettingFragment.firstSelectLastBtDevice) {
+			SettingFragment.firstSelectLastBtDevice = false
+			val lastBtDeviceMac = Preference[Preference.LAST_BT_DEVICE_MAC, ""]!!
+			if (lastBtDeviceMac.isNotEmpty()) {
+				checkBluetoothOn {
+					val lastDevice = blVM.getBondedRD64HDevices().find { it.address == lastBtDeviceMac }
+					if (lastDevice != null) {
+						blVM.connectDevice(lastDevice)
+					}
 				}
 			}
 		}
@@ -135,8 +143,12 @@ class SettingFragment : Fragment() {
 							SharedEvent.loadingFlow.value = Tip("")
 						}
 
-						ConnectEvent.Listening -> {}
-						ConnectEvent.ConnectionLost -> {}
+						ConnectEvent.Listening -> {
+							SharedEvent.loadingFlow.value = Tip("")
+						}
+						ConnectEvent.ConnectionLost -> {
+							SharedEvent.loadingFlow.value = Tip("")
+						}
 
 						is ConnectEvent.BytesSent -> {}
 						is ConnectEvent.BytesReceived -> {}
