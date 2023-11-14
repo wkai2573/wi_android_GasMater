@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:id="@+id/errTvCard"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:backgroundTint="?attr/colorErrorContainer"
+  android:minWidth="50dp"
+  android:orientation="vertical"
+  app:cardCornerRadius="8dp"
+  app:strokeWidth="0dp"
+  tools:context=".ui.component.ErrorTextView">
+
+  <LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:paddingHorizontal="8dp"
+    android:paddingVertical="2dp">
+
+    <ImageView
+      android:id="@+id/imageView"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:contentDescription="warning"
+      android:src="@drawable/ic_warning_amber_24"
+      app:tint="?attr/colorError" />
+
+    <TextView
+      android:id="@+id/errTv"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:paddingHorizontal="8dp"
+      android:text="TextView"
+      android:textColor="?attr/colorError" />
+  </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

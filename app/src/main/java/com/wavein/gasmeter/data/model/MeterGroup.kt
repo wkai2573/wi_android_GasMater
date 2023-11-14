@@ -29,6 +29,17 @@ data class MeterGroup(
 	val groupWithTip:SpannableString
 		get() = SpannableString.valueOf(SpannableStringBuilder().append("$this (").append(readTipSpannable).append(")"))
 
+	// 異常提示
+	val error:String
+		get() {
+			val degreeUsedNegativeCount = meterRows.filter { meterRow -> meterRow.degreeNegative }.size
+			return if (degreeUsedNegativeCount > 0) {
+				"$degreeUsedNegativeCount 筆資料 使用量為負數"
+			} else {
+				""
+			}
+		}
+
 	// combo下拉時顯示內容
 	override fun toString():String {
 		return this.group

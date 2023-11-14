@@ -63,7 +63,7 @@ class MeterInfoFragment : Fragment() {
 							("${it.meterDegree} ${if (it.isManualMeterDegree == true) " (人工輸入)" else ""}")
 						binding.fieldMeterDegree.setValue(meterDegreeText, if (it.meterDegree == null) Color.RED else Color.BLACK)
 						binding.fieldLastMeterDegree.setValue(it.lastMeterDegree?.toString() ?: "")
-						binding.fieldDegreesUsed.setValue(it.degreesUsed?.toString() ?: "")
+						binding.fieldDegreeUsed.setValue(it.degreeUsed?.toString() ?: "", if (it.degreeNegative) Color.RED else Color.BLACK)
 						binding.fieldMeterReadTime.setValue(it.meterReadTime ?: "")
 						binding.fieldLastMeterReadTime.setValue(it.lastMeterReadTime ?: "")
 						binding.fieldAlarm1.setValue(booleanRender(it.batteryVoltageDropAlarm))
@@ -162,7 +162,11 @@ class MeterInfoFragment : Fragment() {
 					val existedRow = meterVM.meterRowsStateFlow.value.find { it.meterId == newMeterId }
 					if (existedRow != null) {
 						lifecycleScope.launch {
-							SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("通信ID重複\n此通信ID已存在於群組號: ${existedRow.group}", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
+							SharedEvent.eventFlow.emit(
+								SharedEvent.ShowSnackbar(
+									"通信ID重複\n此通信ID已存在於群組號: ${existedRow.group}", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE
+								)
+							)
 						}
 						return@setPositiveButton
 					} else {

@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.wavein.gasmeter.data.model.MeterRow
 import com.wavein.gasmeter.data.model.Selectable
 import com.wavein.gasmeter.databinding.ItemMeterRowBinding
-import com.wavein.gasmeter.ui.meterwork.MeterViewModel
 
 enum class MeterRowRender { Simple, Detail }
 
@@ -60,7 +59,9 @@ class MeterListAdapter(
 			binding.fieldMeterId.setValue(meterRow.meterId)
 			binding.fieldQueue.setValue(meterRow.queue)
 			binding.fieldCustName.setValue(meterRow.custName)
-			binding.fieldMeterDegree.setValue("${meterRow.meterDegree ?: "未抄表"}", if (meterRow.meterDegree == null) Color.RED else Color.BLACK)
+			val degreeColor = if (meterRow.degreeRead) Color.BLACK else Color.RED
+			binding.fieldMeterDegree.setValue("${meterRow.meterDegree ?: "未抄表"}", degreeColor)
+			binding.errTv.setText(meterRow.error)
 		}
 	}
 

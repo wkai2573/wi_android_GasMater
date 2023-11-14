@@ -61,4 +61,11 @@
       tools:value="1234.567" />
   </LinearLayout>
 
+  <com.wavein.gasmeter.ui.component.ErrorTextView
+    android:id="@+id/errTv"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="32dp"
+    tools:text="使用量為 -50" />
+
 </LinearLayout>

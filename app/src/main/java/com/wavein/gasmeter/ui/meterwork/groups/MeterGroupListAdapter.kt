@@ -51,6 +51,7 @@ class MeterGroupListAdapter(private val onClick:(MeterGroup) -> Unit) :
 			val meterGroup = sMeterGroup.data
 			binding.fieldGroup.setValue(meterGroup.group)
 			binding.fieldReadCount.setValue(meterGroup.readTip, meterGroup.readTipColor)
+			binding.errTv.setText(meterGroup.error)
 		}
 	}
 

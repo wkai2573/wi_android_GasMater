@@ -8,6 +8,7 @@ import android.text.style.ForegroundColorSpan
 import com.wavein.gasmeter.tools.Color_Success
 import com.wavein.gasmeter.tools.toBoolean10
 import com.wavein.gasmeter.tools.toString10
+import java.text.DecimalFormat
 
 data class MeterRow(
 	// 原csv欄位(不照順序,*號為csv欄位名)
@@ -51,10 +52,11 @@ data class MeterRow(
 	val meterState:String? = null,               // 表狀態  (メーター状態 16-02)
 ) {
 	// 使用量
-	val degreesUsed get() = if (meterDegree == null || lastMeterDegree == null) null else meterDegree - lastMeterDegree
+	val degreeUsed get() = if (meterDegree == null || lastMeterDegree == null) null else meterDegree - lastMeterDegree
 
 	// 已抄數量提示
 	val degreeRead:Boolean get() = meterDegree != null // 已抄表
+	val degreeNegative:Boolean get() = meterDegree != null && (degreeUsed ?: 0f) < 0f // 使用量負數
 	val readTip:String get() = if (degreeRead) "已抄表" else "未抄表"
 	val readTipColor:Int get() = if (degreeRead) Color_Success else Color.RED
 	val readTipSpannable:SpannableString
@@ -66,6 +68,18 @@ data class MeterRow(
 		}
 	val queueAndIdWithTip:SpannableString
 		get() = SpannableString.valueOf(SpannableStringBuilder().append("$this ").append(readTipSpannable))
+
+	// 異常提示
+	val error:String
+		get() {
+			return if (degreeNegative) {
+				val format = DecimalFormat("0.#")
+				val degreeUsedStr = format.format(degreeUsed)
+				"使用量負數: $degreeUsedStr"
+			} else {
+				""
+			}
+		}
 
 	// combo下拉時顯示內容
 	override fun toString():String {
@@ -105,7 +119,7 @@ fun Map<String, String>.toMeterRow():MeterRow? {
 			businessesCode = csvRow["事業体碼"] ?: return null,
 			lastMeterDegree = csvRow["前次抄表數值"]?.toFloatOrNull(),
 			lastMeterReadTime = csvRow["前次抄表日期"] ?: return null,
-			//degreesUsed = csvRow["使用量"]?.toFloatOrNull(),
+			//degreeUsed = csvRow["使用量"]?.toFloatOrNull(),
 			alarmInfo1 = csvRow["告警1"] ?: return null,
 			alarmInfo2 = csvRow["告警2"] ?: return null,
 			pressureValue = csvRow["壓力值"]?.toFloatOrNull(),
@@ -148,7 +162,7 @@ private fun MeterRow.toCsvRow():Map<String, String> {
 		"事業体碼" to this.businessesCode.orEmpty(),
 		"前次抄表數值" to (this.lastMeterDegree?.toString() ?: ""),
 		"前次抄表日期" to this.lastMeterReadTime.orEmpty(),
-		"使用量" to (this.degreesUsed?.toString() ?: ""),
+		"使用量" to (this.degreeUsed?.toString() ?: ""),
 		"告警1" to this.alarmInfo1.orEmpty(),
 		"告警2" to this.alarmInfo2.orEmpty(),
 		"壓力值" to (this.pressureValue?.toString() ?: ""),
