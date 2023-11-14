@@ -93,6 +93,7 @@ class MeterSearchFragment : Fragment() {
 			meterVM.setSelectedMeterGroup(meterVM.meterRowsStateFlow.value.toMeterGroups().find { meterGroup -> meterGroup.group == it.group })
 			meterVM.selectedMeterRowFlow.value = it
 			navVM.meterBaseChangeTabStateFlow.value = 2
+			navVM.meterRowPageBackDestinationIsSearch = true
 			navVM.navigate(R.id.nav_meterBaseFragment)
 		}
 		binding.meterRowsRv.apply {

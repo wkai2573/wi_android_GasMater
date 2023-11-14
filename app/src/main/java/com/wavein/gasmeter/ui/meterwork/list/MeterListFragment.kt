@@ -23,6 +23,7 @@ import com.wavein.gasmeter.data.model.Selectable
 import com.wavein.gasmeter.data.model.toMeterGroups
 import com.wavein.gasmeter.databinding.FragmentMeterListBinding
 import com.wavein.gasmeter.tools.SharedEvent
+import com.wavein.gasmeter.ui.NavViewModel
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.meterwork.Filter
 import com.wavein.gasmeter.ui.meterwork.MeterBaseFragment
@@ -38,6 +39,7 @@ class MeterListFragment : Fragment() {
 	// binding & viewModel
 	private var _binding:FragmentMeterListBinding? = null
 	private val binding get() = _binding!!
+	private val navVM by activityViewModels<NavViewModel>()
 	private val blVM by activityViewModels<BluetoothViewModel>()
 	private val csvVM by activityViewModels<CsvViewModel>()
 	private val meterVM by activityViewModels<MeterViewModel>()
@@ -75,6 +77,7 @@ class MeterListFragment : Fragment() {
 		// rv
 		meterListAdapter = MeterListAdapter {
 			meterVM.selectedMeterRowFlow.value = it
+			navVM.meterRowPageBackDestinationIsSearch = false
 			(parentFragment as MeterBaseFragment).changeTab(2)
 		}
 		binding.meterRowsRv.apply {

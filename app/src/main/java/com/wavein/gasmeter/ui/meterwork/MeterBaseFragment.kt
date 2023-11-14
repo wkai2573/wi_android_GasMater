@@ -19,6 +19,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import com.wavein.gasmeter.R
 import com.wavein.gasmeter.data.model.MeterRow
 import com.wavein.gasmeter.databinding.FragmentMeterBaseBinding
 import com.wavein.gasmeter.tools.SharedEvent
@@ -114,6 +115,24 @@ class MeterBaseFragment : Fragment() {
 					delay(1)
 					changeTab(tabIndex, false)
 					navVM.meterBaseChangeTabStateFlow.value = -1
+				}
+			}
+		}
+
+		// 訂閱點擊back事件: 檢查目前抄表頁裡面的分頁,決定執行動作
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				navVM.meterBaseBackKeyClickSharedFlow.asSharedFlow().collectLatest { smoothScroll ->
+					if (binding.pager.currentItem == 2 && navVM.meterRowPageBackDestinationIsSearch) {
+						navVM.navigate(R.id.nav_meterSearchFragment)
+					} else {
+						val toTabIndex = binding.pager.currentItem - 1
+						if (toTabIndex >= 0) {
+							changeTab(toTabIndex, smoothScroll)
+						} else {
+							navVM.navigate(R.id.nav_settingFragment)
+						}
+					}
 				}
 			}
 		}

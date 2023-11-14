@@ -4,14 +4,18 @@ import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
@@ -33,11 +37,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
 	private lateinit var appBarConfiguration:AppBarConfiguration
+	private lateinit var navController:NavController
 
 	// binding & viewModel
 	private lateinit var binding:ActivityMainBinding
@@ -72,7 +76,7 @@ class MainActivity : AppCompatActivity() {
 
 		// 下方navBar
 		val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main) as NavHostFragment
-		val navController = navHostFragment.navController
+		navController = navHostFragment.navController
 		navController.addOnDestinationChangedListener { _, destination, _ ->
 			// 隱藏顯示 navBar
 			binding.navView.visibility = when (destination.id) {
@@ -235,12 +239,40 @@ class MainActivity : AppCompatActivity() {
 		}
 	}
 
-	// 按back縮小app
+	private var backPressedTime:Long = 0
+	private val backPressedInterval = 2000 // 兩次返回鍵間隔
+
+	// back鍵, 依頁面不同動作
 	private fun setBackPressedDispatcherAppToBack() {
 		val callback = object : OnBackPressedCallback(true) {
 			override fun handleOnBackPressed() {
-				moveTaskToBack(true) // 縮小app
-				// this.onBackPressed() // 預設的返回操作 (會回logo頁)
+				when (navController.currentDestination?.id) {
+					R.id.nav_settingFragment -> {
+						if (System.currentTimeMillis() - backPressedTime < backPressedInterval) {
+							this@MainActivity.finish()
+						} else {
+							Toast.makeText(this@MainActivity, "再按一次返回鍵退出", Toast.LENGTH_SHORT).show()
+							backPressedTime = System.currentTimeMillis()
+						}
+					}
+
+					R.id.nav_meterBaseFragment -> {
+						navVM.meterBaseOnBackKeyClick(true)
+					}
+
+					R.id.nav_meterSearchFragment -> {
+						navVM.navigate(R.id.nav_settingFragment)
+					}
+
+					R.id.nav_nccFragment -> {
+						navVM.navigate(R.id.nav_settingFragment)
+					}
+
+					else -> {
+						moveTaskToBack(true) // 縮小app
+						// this.onBackPressed() // 預設的返回操作 (會回logo頁)
+					}
+				}
 			}
 		}
 		this.onBackPressedDispatcher.addCallback(this, callback)

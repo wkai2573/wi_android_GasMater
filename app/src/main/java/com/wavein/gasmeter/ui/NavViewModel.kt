@@ -26,4 +26,16 @@ class NavViewModel @Inject constructor(
 
 	// meterBase頁中切換tab
 	val meterBaseChangeTabStateFlow = MutableStateFlow(-1)
+
+	// 瓦斯表的back鍵目的地
+	// 若從群組瓦斯表進入, 為false
+	// 若從查詢進入, 為true
+	var meterRowPageBackDestinationIsSearch = false
+
+	// meterBase頁中點返回鍵
+	val meterBaseBackKeyClickSharedFlow = MutableSharedFlow<Boolean>()
+	fun meterBaseOnBackKeyClick(smoothScroll:Boolean) = viewModelScope.launch {
+		meterBaseBackKeyClickSharedFlow.emit(smoothScroll)
+	}
+
 }
