@@ -106,6 +106,30 @@ class SettingFragment : Fragment() {
 			}
 		}
 
+		// 訂閱藍牙事件: 連線成功後立即中斷連線
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				blVM.connectEventFlow.asSharedFlow().collectLatest { event ->
+					when (event) {
+						ConnectEvent.Connecting -> {}
+						ConnectEvent.Connected -> {
+							blVM.disconnectDevice()
+						}
+						ConnectEvent.ConnectionFailed -> {
+							SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("設備連結失敗", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
+						}
+
+						ConnectEvent.Listening -> {}
+						ConnectEvent.ConnectionLost -> {}
+
+						is ConnectEvent.BytesSent -> {}
+						is ConnectEvent.BytesReceived -> {}
+						else -> {}
+					}
+				}
+			}
+		}
+
 		// 檔案管理__________
 
 		// 訂閱Csv檔案

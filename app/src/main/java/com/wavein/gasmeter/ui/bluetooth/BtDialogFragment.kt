@@ -123,22 +123,17 @@ class BtDialogFragment(
 		}
 	}
 
-	// 設定頁-> 選定為連線的設備
+	// 設定頁-> 選定為連線的設備 & 配對並連線設備 & 連線成功後立即中斷
 	// 抄表頁-> 選定為連線的設備 & 配對並連線設備
 	private fun connectDevice(device:BluetoothDevice) {
-		if (findNavController().currentDestination?.id == R.id.nav_settingFragment) {
-			blVM.setAutoConnectBluetoothDevice(device)
-			dialog?.dismiss()
-		} else {
-			when (device.bondState) {
-				// 已配對, 連接設備
-				BluetoothDevice.BOND_BONDED -> {
-					blVM.connectDevice(device)
-					dialog?.dismiss()
-				}
-				// 未配對, 配對設備
-				BluetoothDevice.BOND_NONE -> device.createBond()
+		when (device.bondState) {
+			// 已配對, 連接設備
+			BluetoothDevice.BOND_BONDED -> {
+				blVM.connectDevice(device)
+				dialog?.dismiss()
 			}
+			// 未配對, 配對設備
+			BluetoothDevice.BOND_NONE -> device.createBond()
 		}
 	}
 
