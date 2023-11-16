@@ -146,6 +146,7 @@ class SettingFragment : Fragment() {
 						ConnectEvent.Listening -> {
 							SharedEvent.loadingFlow.value = Tip("")
 						}
+
 						ConnectEvent.ConnectionLost -> {
 							SharedEvent.loadingFlow.value = Tip("")
 						}
@@ -198,6 +199,10 @@ class SettingFragment : Fragment() {
 								lastMeterDegree = meterRow.meterDegree,
 								meterReadTime = null,
 								lastMeterReadTime = meterRow.meterReadTime,
+								batteryVoltageDropAlarm = null,
+								innerPipeLeakageAlarm = null,
+								shutoff = null,
+								alarmInfo1 = null,
 							)
 						} else {
 							meterRow
