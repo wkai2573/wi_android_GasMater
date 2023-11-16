@@ -32,7 +32,6 @@ import java.io.File
 import java.io.FileDescriptor
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.io.IOException
 import javax.inject.Inject
 
 val bom = byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte())
@@ -44,7 +43,7 @@ class CsvViewModel @Inject constructor(
 	//...
 ) : ViewModel() {
 
-	val readFileStateFlow = MutableStateFlow(ReadFileState())
+	private val readFileStateFlow = MutableStateFlow(ReadFileState())
 	val selectedFileStateFlow = MutableStateFlow(FileState())
 
 	// 檔案選取器
@@ -80,9 +79,42 @@ class CsvViewModel @Inject constructor(
 		val csvRows:List<Map<String, String>> = csvReader().readAllWithHeader(inputStream)
 		parcelFileDescriptor.close()
 		readFileStateFlow.value = ReadFileState(ReadFileState.Type.Idle)
-		meterVM.meterRowsStateFlow.value = csvRows.toMeterRows()
-		meterVM.setSelectedMeterGroup(null)
-		setFileState(context, uri, specifiedFilename)
+		// 檢查CSV資料合法
+		val meterRows = csvRows.toMeterRows()
+		var message = checkRowsLegal(meterRows)
+		if (message == "ok") {
+			meterVM.meterRowsStateFlow.value = csvRows.toMeterRows()
+			meterVM.setSelectedMeterGroup(null)
+			setFileState(context, uri, specifiedFilename)
+		} else {
+			message += "\n請確認CSV檔案資料"
+			viewModelScope.launch {
+				SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(message, SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
+			}
+		}
+	}
+
+	// 檢查CSV資料合法
+	//  1. 抄表順路 & 客戶編號 & 表ID 不可重複
+	//  2. 單群最多45台瓦斯表
+	private fun checkRowsLegal(meterRows:List<MeterRow>):String {
+		val duplicateQueue = meterRows.groupingBy { it.queue }.eachCount().filter { it.value > 1 }.keys
+		if (duplicateQueue.isNotEmpty())
+			return "抄表順路重複: ${duplicateQueue.joinToString()}"
+
+		val duplicateCustId = meterRows.groupingBy { it.custId }.eachCount().filter { it.value > 1 }.keys
+		if (duplicateCustId.isNotEmpty())
+			return "客戶編號重複: ${duplicateCustId.joinToString()}"
+
+		val duplicateMeterId = meterRows.groupingBy { it.meterId }.eachCount().filter { it.value > 1 }.keys
+		if (duplicateMeterId.isNotEmpty())
+			return "表ID重複: ${duplicateMeterId.joinToString()}"
+
+		val exceed45Groups = meterRows.groupBy { it.group }.filter { it.value.size > 45 }.keys
+		if (exceed45Groups.isNotEmpty())
+			return "超過45台瓦斯表群組: ${exceed45Groups.joinToString()}"
+
+		return "ok"
 	}
 
 	// 設為選擇的檔案

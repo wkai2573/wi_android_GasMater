@@ -134,6 +134,7 @@ class FtpViewModel @Inject constructor(
 				}
 				ftpConnStateFlow.value = FtpConnState.Connected
 				ftpClient.enterLocalPassiveMode()
+				ftpClient.controlEncoding = "UTF-8" // 設置ftp控制編碼
 				if (ftpInfo.root.isNotEmpty() && !ftpClient.changeWorkingDirectory(encode(ftpInfo.root))) {
 					if (ftpLoginError()) showSnack("${ftpInfo.root} 目錄無法開啟")
 					return@launch
@@ -208,7 +209,7 @@ class FtpViewModel @Inject constructor(
 						}
 					}
 					// 檢查序號正確
-					decode(files[0].name) == uuidFilename -> {
+					files[0].name == uuidFilename -> {
 						Preference[Preference.APP_KEY] = appkey
 						Preference[Preference.APP_ACTIVATED] = true
 						Preference[Preference.USER_COMPANY] = company
@@ -284,7 +285,7 @@ class FtpViewModel @Inject constructor(
 		ftpProcess(downloadFtpInfo, "") { ftpClient ->
 			ftpClient.setFileType(FTP.BINARY_FILE_TYPE)
 			val fileArray = ftpClient.listFiles()
-				.map { ftpFile -> decode(ftpFile.name) }
+				.map { ftpFile -> ftpFile.name }
 				.filter { filename -> filename.endsWith(".csv", true) }
 				.toTypedArray()
 			if (fileArray.isEmpty()) {
