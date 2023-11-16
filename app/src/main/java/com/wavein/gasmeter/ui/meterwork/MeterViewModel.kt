@@ -22,10 +22,10 @@ class MeterViewModel : ViewModel() {
 	val selectedMeterRowFlow = MutableStateFlow<MeterRow?>(null)
 
 	// 左分頁filter
-	val groupsFilterFlow = MutableStateFlow(Filter.Undone)
+	val groupsFilterFlow = MutableStateFlow(Filter.All)
 
 	// 中分頁filter
-	val metersFilterFlow = MutableStateFlow(Filter.Undone)
+	val metersFilterFlow = MutableStateFlow(Filter.All)
 
 }
 
