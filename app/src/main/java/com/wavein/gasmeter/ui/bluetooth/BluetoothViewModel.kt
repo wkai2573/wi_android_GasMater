@@ -169,23 +169,8 @@ class BluetoothViewModel @Inject constructor(
 			}
 
 			ConnectEvent.ConnectionLost -> {
-				// todo 如果是通信中途發生中斷, 要處理結果
-				if (commStateFlow.value == CommState.Communicating) {
-					val metaInfo = commResult["meta"] as MetaInfo
-					when (metaInfo.op) {
-						"R80" -> {
-							val d05mList = if (commResult.containsKey("D05m")) {
-								(commResult["D05m"] as D05mInfo).list
-							} else {
-								emptyList()
-							}
-							val notReadNumber = (metaInfo.meterIds?.size ?: 0) - d05mList.size
-							commResult["error"] = BaseInfo("$notReadNumber 台抄表失敗\n請檢查該群組瓦斯表")
-						}
-						"R87" -> {}
-					}
-					onCommEnd()
-				}
+				// 如果是通信中途發生中斷, 要處理結果
+				if (commStateFlow.value == CommState.Communicating) onCommEnd()
 				connectEventFlow.emit(ConnectEvent.ConnectionLost)
 				disconnectDevice()
 			}
@@ -312,6 +297,28 @@ class BluetoothViewModel @Inject constructor(
 
 	// 溝通結束處理
 	private fun onCommEnd() = viewModelScope.launch {
+		// 依組合決定通信結束後小吃文字
+		val metaInfo = commResult["meta"] as MetaInfo
+		when (metaInfo.op) {
+			"R80" -> {
+				val d05mList = if (commResult.containsKey("D05m")) {
+					(commResult["D05m"] as D05mInfo).list
+				} else {
+					emptyList()
+				}
+				val notReadNumber = (metaInfo.meterIds?.size ?: 0) - d05mList.size
+				if (notReadNumber > 0) {
+					commResult["error"] = BaseInfo("${d05mList.size}台抄表成功，${notReadNumber}台無回應\n請檢查未抄表瓦斯表")
+				} else {
+					commResult["success"] = BaseInfo("${d05mList.size}台抄表成功")
+				}
+			}
+
+			"R87" -> {
+				//todo R87小吃文字
+			}
+		}
+		// 結果處理
 		if (commResult.containsKey("error")) {
 			commEndSharedEvent.emit(CommEndEvent.Error(commResult))
 		} else {

@@ -226,12 +226,22 @@ class MeterBaseFragment : Fragment() {
 				blVM.commEndSharedEvent.asSharedFlow().collectLatest { event ->
 					when (event) {
 						is CommEndEvent.Success -> {
-							SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("通信成功", SharedEvent.Color.Success))
+							val message = if (event.commResult.containsKey("success")) {
+								event.commResult["success"].toString()
+							} else {
+								"通信成功"
+							}
+							SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(message, SharedEvent.Color.Success, Snackbar.LENGTH_INDEFINITE))
 							updateCsvRowsByCommResult(event.commResult) // 依據結果更新csvRows
 						}
 
 						is CommEndEvent.Error -> {
-							SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(event.commResult.toString(), SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
+							val message = if (event.commResult.containsKey("error")) {
+								event.commResult["error"].toString()
+							} else {
+								event.commResult.toString()
+							}
+							SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(message, SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
 							updateCsvRowsByCommResult(event.commResult) // 依據結果更新csvRows
 						}
 
@@ -293,30 +303,33 @@ class MeterBaseFragment : Fragment() {
 	// 根據結果更新csvRows & ftp紀錄log
 	private suspend fun updateCsvRowsByCommResult(commResult:Map<String, Any>) {
 		SharedEvent.catching {
+			var newCsvRows = meterVM.meterRowsStateFlow.value
 			//todo 目前只有處理D05m
-			val d05mList = (commResult["D05m"] as D05mInfo).list
-			val newCsvRows = meterVM.meterRowsStateFlow.value.map { meterRow ->
-				val d05Info = d05mList.find { it.meterId == meterRow.meterId }
-				if (d05Info != null) {
-					val batteryVoltageDropAlarm = try {
-						d05Info.alarmInfoDetail["A8"]!!["b4"]!! ||
-								d05Info.alarmInfoDetail["A4"]!!["b4"]!! ||
-								d05Info.alarmInfoDetail["A4"]!!["b3"]!!
-					} catch (e:Exception) {
-						null
+			if (commResult.containsKey("D05m")) {
+				val d05mList = (commResult["D05m"] as D05mInfo).list
+				newCsvRows = newCsvRows.map { meterRow ->
+					val d05Info = d05mList.find { it.meterId == meterRow.meterId }
+					if (d05Info != null) {
+						val batteryVoltageDropAlarm = try {
+							d05Info.alarmInfoDetail["A8"]!!["b4"]!! ||
+									d05Info.alarmInfoDetail["A4"]!!["b4"]!! ||
+									d05Info.alarmInfoDetail["A4"]!!["b3"]!!
+						} catch (e:Exception) {
+							null
+						}
+						meterRow.copy(
+							isManualMeterDegree = false,
+							meterDegree = d05Info.meterDegree,
+							meterReadTime = TimeUtil.getCurrentTime(),
+							alarmInfo1 = d05Info.alarmInfo1,
+							batteryVoltageDropAlarm = batteryVoltageDropAlarm,
+							innerPipeLeakageAlarm = d05Info.alarmInfoDetail["A5"]?.get("b1"),
+							shutoff = d05Info.alarmInfoDetail["A1"]?.get("b1")?.not(),
+							electricFieldStrength = d05Info.electricFieldStrength,
+						)
+					} else {
+						meterRow
 					}
-					meterRow.copy(
-						isManualMeterDegree = false,
-						meterDegree = d05Info.meterDegree,
-						meterReadTime = TimeUtil.getCurrentTime(),
-						alarmInfo1 = d05Info.alarmInfo1,
-						batteryVoltageDropAlarm = batteryVoltageDropAlarm,
-						innerPipeLeakageAlarm = d05Info.alarmInfoDetail["A5"]?.get("b1"),
-						shutoff = d05Info.alarmInfoDetail["A1"]?.get("b1")?.not(),
-						electricFieldStrength = d05Info.electricFieldStrength,
-					)
-				} else {
-					meterRow
 				}
 			}
 			// todo ftp log 紀錄有更新瓦斯表的功能
