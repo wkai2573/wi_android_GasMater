@@ -27,6 +27,7 @@ import com.wavein.gasmeter.tools.AppManager
 import com.wavein.gasmeter.tools.LanguageUtil
 import com.wavein.gasmeter.tools.NetworkInfo
 import com.wavein.gasmeter.tools.SharedEvent
+import com.wavein.gasmeter.tools.VibrationAndSoundUtil
 import com.wavein.gasmeter.tools.allowInfiniteLines
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.ftp.FtpViewModel
@@ -42,8 +43,10 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
+	// 實例
 	private lateinit var appBarConfiguration:AppBarConfiguration
 	private lateinit var navController:NavController
+	private lateinit var vibrationAndSoundUtil:VibrationAndSoundUtil
 
 	// binding & viewModel
 	private lateinit var binding:ActivityMainBinding
@@ -67,8 +70,9 @@ class MainActivity : AppCompatActivity() {
 	override fun onCreate(savedInstanceState:Bundle?) {
 		super.onCreate(savedInstanceState)
 
-		// 初始化APP
+		// 初始化
 		AppManager.initAll(application)
+		vibrationAndSoundUtil = VibrationAndSoundUtil(this)
 
 		// ui
 		binding = ActivityMainBinding.inflate(layoutInflater)
@@ -238,6 +242,10 @@ class MainActivity : AppCompatActivity() {
 						is SharedEvent.ShowDialogB -> {
 							event.alertDialog.show()
 						}
+						// 震動&音效
+						is SharedEvent.PlayEffect -> {
+							vibrationAndSoundUtil.vibrateAndPlaySound(event.vibrate, event.sound)
+						}
 					}
 				}
 			}
@@ -253,10 +261,14 @@ class MainActivity : AppCompatActivity() {
 		}
 	}
 
-	private var backPressedTime:Long = 0
-	private val backPressedInterval = 2000 // 兩次返回鍵間隔
+	override fun onDestroy() {
+		vibrationAndSoundUtil.releaseResources()
+		super.onDestroy()
+	}
 
 	// back鍵, 依頁面不同動作
+	private var backPressedTime:Long = 0
+	private val backPressedInterval = 2000 // 兩次返回鍵間隔
 	private fun setBackPressedDispatcherAppToBack() {
 		val callback = object : OnBackPressedCallback(true) {
 			override fun handleOnBackPressed() {

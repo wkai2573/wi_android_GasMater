@@ -232,6 +232,7 @@ class MeterBaseFragment : Fragment() {
 								"通信成功"
 							}
 							SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(message, SharedEvent.Color.Success, Snackbar.LENGTH_INDEFINITE))
+							SharedEvent.eventFlow.emit(SharedEvent.PlayEffect())
 							updateCsvRowsByCommResult(event.commResult) // 依據結果更新csvRows
 						}
 
@@ -242,6 +243,7 @@ class MeterBaseFragment : Fragment() {
 								event.commResult.toString()
 							}
 							SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(message, SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
+							SharedEvent.eventFlow.emit(SharedEvent.PlayEffect())
 							updateCsvRowsByCommResult(event.commResult) // 依據結果更新csvRows
 						}
 

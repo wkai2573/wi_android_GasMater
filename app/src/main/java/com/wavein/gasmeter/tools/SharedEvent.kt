@@ -30,9 +30,9 @@ sealed class SharedEvent {
 		val onDissmiss:DialogInterface.OnDismissListener = DialogInterface.OnDismissListener { dialog -> },
 	) : SharedEvent()
 
-	data class ShowDialogB(
-		val alertDialog:AlertDialog,
-	) : SharedEvent()
+	data class ShowDialogB(val alertDialog:AlertDialog) : SharedEvent()
+
+	data class PlayEffect(val vibrate:Boolean = true, val sound:Boolean = true) : SharedEvent()
 
 	companion object {
 		// 事件流
@@ -42,7 +42,7 @@ sealed class SharedEvent {
 		val loadingFlow = MutableStateFlow(Tip())
 
 		// 顯示錯誤dialog
-		suspend fun showErrDialog(e:Exception) {
+		private suspend fun showErrDialog(e:Exception) {
 			var errMessage = e.message ?: "unknown error"
 			for (element in e.stackTrace) {
 				errMessage += "\nat ${element.fileName}:${element.lineNumber}"
