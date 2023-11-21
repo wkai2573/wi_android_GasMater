@@ -121,7 +121,7 @@ class MeterInfoSetPageAdapter(fragment:Fragment) : FragmentStateAdapter(fragment
 	override fun createFragment(position:Int):Fragment {
 		val fragment = when (position) {
 			0 -> MeterInfoFragment()
-			1 -> MeterSetFragment()
+			1 -> MeterAdvFragment()
 			else -> MeterInfoFragment()
 		}
 		return fragment

@@ -7,12 +7,12 @@ import android.view.View
 import android.widget.LinearLayout
 import androidx.annotation.ColorInt
 import com.wavein.gasmeter.R
-import com.wavein.gasmeter.databinding.FieldErrorTextviewBinding
+import com.wavein.gasmeter.databinding.CustErrorTextviewBinding
 
 
 // 自訂View元件: ErrorTextView
 class ErrorTextView : LinearLayout {
-	private var binding:FieldErrorTextviewBinding? = null
+	private var binding:CustErrorTextviewBinding? = null
 
 	fun setText(text:String?, @ColorInt color:Int? = null) {
 		if (text.isNullOrEmpty()) {
@@ -25,18 +25,18 @@ class ErrorTextView : LinearLayout {
 	}
 
 	constructor(context:Context?) : super(context) {
-		binding = FieldErrorTextviewBinding.inflate(LayoutInflater.from(getContext()), this, false)
+		binding = CustErrorTextviewBinding.inflate(LayoutInflater.from(getContext()), this, false)
 		addView(binding?.root)
 	}
 
 	constructor(context:Context?, attrs:AttributeSet?) : super(context, attrs) {
-		binding = FieldErrorTextviewBinding.inflate(LayoutInflater.from(getContext()), this, false)
+		binding = CustErrorTextviewBinding.inflate(LayoutInflater.from(getContext()), this, false)
 		addView(binding?.root)
 		initLayout(attrs)
 	}
 
 	constructor(context:Context?, attrs:AttributeSet?, defStyle:Int) : super(context, attrs, defStyle) {
-		binding = FieldErrorTextviewBinding.inflate(LayoutInflater.from(getContext()), this, false)
+		binding = CustErrorTextviewBinding.inflate(LayoutInflater.from(getContext()), this, false)
 		addView(binding?.root)
 		initLayout(attrs, defStyle)
 	}

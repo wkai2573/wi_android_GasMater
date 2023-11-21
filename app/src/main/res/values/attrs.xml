@@ -1,9 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <!-- todo custom field -->
+  <!-- 自訂元件參數 -->
   <declare-styleable name="Field">
     <attr name="title" format="string" />
     <attr name="value" format="string" />
+  </declare-styleable>
+
+  <declare-styleable name="FieldAdvInput">
+    <attr name="advTitle" format="string" />
+    <attr name="readLine" format="boolean" />
+    <attr name="readValue" format="string" />
+    <attr name="readDetailBtn" format="boolean" />
+    <attr name="readChecked" format="boolean" />
+    <attr name="writeLine" format="boolean" />
+    <attr name="writeValue" format="string" />
+    <attr name="writeDetailBtn" format="boolean" />
+    <attr name="writeChecked" format="boolean" />
+    <attr name="bottomDivider" format="boolean" />
   </declare-styleable>
 
   <declare-styleable name="ErrorTextView">

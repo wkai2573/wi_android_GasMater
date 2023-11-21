@@ -17,8 +17,8 @@ sealed class SharedEvent {
 		val message:String,
 		val color:Color = Color.Normal,
 		val duration:Int = Snackbar.LENGTH_SHORT,
-		val anchorView:View? = null,
-		val view:View? = null,
+		val view:View? = snackbarDefaultView,             // 顯示上下層
+		val anchorView:View? = snackbarDefaultAnchorView, // 顯示位置錨點
 	) : SharedEvent()
 
 	data class ShowDialog(
@@ -37,6 +37,10 @@ sealed class SharedEvent {
 	companion object {
 		// 事件流
 		val eventFlow = MutableSharedFlow<SharedEvent>()
+
+		// Snackbar:預設錨點
+		var snackbarDefaultView:View? = null
+		var snackbarDefaultAnchorView:View? = null
 
 		// 可觀察變數
 		val loadingFlow = MutableStateFlow(Tip())

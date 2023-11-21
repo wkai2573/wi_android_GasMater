@@ -41,10 +41,6 @@ class FtpViewModel @Inject constructor(
 	val ftpConnStateFlow = MutableStateFlow<FtpConnState>(FtpConnState.Idle)
 
 	// 變數
-	@SuppressLint("StaticFieldLeak")
-	var snackbarView:View? = null
-	var snackbarAnchorView:View? = null
-
 	var systemFtpInfo:FtpInfo = FtpInfo(
 		FtpEnum.System,
 		Preference[Preference.FTP_SYSTEM_HOST, "118.163.191.31"]!!,
@@ -249,7 +245,6 @@ class FtpViewModel @Inject constructor(
 				SharedEvent.ShowSnackbar(
 					msg, snackbarColor,
 					duration = if (snackbarColor == SharedEvent.Color.Error) Snackbar.LENGTH_INDEFINITE else Snackbar.LENGTH_SHORT,
-					view = snackbarView, anchorView = snackbarAnchorView
 				)
 			)
 		}

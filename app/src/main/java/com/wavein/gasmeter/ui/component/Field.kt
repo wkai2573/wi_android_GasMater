@@ -7,12 +7,12 @@ import android.view.LayoutInflater
 import android.widget.LinearLayout
 import androidx.annotation.ColorInt
 import com.wavein.gasmeter.R
-import com.wavein.gasmeter.databinding.FieldNormalBinding
+import com.wavein.gasmeter.databinding.CustFieldNormalBinding
 
 
 // 自訂View元件: Field
 class Field : LinearLayout {
-	private var binding:FieldNormalBinding? = null
+	private var binding:CustFieldNormalBinding? = null
 
 	fun setValue(text:String, @ColorInt color:Int? = null) {
 		binding?.valueTv?.text = text
@@ -20,18 +20,18 @@ class Field : LinearLayout {
 	}
 
 	constructor(context:Context?) : super(context) {
-		binding = FieldNormalBinding.inflate(LayoutInflater.from(getContext()), this, false)
+		binding = CustFieldNormalBinding.inflate(LayoutInflater.from(getContext()), this, false)
 		addView(binding?.root)
 	}
 
 	constructor(context:Context?, attrs:AttributeSet?) : super(context, attrs) {
-		binding = FieldNormalBinding.inflate(LayoutInflater.from(getContext()), this, false)
+		binding = CustFieldNormalBinding.inflate(LayoutInflater.from(getContext()), this, false)
 		addView(binding?.root)
 		initLayout(attrs)
 	}
 
 	constructor(context:Context?, attrs:AttributeSet?, defStyle:Int) : super(context, attrs, defStyle) {
-		binding = FieldNormalBinding.inflate(LayoutInflater.from(getContext()), this, false)
+		binding = CustFieldNormalBinding.inflate(LayoutInflater.from(getContext()), this, false)
 		addView(binding?.root)
 		initLayout(attrs, defStyle)
 	}

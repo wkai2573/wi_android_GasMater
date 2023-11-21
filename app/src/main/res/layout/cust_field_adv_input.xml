@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:orientation="vertical"
+  tools:context=".ui.component.FieldAdvInput">
+
+  <TextView
+    android:id="@+id/titleTv"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:textColor="?attr/colorPrimary"
+    android:textSize="12sp"
+    tools:text="欄位標題" />
+
+  <LinearLayout
+    android:id="@+id/readLine"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="fill_vertical"
+    android:paddingHorizontal="8sp">
+
+    <TextView
+      android:id="@+id/readValueTv"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_weight="1"
+      android:paddingVertical="12dp"
+      android:textSize="16sp"
+      tools:text="欄位數值" />
+
+    <com.google.android.material.button.MaterialButton
+      android:id="@+id/readDetailBtn"
+      style="?attr/materialButtonOutlinedStyle"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="4dp"
+      android:text="詳細" />
+
+    <androidx.appcompat.widget.AppCompatCheckBox
+      android:id="@+id/readCheckbox"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="讀取"
+      android:textColor="?attr/colorPrimary"
+      app:buttonTint="?attr/colorPrimary" />
+  </LinearLayout>
+
+  <LinearLayout
+    android:id="@+id/writeLine"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="8sp">
+
+    <com.google.android.material.textfield.TextInputLayout
+      android:id="@+id/writeValueInput"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_weight="1"
+      android:hint="設定值">
+
+      <com.google.android.material.textfield.TextInputEditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:enabled="false" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+      android:id="@+id/writeDetailBtn"
+      style="?attr/materialButtonOutlinedStyle"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="4dp"
+      android:text="詳細" />
+
+    <androidx.appcompat.widget.AppCompatCheckBox
+      android:id="@+id/writeCheckbox"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="設定"
+      android:textColor="?attr/colorError"
+      app:buttonTint="?attr/colorError" />
+  </LinearLayout>
+
+  <com.google.android.material.divider.MaterialDivider
+    android:id="@+id/bottomDivider"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    app:dividerInsetEnd="32dp" />
+
+</LinearLayout>

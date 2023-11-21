@@ -16,6 +16,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.activityViewModels
 import com.wavein.gasmeter.databinding.DialogFtpSettingBinding
 import com.wavein.gasmeter.databinding.DialogLoadingBinding
+import com.wavein.gasmeter.tools.SharedEvent
 
 @SuppressLint("MissingPermission")
 class FtpSettingDialogFragment(
@@ -33,8 +34,8 @@ class FtpSettingDialogFragment(
 
 	override fun onDismiss(dialog:DialogInterface) {
 		super.onDismiss(dialog)
-		ftpVM.snackbarView = null
-		ftpVM.snackbarAnchorView = null
+		SharedEvent.snackbarDefaultView = null
+		SharedEvent.snackbarDefaultAnchorView = null
 		onDismissCallback?.invoke(dialog)
 		_binding = null
 	}
@@ -53,9 +54,9 @@ class FtpSettingDialogFragment(
 
 	// 初始化ui
 	private fun init(activity:FragmentActivity) {
-		//設定snackbar位置, dismiss後要改回null
-		ftpVM.snackbarView = binding.root
-		ftpVM.snackbarAnchorView = binding.buttonsLayout
+		// 設定snackbar錨點
+		SharedEvent.snackbarDefaultView = binding.root
+		SharedEvent.snackbarDefaultAnchorView = binding.buttonsLayout
 
 		binding.hostInput.editText?.setText(ftpInfo.host)
 		binding.usernameInput.editText?.setText(ftpInfo.username)

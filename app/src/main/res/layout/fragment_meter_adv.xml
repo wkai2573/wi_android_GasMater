@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  tools:context=".ui.component.FieldAdvInput">
+
+  <TextView
+    android:id="@+id/textView"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:text="施工中..."
+    android:textSize="30sp" />
+
+<!--  <com.google.android.material.floatingactionbutton.FloatingActionButton-->
+<!--    android:id="@+id/sendFab"-->
+<!--    android:layout_width="wrap_content"-->
+<!--    android:layout_height="wrap_content"-->
+<!--    android:layout_gravity="bottom|end"-->
+<!--    android:layout_margin="16dp"-->
+<!--    android:contentDescription="send"-->
+<!--    app:srcCompat="@drawable/ic_send_24" />-->
+
+<!--  <androidx.core.widget.NestedScrollView-->
+<!--    android:layout_width="match_parent"-->
+<!--    android:layout_height="match_parent">-->
+
+<!--    <LinearLayout-->
+<!--      android:layout_width="match_parent"-->
+<!--      android:layout_height="wrap_content"-->
+<!--      android:orientation="vertical"-->
+<!--      android:padding="8dp">-->
+
+<!--      <com.wavein.gasmeter.ui.component.FieldAdvInput-->
+<!--        android:id="@+id/field_23"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        app:advTitle="23. 五回遮斷履歷"-->
+<!--        app:readValue="1. 0000000000000 無遮斷\n2. 0000000000000 無遮斷\n3. 0000000000000 無遮斷\n4. 0000000000000 無遮斷\n5. 0000000000000 無遮斷" />-->
+
+<!--      <com.wavein.gasmeter.ui.component.FieldAdvInput-->
+<!--        android:id="@+id/field_03"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        app:advTitle="03. 告警情報"-->
+<!--        app:readValue="1. @@@B@@@ Test遮斷\n2. @@@@@@@" />-->
+
+<!--      <com.wavein.gasmeter.ui.component.FieldAdvInput-->
+<!--        android:id="@+id/field_16"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        app:advTitle="16. 表狀態"-->
+<!--        app:readDetailBtn="true"-->
+<!--        app:readValue="B@@ICB"-->
+<!--        app:writeDetailBtn="true"-->
+<!--        app:writeLine="true" />-->
+
+<!--      <com.wavein.gasmeter.ui.component.FieldAdvInput-->
+<!--        android:id="@+id/field_57"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        app:advTitle="57. 時間使用量"-->
+<!--        app:readValue="00011" />-->
+
+<!--      <com.wavein.gasmeter.ui.component.FieldAdvInput-->
+<!--        android:id="@+id/field_58"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        app:advTitle="58. 最大使用量"-->
+<!--        app:readValue="00011" />-->
+
+<!--      <com.wavein.gasmeter.ui.component.FieldAdvInput-->
+<!--        android:id="@+id/field_59"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        app:advTitle="59. 1日最大使用量"-->
+<!--        app:readValue="00011" />-->
+
+<!--      <com.wavein.gasmeter.ui.component.FieldAdvInput-->
+<!--        android:id="@+id/field_31"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        app:advTitle="31. 登錄母火流量"-->
+<!--        app:readDetailBtn="true"-->
+<!--        app:readValue="B@@ICB"-->
+<!--        app:writeDetailBtn="true"-->
+<!--        app:writeLine="true" />-->
+
+<!--      <com.wavein.gasmeter.ui.component.FieldAdvInput-->
+<!--        android:id="@+id/field_50"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        app:advTitle="50. 壓力遮斷判定值"-->
+<!--        app:readDetailBtn="true"-->
+<!--        app:readValue="B@@ICB"-->
+<!--        app:writeDetailBtn="true"-->
+<!--        app:writeLine="true" />-->
+
+<!--      <com.wavein.gasmeter.ui.component.FieldAdvInput-->
+<!--        android:id="@+id/field_51"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginBottom="76dp"-->
+<!--        app:advTitle="51. 現在壓力值"-->
+<!--        app:readValue="00011" />-->
+<!--    </LinearLayout>-->
+<!--  </androidx.core.widget.NestedScrollView>-->
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+
