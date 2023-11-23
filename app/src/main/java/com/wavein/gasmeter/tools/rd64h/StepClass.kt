@@ -20,6 +20,7 @@ data class R87Step(val cc:String = "\u0021\u0040\u0000\u0000", val adr:String, v
 class D87D01Step : BaseStep()
 class D87D05Step : BaseStep()
 class D87D23Step : BaseStep()
+class D87D24Step : BaseStep()
 
 
 

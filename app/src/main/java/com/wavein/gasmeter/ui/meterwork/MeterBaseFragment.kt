@@ -26,6 +26,7 @@ import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.TimeUtil
 import com.wavein.gasmeter.tools.rd64h.info.D05mInfo
 import com.wavein.gasmeter.tools.rd64h.info.D87D23Info
+import com.wavein.gasmeter.tools.rd64h.info.D87D24Info
 import com.wavein.gasmeter.tools.rd64h.info.MetaInfo
 import com.wavein.gasmeter.ui.NavViewModel
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
@@ -346,14 +347,23 @@ class MeterBaseFragment : Fragment() {
 						if (meterRow.meterId != meterId) return@map newMeterRow
 						// D87D23: 五回遮斷履歷
 						if (commResult.containsKey("D87D23")) {
-							val data = (commResult["D87D23"] as D87D23Info).data
-							val shutdownHistoryList = data.chunked(13)
+							val info = commResult["D87D23"] as D87D23Info
 							newMeterRow = newMeterRow.copy(
-								shutdownHistory1 = shutdownHistoryList[0],
-								shutdownHistory2 = shutdownHistoryList[1],
-								shutdownHistory3 = shutdownHistoryList[2],
-								shutdownHistory4 = shutdownHistoryList[3],
-								shutdownHistory5 = shutdownHistoryList[4],
+								shutdownHistory1 = info.shutdownHistory1,
+								shutdownHistory2 = info.shutdownHistory2,
+								shutdownHistory3 = info.shutdownHistory3,
+								shutdownHistory4 = info.shutdownHistory4,
+								shutdownHistory5 = info.shutdownHistory5,
+							)
+						}
+						// D87D24: 表內部狀態 (可抓 告警情報 & 登錄母火流量)
+						if (commResult.containsKey("D87D24")) {
+							val info = commResult["D87D24"] as D87D24Info
+							newMeterRow = newMeterRow.copy(
+								alarmInfo1 = info.alarmInfo1,
+								alarmInfo2 = info.alarmInfo2,
+								registerFuseFlowRate1 = info.registerFuseFlowRate1,
+								registerFuseFlowRate2 = info.registerFuseFlowRate2,
 							)
 						}
 						// todo 其他R87結果...

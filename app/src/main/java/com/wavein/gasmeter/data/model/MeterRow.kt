@@ -92,8 +92,8 @@ data class MeterRow(
 	}
 
 	val alarmInfoForFieldShow:String
-		get() = "1. $alarmInfo1 ${alarmInfoMeaning(alarmInfo1)}\n" +
-				"2. $alarmInfo2 ${alarmInfoMeaning(alarmInfo2)}"
+		get() = "1. $alarmInfo1\n${alarmInfoMeaning(alarmInfo1)}\n\n" +
+				"2. $alarmInfo2\n${alarmInfoMeaning(alarmInfo2)}"
 
 	private fun alarmInfoMeaning(alarmInfo:String?):String {
 		if (alarmInfo == null) return ""

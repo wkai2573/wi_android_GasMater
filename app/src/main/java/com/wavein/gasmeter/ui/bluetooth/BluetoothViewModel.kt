@@ -424,6 +424,7 @@ class BluetoothViewModel @Inject constructor(
 					"R01" -> listOf(D87D01Step())
 					"R05" -> listOf(D87D05Step())
 					"R23" -> listOf(D87D23Step(), D87D23Step()) //R23有2part
+					"R24" -> listOf(D87D24Step())
 					// todo 其他R87項目...
 					else -> listOf()
 				}
@@ -591,6 +592,13 @@ class BluetoothViewModel @Inject constructor(
 							) as D87D23Info
 					info.writePart(respText)
 					commResult["D87D23"] = info
+					receiveSteps.removeAt(0)
+					continueSend = true
+				}
+
+				is D87D24Step -> {
+					val info = BaseInfo.get(respText, D87D24Info::class.java) as D87D24Info
+					commResult["D87D24"] = info
 					receiveSteps.removeAt(0)
 					continueSend = true
 				}
