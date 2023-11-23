@@ -222,14 +222,22 @@ class NccFragment : Fragment() {
 			onResume()
 			val meterId = binding.meterInput.editText?.text.toString()
 			Preference[Preference.NCC_METER_ID] = meterId //紀錄本次輸入
-			// R80方式
+			// [R80]
 			// checkBluetoothOn { blVM.sendR80Telegram(listOf(meterId)) }
-			// R87方式
+			// [R87_R05+R23]
+			// checkBluetoothOn {
+			// 	blVM.sendR87Telegram(
+			// 		meterId, listOf(
+			// 		 	R87Step(adr = meterId, op = "R05"), // 讀數&狀態
+			// 			R87Step(adr = meterId, op = "R23"), // 五回遮斷履歷
+			// 		)
+			// 	)
+			// }
+			// [R87_R16]
 			checkBluetoothOn {
 				blVM.sendR87Telegram(
 					meterId, listOf(
-					 	R87Step(adr = meterId, op = "R05"), // 讀數&狀態
-						R87Step(adr = meterId, op = "R23"), // 五回遮斷履歷
+						R87Step(adr = meterId, op = "R16"), // 表狀態
 					)
 				)
 			}

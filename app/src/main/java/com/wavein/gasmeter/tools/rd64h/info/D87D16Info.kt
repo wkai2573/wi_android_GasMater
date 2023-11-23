@@ -2,7 +2,7 @@ package com.wavein.gasmeter.tools.rd64h.info
 
 import com.wavein.gasmeter.tools.rd64h.ALine
 
-data class D87D01Info(override val text:String) : BaseInfo(text) {
+data class D87D16Info(override val text:String) : BaseInfo(text) {
 	var data:String = ""
 
 	init {

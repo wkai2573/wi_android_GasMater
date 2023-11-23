@@ -425,6 +425,7 @@ class BluetoothViewModel @Inject constructor(
 					"R05" -> listOf(D87D05Step())
 					"R23" -> listOf(D87D23Step(), D87D23Step()) //R23有2part
 					"R24" -> listOf(D87D24Step())
+					"R16" -> listOf(D87D16Step())
 					// todo 其他R87項目...
 					else -> listOf()
 				}
@@ -530,7 +531,10 @@ class BluetoothViewModel @Inject constructor(
 	// 依步驟接收電文 !!!電文處理中途
 	private fun onReceiveByStep(readSP:ByteArray) = viewModelScope.launch {
 		receivedCount++
-		if (receiveSteps.isEmpty()) throw Exception("無receiveSteps")
+		if (receiveSteps.isEmpty()) {
+			onCommEnd()
+			return@launch
+		}
 		var continueSend = false
 		val receiveStep = receiveSteps[0]
 		val read = RD64H.telegramConvert(readSP, "-s-p")
@@ -603,16 +607,27 @@ class BluetoothViewModel @Inject constructor(
 					continueSend = true
 				}
 
+				is D87D16Step -> {
+					val info = BaseInfo.get(respText, D87D16Info::class.java) as D87D16Info
+					commResult["D87D16"] = info
+					receiveSteps.removeAt(0)
+					continueSend = true
+				}
+
 				// todo 其他R87項目...
 			}
 
 			if (continueSend) sendByStep()
 		} catch (error:Exception) {
 			error.printStackTrace()
-			// 錯誤處理: 檢查是不是D16
+			// 錯誤處理: 檢查是不是D16 或 D36
 			kotlin.runCatching {
 				val info = BaseInfo.get(respText, D16Info::class.java) as D16Info
 				commResult["D16"] = info
+			}
+			kotlin.runCatching {
+				val info = BaseInfo.get(respText, D36Info::class.java) as D36Info
+				commResult["D36"] = info
 			}
 			commResult["Error"] = BaseInfo(respText)
 			onCommEnd()

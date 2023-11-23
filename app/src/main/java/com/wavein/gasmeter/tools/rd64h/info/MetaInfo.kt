@@ -8,6 +8,4 @@ data class MetaInfo(
 	val op:String,
 	val meterIds:List<String>,
 	val r87Steps:List<R87Step>? = null,
-) : BaseInfo(text) {
-	override var isCorrectParsed = false
-}
+) : BaseInfo(text)

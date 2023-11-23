@@ -3,7 +3,6 @@ package com.wavein.gasmeter.tools.rd64h.info
 import com.wavein.gasmeter.tools.rd64h.ALine
 
 data class D87D24Info(override val text:String) : BaseInfo(text) {
-	override var isCorrectParsed = false
 	var data:String = ""
 	var alarmInfo1:String = ""
 	var alarmInfo2:String = ""
@@ -14,31 +13,28 @@ data class D87D24Info(override val text:String) : BaseInfo(text) {
 	var numberOfRetries:String = ""
 	var innerPipeLeakage:String = ""
 	var fuseFlowRegistration:String = ""
-	var registerFuseFlowRate1: String = ""
-	var registerFuseFlowRate2: String = ""
+	var registerFuseFlowRate1:String = ""
+	var registerFuseFlowRate2:String = ""
 
 	init {
-		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text)
-		if (matchResult != null) {
-			val (meterId, aLineRaw) = matchResult.destructured
-			val aLine = ALine(aLineRaw)
-			data = aLine.data
-			if (data.length == 40) {
-				val alineMatchResult = Regex("^(.{8})(.{8})(.)(.{5})(.{3})(.{3})(.{2})(.)(.)(.{4})(.{4})$").find(data)
-				val groups = alineMatchResult!!.groupValues
-				this.alarmInfo1 = groups[1]
-				this.alarmInfo2 = groups[2]
-				this.stateValue = groups[3]
-				this.q0 = groups[4]
-				this.q0ShutOffSettingTime = groups[5]
-				this.q0TimerTime = groups[6]
-				this.numberOfRetries = groups[7]
-				this.innerPipeLeakage = groups[8]
-				this.fuseFlowRegistration = groups[9]
-				this.registerFuseFlowRate1 = groups[10]
-				this.registerFuseFlowRate2 = groups[11]
-				isCorrectParsed = true
-			}
+		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常")
+		val (meterId, aLineRaw) = matchResult.destructured
+		val aLine = ALine(aLineRaw)
+		data = aLine.data
+		if (data.length == 40) {
+			val alineMatchResult = Regex("^(.{8})(.{8})(.)(.{5})(.{3})(.{3})(.{2})(.)(.)(.{4})(.{4})$").find(data)
+			val groups = alineMatchResult!!.groupValues
+			this.alarmInfo1 = groups[1]
+			this.alarmInfo2 = groups[2]
+			this.stateValue = groups[3]
+			this.q0 = groups[4]
+			this.q0ShutOffSettingTime = groups[5]
+			this.q0TimerTime = groups[6]
+			this.numberOfRetries = groups[7]
+			this.innerPipeLeakage = groups[8]
+			this.fuseFlowRegistration = groups[9]
+			this.registerFuseFlowRate1 = groups[10]
+			this.registerFuseFlowRate2 = groups[11]
 		}
 	}
 

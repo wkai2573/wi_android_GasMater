@@ -25,6 +25,7 @@ import com.wavein.gasmeter.databinding.FragmentMeterBaseBinding
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.TimeUtil
 import com.wavein.gasmeter.tools.rd64h.info.D05mInfo
+import com.wavein.gasmeter.tools.rd64h.info.D87D16Info
 import com.wavein.gasmeter.tools.rd64h.info.D87D23Info
 import com.wavein.gasmeter.tools.rd64h.info.D87D24Info
 import com.wavein.gasmeter.tools.rd64h.info.MetaInfo
@@ -365,6 +366,11 @@ class MeterBaseFragment : Fragment() {
 								registerFuseFlowRate1 = info.registerFuseFlowRate1,
 								registerFuseFlowRate2 = info.registerFuseFlowRate2,
 							)
+						}
+						// D87D16: 表狀態
+						if (commResult.containsKey("D87D16")) {
+							val info = commResult["D87D16"] as D87D16Info
+							newMeterRow = newMeterRow.copy(meterStatus = info.data)
 						}
 						// todo 其他R87結果...
 
