@@ -365,7 +365,7 @@ class FtpViewModel @Inject constructor(
 		}
 	}
 
-	// todo 問chatGPT用
+	// 問chatGPT用
 	fun uploadFileToFtp(filename:String, host:String, username:String, password:String, directory:String, fileDescriptor:FileDescriptor) {
 		val ftpClient = FTPClient()
 		ftpClient.connect(host)

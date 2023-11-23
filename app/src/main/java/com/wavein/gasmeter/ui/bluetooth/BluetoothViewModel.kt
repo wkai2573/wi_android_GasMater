@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.content.Intent
+import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -275,6 +276,8 @@ class BluetoothViewModel @Inject constructor(
 
 	//region 傳送接收訊息邏輯&UI層處理__________________________________________________
 
+	private var startTime:Long = 0L // 計算耗時用
+
 	// 發送Text給母機
 	fun sendTextToDevice(toSendText:String) {
 		if (toSendText.isEmpty()) return
@@ -297,16 +300,18 @@ class BluetoothViewModel @Inject constructor(
 
 	// 溝通結束處理
 	private fun onCommEnd() = viewModelScope.launch {
+		Log.i("@@@耗時", "${elapsedTime()} 秒 (總耗時)")
 		// 依組合決定通信結束後小吃文字
 		val metaInfo = commResult["meta"] as MetaInfo
 		when (metaInfo.op) {
+			// R80 異常訊息
 			"R80" -> {
 				val d05mList = if (commResult.containsKey("D05m")) {
 					(commResult["D05m"] as D05mInfo).list
 				} else {
 					emptyList()
 				}
-				val notReadNumber = (metaInfo.meterIds?.size ?: 0) - d05mList.size
+				val notReadNumber = metaInfo.meterIds.size - d05mList.size
 				if (notReadNumber > 0) {
 					commResult["error"] = BaseInfo("${d05mList.size}台抄表成功，${notReadNumber}台無回應\n請檢查未抄表瓦斯表")
 				} else {
@@ -314,8 +319,30 @@ class BluetoothViewModel @Inject constructor(
 				}
 			}
 
+			// R87 異常訊息
+			// 檢查開始時R87傳了什麼steps，如果結果沒有對應的結果op，顯示對應錯誤
 			"R87" -> {
-				//todo R87小吃文字
+				val errList = mutableListOf<String>()
+				metaInfo.r87Steps!!.forEach { step ->
+					when (step.op) {
+						"R23" -> if (!commResult.containsKey("D87D23")) errList.add("五回遮斷履歷")
+						"R24" -> if (!commResult.containsKey("D87D24")) errList.add("告警情報or母火流量")
+						"R16" -> if (!commResult.containsKey("D87D16")) errList.add("表狀態")
+						"S16" -> if (!commResult.containsKey("D87D16")) errList.add("表狀態設定")
+						"R57" -> if (!commResult.containsKey("D87D57")) errList.add("時間使用量")
+						"R58" -> if (!commResult.containsKey("D87D58")) errList.add("最大使用量")
+						"R59" -> if (!commResult.containsKey("D87D59")) errList.add("1日最大使用量")
+						"S31" -> if (!commResult.containsKey("D87D24")) errList.add("母火流量設定")
+						"R50" -> if (!commResult.containsKey("D87D50")) errList.add("壓力遮斷判定值")
+						"S50" -> if (!commResult.containsKey("D87D50")) errList.add("壓力遮斷判定值設定")
+						"R51" -> if (!commResult.containsKey("D87D51")) errList.add("現在壓力值")
+					}
+				}
+				if (errList.isNotEmpty()) {
+					commResult["error"] = BaseInfo("通信異常，以下通信失敗：\n${errList.joinToString("\n")}")
+				} else {
+					commResult["success"] = BaseInfo("查詢/設定成功")
+				}
 			}
 		}
 		// 結果處理
@@ -349,6 +376,7 @@ class BluetoothViewModel @Inject constructor(
 	// 發送R80電文組合
 	fun sendR80Telegram(meterIds:List<String>) = viewModelScope.launch {
 		if (commStateFlow.value != CommState.ReadyCommunicate) return@launch
+		startTime = System.currentTimeMillis()
 		commStateFlow.value = CommState.Communicating
 		commResult = mutableMapOf("meta" to MetaInfo("", "R80", meterIds))
 
@@ -369,8 +397,10 @@ class BluetoothViewModel @Inject constructor(
 	// 發送R87電文組合
 	fun sendR87Telegram(meterId:String, r87Steps:List<R87Step>) = viewModelScope.launch {
 		if (commStateFlow.value != CommState.ReadyCommunicate) return@launch
+		startTime = System.currentTimeMillis()
+
 		commStateFlow.value = CommState.Communicating
-		commResult = mutableMapOf("meta" to MetaInfo("", "R87", null))
+		commResult = mutableMapOf("meta" to MetaInfo("", "R87", listOf(meterId), r87Steps))
 
 		sendSteps = mutableListOf(
 			__5Step(),
@@ -394,6 +424,7 @@ class BluetoothViewModel @Inject constructor(
 					"R01" -> listOf(D87D01Step())
 					"R05" -> listOf(D87D05Step())
 					"R23" -> listOf(D87D23Step(), D87D23Step()) //R23有2part
+					// todo 其他R87項目...
 					else -> listOf()
 				}
 			}.toTypedArray()
@@ -405,6 +436,7 @@ class BluetoothViewModel @Inject constructor(
 
 	// 依步驟發送電文 !!!電文處理中途
 	private suspend fun sendByStep() {
+		Log.i("@@@耗時", "${elapsedTime()} 秒")
 		if (sendSteps.isEmpty()) {
 			onCommEnd()
 			return
@@ -486,6 +518,14 @@ class BluetoothViewModel @Inject constructor(
 		delay(3500L)
 	}
 
+	// 經過時間
+	private fun elapsedTime():String {
+		val diffMillisecond = System.currentTimeMillis() - startTime
+		val diffSecond = diffMillisecond.toFloat() / 1000
+		return String.format("%.1f", diffSecond)
+	}
+
+
 	// 依步驟接收電文 !!!電文處理中途
 	private fun onReceiveByStep(readSP:ByteArray) = viewModelScope.launch {
 		receivedCount++
@@ -554,6 +594,8 @@ class BluetoothViewModel @Inject constructor(
 					receiveSteps.removeAt(0)
 					continueSend = true
 				}
+
+				// todo 其他R87項目...
 			}
 
 			if (continueSend) sendByStep()

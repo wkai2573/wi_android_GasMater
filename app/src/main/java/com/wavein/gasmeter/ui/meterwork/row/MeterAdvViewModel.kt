@@ -7,7 +7,4 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class MeterAdvViewModel : ViewModel() {
 
 	//val meterRowsStateFlow = MutableStateFlow<List<MeterRow>>(emptyList())
-
-	val r87StepsStateFlow = MutableStateFlow<List<R87Step>>(emptyList())
-
 }

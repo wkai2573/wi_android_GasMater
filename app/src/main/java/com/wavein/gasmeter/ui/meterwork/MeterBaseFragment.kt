@@ -25,6 +25,8 @@ import com.wavein.gasmeter.databinding.FragmentMeterBaseBinding
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.TimeUtil
 import com.wavein.gasmeter.tools.rd64h.info.D05mInfo
+import com.wavein.gasmeter.tools.rd64h.info.D87D23Info
+import com.wavein.gasmeter.tools.rd64h.info.MetaInfo
 import com.wavein.gasmeter.ui.NavViewModel
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.bluetooth.BtDialogFragment
@@ -305,35 +307,62 @@ class MeterBaseFragment : Fragment() {
 	// 根據結果更新csvRows & ftp紀錄log
 	private suspend fun updateCsvRowsByCommResult(commResult:Map<String, Any>) {
 		SharedEvent.catching {
+			Log.i("@@@通信結果 ", commResult.toString())
+			val metaInfo = commResult["meta"] as MetaInfo
+
 			var newCsvRows = meterVM.meterRowsStateFlow.value
-			//todo 目前只有處理D05m
-			if (commResult.containsKey("D05m")) {
-				val d05mList = (commResult["D05m"] as D05mInfo).list
-				newCsvRows = newCsvRows.map { meterRow ->
-					val d05Info = d05mList.find { it.meterId == meterRow.meterId }
-					if (d05Info != null) {
-						val batteryVoltageDropAlarm = try {
-							d05Info.alarmInfoDetail["A8"]!!["b4"]!! ||
-									d05Info.alarmInfoDetail["A4"]!!["b4"]!! ||
-									d05Info.alarmInfoDetail["A4"]!!["b3"]!!
-						} catch (e:Exception) {
-							null
+			when (metaInfo.op) {
+				"R80" -> {
+					// D05m: 群組抄表
+					if (commResult.containsKey("D05m")) {
+						val d05mList = (commResult["D05m"] as D05mInfo).list
+						newCsvRows = newCsvRows.map { meterRow ->
+							val d05Info = d05mList.find { it.meterId == meterRow.meterId } ?: return@map meterRow
+							val batteryVoltageDropAlarm = try {
+								d05Info.alarmInfoDetail["A8"]!!["b4"]!! ||
+										d05Info.alarmInfoDetail["A4"]!!["b4"]!! ||
+										d05Info.alarmInfoDetail["A4"]!!["b3"]!!
+							} catch (e:Exception) {
+								null
+							}
+							meterRow.copy(
+								isManualMeterDegree = false,
+								meterDegree = d05Info.meterDegree,
+								meterReadTime = TimeUtil.getCurrentTime(),
+								alarmInfo1 = d05Info.alarmInfo1,
+								batteryVoltageDropAlarm = batteryVoltageDropAlarm,
+								innerPipeLeakageAlarm = d05Info.alarmInfoDetail["A5"]?.get("b1"),
+								shutoff = d05Info.alarmInfoDetail["A1"]?.get("b1")?.not(),
+								electricFieldStrength = d05Info.electricFieldStrength,
+							)
 						}
-						meterRow.copy(
-							isManualMeterDegree = false,
-							meterDegree = d05Info.meterDegree,
-							meterReadTime = TimeUtil.getCurrentTime(),
-							alarmInfo1 = d05Info.alarmInfo1,
-							batteryVoltageDropAlarm = batteryVoltageDropAlarm,
-							innerPipeLeakageAlarm = d05Info.alarmInfoDetail["A5"]?.get("b1"),
-							shutoff = d05Info.alarmInfoDetail["A1"]?.get("b1")?.not(),
-							electricFieldStrength = d05Info.electricFieldStrength,
-						)
-					} else {
-						meterRow
+					}
+				}
+
+				"R87" -> {
+					val meterId = metaInfo.meterIds[0]
+					newCsvRows = newCsvRows.map { meterRow ->
+						var newMeterRow = meterRow
+						if (meterRow.meterId != meterId) return@map newMeterRow
+						// D87D23: 五回遮斷履歷
+						if (commResult.containsKey("D87D23")) {
+							val data = (commResult["D87D23"] as D87D23Info).data
+							val shutdownHistoryList = data.chunked(13)
+							newMeterRow = newMeterRow.copy(
+								shutdownHistory1 = shutdownHistoryList[0],
+								shutdownHistory2 = shutdownHistoryList[1],
+								shutdownHistory3 = shutdownHistoryList[2],
+								shutdownHistory4 = shutdownHistoryList[3],
+								shutdownHistory5 = shutdownHistoryList[4],
+							)
+						}
+						// todo 其他R87結果...
+
+						newMeterRow
 					}
 				}
 			}
+
 			// todo ftp log 紀錄有更新瓦斯表的功能
 			// ...
 			// 更新ui並儲存csv

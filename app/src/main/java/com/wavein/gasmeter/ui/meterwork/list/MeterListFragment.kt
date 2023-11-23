@@ -147,7 +147,7 @@ class MeterListFragment : Fragment() {
 				}
 				return@setOnClickListener
 			}
-			val estimatedTime = 2 +
+			val estimatedTime = 8 +
 					when {
 						notReadMeterIds.size <= 15 -> 37
 						else -> 50

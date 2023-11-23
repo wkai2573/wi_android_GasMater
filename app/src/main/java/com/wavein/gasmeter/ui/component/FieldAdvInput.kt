@@ -14,9 +14,17 @@ import com.wavein.gasmeter.databinding.CustFieldAdvInputBinding
 class FieldAdvInput : LinearLayout {
 	private var binding:CustFieldAdvInputBinding? = null
 
+	val readCheckbox get() = binding?.readCheckbox
+	val writeCheckbox get() = binding?.writeCheckbox
+	val writeValue get () = binding?.writeValueInput?.editText?.text?.toString() ?: ""
+
 	fun setReadValue(text:String, @ColorInt color:Int? = null) {
 		binding?.readValueTv?.text = text
 		color?.let { binding?.readValueTv?.setTextColor(it) }
+	}
+
+	fun setWriteValue(text:String) {
+		binding?.writeValueInput?.editText?.setText(text)
 	}
 
 	constructor(context:Context?) : super(context) {

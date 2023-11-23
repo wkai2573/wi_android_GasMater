@@ -1,5 +1,7 @@
 package com.wavein.gasmeter.tools.rd64h.info
 
+import com.wavein.gasmeter.data.model.MeterRow
+
 data class D05Info(override val text:String) : BaseInfo(text) {
 	override var isCorrectParsed = false
 	var btParentInfo = ""
@@ -9,7 +11,7 @@ data class D05Info(override val text:String) : BaseInfo(text) {
 	var meterId = ""
 	var meterDegree = 0f
 	var alarmInfo1 = ""
-	var alarmInfoDetail = mutableMapOf<String, Map<String, Boolean>>()
+	var alarmInfoDetail = mapOf<String, Map<String, Boolean>>()
 
 	init {
 		val regex = Regex("^(.)(.)(.{2})(.{14})(D05)(\\d{9}.{8})\\s*$")
@@ -31,15 +33,7 @@ data class D05Info(override val text:String) : BaseInfo(text) {
 		val alarmInfo1 = data.substring(9)
 		this.meterDegree = meterDegree.toFloat() / 1000
 		this.alarmInfo1 = alarmInfo1
-		this.alarmInfoDetail = mutableMapOf()
-		for (i in alarmInfo1.indices) {
-			val infoDig = "A${8 - i}"
-			val b4 = (alarmInfo1[i].code and 0b00001000) != 0
-			val b3 = (alarmInfo1[i].code and 0b00000100) != 0
-			val b2 = (alarmInfo1[i].code and 0b00000010) != 0
-			val b1 = (alarmInfo1[i].code and 0b00000001) != 0
-			alarmInfoDetail[infoDig] = mapOf("b4" to b4, "b3" to b3, "b2" to b2, "b1" to b1)
-		}
+		this.alarmInfoDetail = MeterRow.alarmInfoDetail(alarmInfo1)
 	}
 
 	companion object {

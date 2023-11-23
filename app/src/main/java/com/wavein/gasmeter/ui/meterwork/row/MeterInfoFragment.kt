@@ -90,7 +90,7 @@ class MeterInfoFragment : Fragment() {
 			}
 			MaterialAlertDialogBuilder(requireContext())
 				.setTitle("個別抄表")
-				.setMessage("準備進行個別抄表\n耗時約37秒")
+				.setMessage("準備進行個別抄表\n耗時約45秒") // 1+2+1+37+3.5
 				.setNegativeButton("取消") { dialog, which ->
 					dialog.dismiss()
 				}
