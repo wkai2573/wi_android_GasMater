@@ -47,7 +47,7 @@ class ErrorTextView : LinearLayout {
 			context.obtainStyledAttributes(attrs, R.styleable.ErrorTextView)
 		else
 			context.obtainStyledAttributes(attrs, R.styleable.ErrorTextView, defStyle, 0)
-		val text = typedArray.getString(R.styleable.ErrorTextView_text)
+		val text = typedArray.getString(R.styleable.ErrorTextView_errorText)
 		typedArray.recycle()
 		// ui
 		setText(text)

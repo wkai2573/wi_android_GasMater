@@ -30,6 +30,8 @@ class MeterRowFragment : Fragment() {
 	private val meterVM by activityViewModels<MeterViewModel>()
 	private val csvVM by activityViewModels<CsvViewModel>()
 
+	private var lastMeterId = ""
+
 	override fun onDestroyView() {
 		super.onDestroyView()
 		_binding = null
@@ -61,6 +63,11 @@ class MeterRowFragment : Fragment() {
 				meterVM.selectedMeterRowFlow.asStateFlow().collectLatest {
 					setCombo(it)
 					binding.fieldGroup.setValue("${it?.group}")
+					// 切換meter後要換回基本頁
+					if (lastMeterId != it?.meterId) {
+						binding.pager.setCurrentItem(0, false)
+					}
+					lastMeterId = it?.meterId ?: ""
 				}
 			}
 		}

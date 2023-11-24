@@ -4,7 +4,7 @@
   xmlns:tools="http://schemas.android.com/tools"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
-  tools:context=".ui.component.FieldAdvInput">
+  tools:context=".ui.meterwork.row.MeterAdvFragment">
 
   <!--  <TextView-->
   <!--    android:id="@+id/textView"-->
@@ -38,21 +38,21 @@
         android:id="@+id/field_23"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:advTitle="23. 五回遮斷履歷"
+        app:fieldAdvTitle="23. 五回遮斷履歷"
         tools:readValue="1. 0000000000000 無遮斷\n2. 0000000000000 無遮斷\n3. 0000000000000 無遮斷\n4. 0000000000000 無遮斷\n5. 0000000000000 無遮斷" />
 
       <com.wavein.gasmeter.ui.component.FieldAdvInput
         android:id="@+id/field_03"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:advTitle="03. 告警情報"
+        app:fieldAdvTitle="03. 告警情報"
         tools:readValue="1. @@@B@@@ Test遮斷\n2. @@@@@@@" />
 
       <com.wavein.gasmeter.ui.component.FieldAdvInput
         android:id="@+id/field_16"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:advTitle="16. 表狀態"
+        app:fieldAdvTitle="16. 表狀態"
         app:readDetailBtn="true"
         tools:readValue="B@@ICB"
         app:writeDetailBtn="true"
@@ -62,28 +62,28 @@
         android:id="@+id/field_57"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:advTitle="57. 時間使用量"
+        app:fieldAdvTitle="57. 時間使用量"
         tools:readValue="00011" />
 
       <com.wavein.gasmeter.ui.component.FieldAdvInput
         android:id="@+id/field_58"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:advTitle="58. 最大使用量"
+        app:fieldAdvTitle="58. 最大使用量"
         tools:readValue="00011" />
 
       <com.wavein.gasmeter.ui.component.FieldAdvInput
         android:id="@+id/field_59"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:advTitle="59. 1日最大使用量"
+        app:fieldAdvTitle="59. 1日最大使用量"
         tools:readValue="00011" />
 
       <com.wavein.gasmeter.ui.component.FieldAdvInput
         android:id="@+id/field_31"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:advTitle="31. 登錄母火流量"
+        app:fieldAdvTitle="31. 登錄母火流量"
         app:readDetailBtn="true"
         tools:readValue="B@@ICB"
         app:writeDetailBtn="true"
@@ -93,7 +93,7 @@
         android:id="@+id/field_50"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:advTitle="50. 壓力遮斷判定值"
+        app:fieldAdvTitle="50. 壓力遮斷判定值"
         app:readDetailBtn="true"
         tools:readValue="B@@ICB"
         app:writeDetailBtn="true"
@@ -104,7 +104,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="76dp"
-        app:advTitle="51. 現在壓力值"
+        app:fieldAdvTitle="51. 現在壓力值"
         tools:readValue="00011" />
     </LinearLayout>
   </androidx.core.widget.NestedScrollView>

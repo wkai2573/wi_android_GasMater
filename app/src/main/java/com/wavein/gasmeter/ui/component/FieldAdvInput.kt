@@ -15,8 +15,11 @@ class FieldAdvInput : LinearLayout {
 	private var binding:CustFieldAdvInputBinding? = null
 
 	val readCheckbox get() = binding?.readCheckbox
+	val readValue get() = binding?.readValueTv?.text?.toString() ?: ""
+	val readDetailBtn get() = binding?.readDetailBtn
 	val writeCheckbox get() = binding?.writeCheckbox
-	val writeValue get () = binding?.writeValueInput?.editText?.text?.toString() ?: ""
+	val writeValue get() = binding?.writeValueInput?.editText?.text?.toString() ?: ""
+	val writeDetailBtn get() = binding?.writeDetailBtn
 
 	fun setReadValue(text:String, @ColorInt color:Int? = null) {
 		binding?.readValueTv?.text = text
@@ -50,7 +53,7 @@ class FieldAdvInput : LinearLayout {
 			context.obtainStyledAttributes(attrs, R.styleable.FieldAdvInput)
 		else
 			context.obtainStyledAttributes(attrs, R.styleable.FieldAdvInput, defStyle, 0)
-		val title = typedArray.getString(R.styleable.FieldAdvInput_advTitle)
+		val title = typedArray.getString(R.styleable.FieldAdvInput_fieldAdvTitle)
 		val readLine = typedArray.getBoolean(R.styleable.FieldAdvInput_readLine, true)
 		val readValue = typedArray.getString(R.styleable.FieldAdvInput_readValue)
 		val readDetailBtn = typedArray.getBoolean(R.styleable.FieldAdvInput_readDetailBtn, false)

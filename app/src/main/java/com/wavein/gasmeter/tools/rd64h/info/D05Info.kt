@@ -29,7 +29,7 @@ data class D05Info(override val text:String) : BaseInfo(text) {
 		val alarmInfo1 = data.substring(9)
 		this.meterDegree = meterDegree.toFloat() / 1000
 		this.alarmInfo1 = alarmInfo1
-		this.alarmInfoDetail = MeterRow.alarmInfoDetail(alarmInfo1)
+		this.alarmInfoDetail = MeterRow.data2BitsMap(alarmInfo1, "A")
 	}
 
 	companion object {

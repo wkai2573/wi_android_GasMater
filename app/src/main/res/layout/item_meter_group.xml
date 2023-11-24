@@ -19,7 +19,7 @@
       android:layout_width="0dp"
       android:layout_height="wrap_content"
       android:layout_weight="1"
-      app:title="群組號"
+      app:fieldTitle="群組號"
       tools:value="00001" />
 
     <com.wavein.gasmeter.ui.component.Field
@@ -27,7 +27,7 @@
       android:layout_width="0dp"
       android:layout_height="wrap_content"
       android:layout_weight="2"
-      app:title="已抄表/總數量"
+      app:fieldTitle="已抄表/總數量"
       tools:value="15/30" />
   </LinearLayout>
 

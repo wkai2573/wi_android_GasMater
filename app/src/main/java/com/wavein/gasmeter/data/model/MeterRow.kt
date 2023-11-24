@@ -97,7 +97,7 @@ data class MeterRow(
 
 	private fun alarmInfoMeaning(alarmInfo:String?):String {
 		if (alarmInfo == null) return ""
-		val alarmInfoDetail = alarmInfoDetail(alarmInfo)
+		val alarmInfoDetail = data2BitsMap(alarmInfo, "A")
 		val list = mutableListOf<String>()
 		if (alarmInfoDetail["A8"]?.get("b4") == true) list.add("常時電池電壓低下遮斷")
 		if (alarmInfoDetail["A4"]?.get("b4") == true) list.add("通常電池電壓低下遮斷")
@@ -150,18 +150,33 @@ data class MeterRow(
 	}
 
 	companion object {
-		// 分析告警情報
-		fun alarmInfoDetail(alarmInfo:String):Map<String, Map<String, Boolean>> {
-			val alarmInfoDetail = mutableMapOf<String, Map<String, Boolean>>()
-			for (i in alarmInfo.indices) {
-				val infoDig = "A${8 - i}"
-				val b4 = (alarmInfo[i].code and 0b00001000) != 0
-				val b3 = (alarmInfo[i].code and 0b00000100) != 0
-				val b2 = (alarmInfo[i].code and 0b00000010) != 0
-				val b1 = (alarmInfo[i].code and 0b00000001) != 0
-				alarmInfoDetail[infoDig] = mapOf("b4" to b4, "b3" to b3, "b2" to b2, "b1" to b1)
+		// data轉bitsMap
+		fun data2BitsMap(data:String, charKeyLetter:String):Map<String, Map<String, Boolean>> {
+			val bitsMap = mutableMapOf<String, Map<String, Boolean>>()
+			for (i in data.indices) {
+				val charIndex = "$charKeyLetter${data.length - i}"
+				val b4 = (data[i].code and 0b00001000) != 0
+				val b3 = (data[i].code and 0b00000100) != 0
+				val b2 = (data[i].code and 0b00000010) != 0
+				val b1 = (data[i].code and 0b00000001) != 0
+				bitsMap[charIndex] = mapOf("b4" to b4, "b3" to b3, "b2" to b2, "b1" to b1)
 			}
-			return alarmInfoDetail
+			return bitsMap
+		}
+
+		// bitsMap轉data
+		fun bitsMap2Data(bitsMap:Map<String, Map<String, Boolean>>):String {
+			var data = ""
+			bitsMap.forEach { (charKey, bMap) ->
+				val b4 = if (bMap["b4"] == true) 0b1000 else 0b0
+				val b3 = if (bMap["b3"] == true) 0b0100 else 0b0
+				val b2 = if (bMap["b2"] == true) 0b0010 else 0b0
+				val b1 = if (bMap["b1"] == true) 0b0001 else 0b0
+				val charCode = 0b01000000 or b4 or b3 or b2 or b1
+				val char = charCode.toChar()
+				data += char
+			}
+			return data
 		}
 	}
 

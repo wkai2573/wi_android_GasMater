@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -17,11 +16,12 @@ import com.wavein.gasmeter.tools.rd64h.R87Step
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.meterwork.MeterBaseFragment
 import com.wavein.gasmeter.ui.meterwork.MeterViewModel
+import com.wavein.gasmeter.ui.meterwork.row.detail.R16DetailSheet
 import com.wavein.gasmeter.ui.setting.CsvViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.lang.Math.ceil
 
 class MeterAdvFragment : Fragment() {
 
@@ -31,7 +31,7 @@ class MeterAdvFragment : Fragment() {
 	private val csvVM by activityViewModels<CsvViewModel>()
 	private val blVM by activityViewModels<BluetoothViewModel>()
 	private val meterVM by activityViewModels<MeterViewModel>()
-	private val advVM:MeterAdvViewModel by viewModels() // 此vm僅保留於此fragment 不全域保留 //todo 可能用不到?
+	private val advVM by activityViewModels<MeterAdvViewModel>()
 
 	// 實例
 	private val meterBaseFragment:MeterBaseFragment get() = ((parentFragment as MeterRowFragment).parentFragment as MeterBaseFragment)
@@ -52,6 +52,22 @@ class MeterAdvFragment : Fragment() {
 		// 更新小吃錨點
 		SharedEvent.snackbarDefaultAnchorView = binding.sendFab
 
+		// 傳送按鈕
+		binding.sendFab.setOnClickListener {
+			if (checkboxToR87Steps().isEmpty()) return@setOnClickListener
+			// 視窗提示耗時 & 確認
+			MaterialAlertDialogBuilder(requireContext()).apply {
+				setTitle("進階查詢/設定")
+				setMessage("準備進行進階查詢/設定\n耗時約${getEstimatedTime()}秒")
+				setNeutralButton("取消") { dialog, which -> dialog.dismiss() }
+				setPositiveButton("確定") { dialog, which ->
+					dialog.dismiss()
+					sendR87Telegram()
+				}
+				show()
+			}
+		}
+
 		// checkbox
 		binding.apply {
 			listOf(field23, field03, field57, field58, field59, field51).forEach { field ->
@@ -71,19 +87,34 @@ class MeterAdvFragment : Fragment() {
 			}
 		}
 
-		// 傳送按鈕
-		binding.sendFab.setOnClickListener {
-			if (checkboxToR87Steps().isEmpty()) return@setOnClickListener
-			// 視窗提示耗時 & 確認
-			MaterialAlertDialogBuilder(requireContext()).apply {
-				setTitle("進階查詢/設定")
-				setMessage("準備進行進階查詢/設定\n耗時約${getEstimatedTime()}秒")
-				setNeutralButton("取消") { dialog, which -> dialog.dismiss() }
-				setPositiveButton("確定") { dialog, which ->
-					dialog.dismiss()
-					sendR87Telegram()
+		// todo 詳細按鈕
+		binding.apply {
+			field16.readDetailBtn?.setOnClickListener {
+				val readValue = field16.readValue
+				if (readValue.isEmpty()) return@setOnClickListener
+				preventDoubleClick(it)
+				val r16sheet = R16DetailSheet()
+				r16sheet.arguments = Bundle().apply {
+					putString("type", "read")
+					putString("value", readValue)
 				}
-				show()
+				r16sheet.show(requireActivity().supportFragmentManager, "r16sheet")
+			}
+			field16.writeDetailBtn?.setOnClickListener {
+				preventDoubleClick(it)
+				val r16sheet = R16DetailSheet()
+				r16sheet.arguments = Bundle().apply {
+					putString("type", "write")
+					if (field16.writeValue.length != 18) {
+						putString("mask", "@@@@@@@@@")
+						putString("value", field16.readValue)
+					} else {
+						val list = field16.writeValue.chunked(9)
+						putString("mask", list[0])
+						putString("value", list[1])
+					}
+				}
+				r16sheet.show(requireActivity().supportFragmentManager, "r16sheet")
 			}
 		}
 
@@ -106,7 +137,30 @@ class MeterAdvFragment : Fragment() {
 			}
 		}
 
+		// 訂閱detail關閉後寫入設定欄
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				advVM.sheetDissmissSharedFlow.collectLatest { event ->
+					when (event) {
+						is SheetResult.S16 -> {
+							binding.field16.setWriteValue(event.data)
+						}
+						// todo ...
+					}
+				}
+			}
+		}
+
 		refreshFab()
+	}
+
+	// 防連點
+	private fun preventDoubleClick(it:View) {
+		lifecycleScope.launch {
+			it.isEnabled = false
+			delay(2000)
+			it.isEnabled = true
+		}
 	}
 
 	// 開始R87通信

@@ -2,12 +2,12 @@
 <resources>
   <!-- 自訂元件參數 -->
   <declare-styleable name="Field">
-    <attr name="title" format="string" />
-    <attr name="value" format="string" />
+    <attr name="fieldTitle" format="string" />
+    <attr name="fieldValue" format="string" />
   </declare-styleable>
 
   <declare-styleable name="FieldAdvInput">
-    <attr name="advTitle" format="string" />
+    <attr name="fieldAdvTitle" format="string" />
     <attr name="readLine" format="boolean" />
     <attr name="readValue" format="string" />
     <attr name="readDetailBtn" format="boolean" />
@@ -20,6 +20,12 @@
   </declare-styleable>
 
   <declare-styleable name="ErrorTextView">
-    <attr name="text" format="string" />
+    <attr name="errorText" format="string" />
   </declare-styleable>
+
+  <declare-styleable name="DetailOption">
+    <attr name="detailOptionTitle" format="string" />
+    <attr name="detailOptionEditable" format="boolean" />
+  </declare-styleable>
+
 </resources>

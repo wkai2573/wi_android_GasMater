@@ -42,8 +42,8 @@ class Field : LinearLayout {
 			context.obtainStyledAttributes(attrs, R.styleable.Field)
 		else
 			context.obtainStyledAttributes(attrs, R.styleable.Field, defStyle, 0)
-		val title = typedArray.getString(R.styleable.Field_title)
-		val value = typedArray.getString(R.styleable.Field_value)
+		val title = typedArray.getString(R.styleable.Field_fieldTitle)
+		val value = typedArray.getString(R.styleable.Field_fieldValue)
 		typedArray.recycle()
 		// ui
 		binding?.titleTv?.text = title

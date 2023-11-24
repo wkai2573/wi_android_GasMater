@@ -48,7 +48,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:layout_weight="1"
-        app:title="通信ID (表ID, 需要家ID)" />
+        app:fieldTitle="通信ID (表ID, 需要家ID)" />
 
       <Button
         android:id="@+id/meterIdBtn"
@@ -68,14 +68,14 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        app:title="抄表值" />
+        app:fieldTitle="抄表值" />
 
       <com.wavein.gasmeter.ui.component.Field
         android:id="@+id/field_meterReadTime"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        app:title="抄表時間" />
+        app:fieldTitle="抄表時間" />
     </LinearLayout>
 
     <LinearLayout
@@ -87,21 +87,21 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        app:title="前回抄表值" />
+        app:fieldTitle="前回抄表值" />
 
       <com.wavein.gasmeter.ui.component.Field
         android:id="@+id/field_lastMeterReadTime"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        app:title="前回抄表時間" />
+        app:fieldTitle="前回抄表時間" />
     </LinearLayout>
 
     <com.wavein.gasmeter.ui.component.Field
       android:id="@+id/field_degreeUsed"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      app:title="使用量" />
+      app:fieldTitle="使用量" />
 
     <TextView
       android:layout_width="wrap_content"
@@ -145,40 +145,40 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        app:title="電池電壓過低" />
+        app:fieldTitle="電池電壓過低" />
 
       <com.wavein.gasmeter.ui.component.Field
         android:id="@+id/field_alarm2"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        app:title="內管洩漏" />
+        app:fieldTitle="內管洩漏" />
 
       <com.wavein.gasmeter.ui.component.Field
         android:id="@+id/field_alarm3"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        app:title="遮斷模式" />
+        app:fieldTitle="遮斷模式" />
     </LinearLayout>
 
     <com.wavein.gasmeter.ui.component.Field
       android:id="@+id/field_custId"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      app:title="客戶編號" />
+      app:fieldTitle="客戶編號" />
 
     <com.wavein.gasmeter.ui.component.Field
       android:id="@+id/field_custName"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      app:title="客戶姓名" />
+      app:fieldTitle="客戶姓名" />
 
     <com.wavein.gasmeter.ui.component.Field
       android:id="@+id/field_custAddr"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      app:title="地址" />
+      app:fieldTitle="地址" />
 
     <LinearLayout
       android:layout_width="match_parent"
@@ -191,7 +191,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:layout_weight="1"
-        app:title="備註" />
+        app:fieldTitle="備註" />
 
       <Button
         android:id="@+id/remarkBtn"

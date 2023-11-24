@@ -10,8 +10,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.provider.Settings
-import android.provider.Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION
 import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
 import android.util.Log
 import android.view.LayoutInflater
@@ -28,7 +26,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.FragmentSettingBinding
 import com.wavein.gasmeter.tools.NetworkInfo
@@ -43,6 +40,10 @@ import com.wavein.gasmeter.ui.ftp.FtpSettingDialogFragment
 import com.wavein.gasmeter.ui.ftp.FtpViewModel
 import com.wavein.gasmeter.ui.loading.Tip
 import com.wavein.gasmeter.ui.meterwork.MeterViewModel
+import com.wavein.gasmeter.ui.meterwork.row.SheetResult
+import com.wavein.gasmeter.ui.meterwork.row.MeterAdvViewModel
+import com.wavein.gasmeter.ui.meterwork.row.detail.R16DetailSheet
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -60,6 +61,7 @@ class SettingFragment : Fragment() {
 	private val meterVM by activityViewModels<MeterViewModel>()
 	private val ftpVM by activityViewModels<FtpViewModel>()
 	private val settingVM by activityViewModels<SettingViewModel>()
+//	private val advVM by activityViewModels<MeterAdvViewModel>() // todo 暫時
 
 	// cb
 	private var onBluetoothOn:(() -> Unit)? = null
@@ -183,7 +185,37 @@ class SettingFragment : Fragment() {
 
 		binding.selectCsvFromLocalBtn.setOnClickListener {
 			csvVM.openFilePicker(filePickerLauncher)
+
+
+			// todo 暫時
+			// 防連續點
+//			lifecycleScope.launch {
+//				binding.selectCsvFromLocalBtn.isEnabled = false
+//				delay(2000)
+//				binding.selectCsvFromLocalBtn.isEnabled = true
+//			}
+//			val r16sheet = R16DetailSheet()
+//			r16sheet.arguments = Bundle().apply {
+//				putString("type", "write")
+//				putString("mask", "@@@@@@@@@")
+//				putString("value", "@ABCDGJJJ")
+//			}
+//			r16sheet.show(requireActivity().supportFragmentManager, "r16sheet")
 		}
+
+		// todo 暫時
+		// 訂閱detail關閉後寫入設定欄
+//		viewLifecycleOwner.lifecycleScope.launch {
+//			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+//				advVM.sheetDissmissSharedFlow.collectLatest { event ->
+//					when (event) {
+//						is SheetResult.S16 -> {
+//							Log.i("@@@設定結果", event.data)
+//						}
+//					}
+//				}
+//			}
+//		}
 
 		binding.resetDegreeBtn.setOnClickListener {
 			MaterialAlertDialogBuilder(requireContext())
