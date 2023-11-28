@@ -12,281 +12,296 @@
     android:layout_height="500dp"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
 
-    <ImageView
-      android:layout_width="70dp"
-      android:layout_height="wrap_content"
-      android:layout_gravity="center|top"
-      android:contentDescription="dragDash"
-      android:scaleType="centerCrop"
-      android:src="@drawable/ic_remove_24"
-      app:tint="#AAAAAA" />
-
     <!-- Bottom sheet contents. -->
 
-    <androidx.core.widget.NestedScrollView
+    <LinearLayout
       android:layout_width="match_parent"
-      android:layout_height="match_parent"
-      android:layout_marginTop="24dp">
+      android:layout_height="wrap_content"
+      android:orientation="vertical">
 
-      <LinearLayout
+      <ImageView
+        android:layout_width="70dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center|top"
+        android:contentDescription="dragDash"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_remove_24"
+        app:tint="#AAAAAA" />
+
+      <Button
+        android:id="@+id/closeBtn"
+        style="?attr/materialButtonOutlinedStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="4dp"
+        android:text="確定" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM9b4"
+      <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
-          android:tag="M9|b4"
-          app:detailOptionTitle="安全継続時間表d" />
+          android:orientation="vertical">
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM9b3"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M9|b3"
-          app:detailOptionTitle="圧力低下流量監視/即遮断" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM9b4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M9|b4"
+            app:detailOptionTitle="安全継続時間表d" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM9b2"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M9|b2"
-          app:detailOptionTitle="安全継続時間表c" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM9b3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M9|b3"
+            app:detailOptionTitle="圧力低下流量監視/即遮断" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM9b1"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M9|b1"
-          app:detailOptionTitle="口火計測方法" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM9b2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M9|b2"
+            app:detailOptionTitle="安全継続時間表c" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM8b4"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M8|b4"
-          app:detailOptionTitle="圧力上昇遮断バイパス" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM9b1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M9|b1"
+            app:detailOptionTitle="口火計測方法" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM8b3"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M8|b3"
-          app:detailOptionTitle="圧力低下遮断バイパス" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM8b4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M8|b4"
+            app:detailOptionTitle="圧力上昇遮断バイパス" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM8b2"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M8|b2"
-          app:detailOptionTitle="感震遮断自動復帰" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM8b3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M8|b3"
+            app:detailOptionTitle="圧力低下遮断バイパス" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM8b1"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M8|b1"
-          app:detailOptionTitle="未使用" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM8b2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M8|b2"
+            app:detailOptionTitle="感震遮断自動復帰" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM7b4"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M7|b4"
-          app:detailOptionTitle="定期検針応答電文" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM8b1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M8|b1"
+            app:detailOptionTitle="未使用" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM7b3"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M7|b3"
-          app:detailOptionTitle="内管漏洩時間短縮" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM7b4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M7|b4"
+            app:detailOptionTitle="定期検針応答電文" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM7b2"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M7|b2"
-          app:detailOptionTitle="内管漏洩警報/遮断" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM7b3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M7|b3"
+            app:detailOptionTitle="内管漏洩時間短縮" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM7b1"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M7|b1"
-          app:detailOptionTitle="テスト遮断選択" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM7b2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M7|b2"
+            app:detailOptionTitle="内管漏洩警報/遮断" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM6b4"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M6|b4"
-          app:detailOptionTitle="圧力ｾﾝｻ特性値書込禁止" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM7b1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M7|b1"
+            app:detailOptionTitle="テスト遮断選択" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM6b3"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M6|b3"
-          app:detailOptionTitle="個別流量オーバー遮断バイパス" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM6b4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M6|b4"
+            app:detailOptionTitle="圧力ｾﾝｻ特性値書込禁止" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM6b2"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M6|b2"
-          app:detailOptionTitle="内管漏洩バイパス" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM6b3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M6|b3"
+            app:detailOptionTitle="個別流量オーバー遮断バイパス" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM6b1"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M6|b1"
-          app:detailOptionTitle="圧力遮断判定値書込禁止" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM6b2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M6|b2"
+            app:detailOptionTitle="内管漏洩バイパス" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM5b4"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M5|b4"
-          app:detailOptionTitle="ﾛｰﾄﾞｻｰﾍﾞｲ" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM6b1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M6|b1"
+            app:detailOptionTitle="圧力遮断判定値書込禁止" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM5b3"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M5|b3"
-          app:detailOptionTitle="ｽﾅｯﾌﾟ測定" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM5b4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M5|b4"
+            app:detailOptionTitle="ﾛｰﾄﾞｻｰﾍﾞｲ" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM5b2"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M5|b2"
-          app:detailOptionTitle="感震遮断リトライ回数" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM5b3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M5|b3"
+            app:detailOptionTitle="ｽﾅｯﾌﾟ測定" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM5b1"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M5|b1"
-          app:detailOptionTitle="圧力遮断リトライ回数" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM5b2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M5|b2"
+            app:detailOptionTitle="感震遮断リトライ回数" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM4b4"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M4|b4"
-          app:detailOptionTitle="圧力感震マスクモード" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM5b1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M5|b1"
+            app:detailOptionTitle="圧力遮断リトライ回数" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM4b3"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M4|b3"
-          app:detailOptionTitle="デマンド発呼有無" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM4b4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M4|b4"
+            app:detailOptionTitle="圧力感震マスクモード" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM4b2"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M4|b2"
-          app:detailOptionTitle="感震流量監視/即遮断" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM4b3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M4|b3"
+            app:detailOptionTitle="デマンド発呼有無" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM4b1"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M4|b1"
-          app:detailOptionTitle="圧力上昇流量監視/即遮断" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM4b2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M4|b2"
+            app:detailOptionTitle="感震流量監視/即遮断" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM3b4"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M3|b4"
-          app:detailOptionTitle="感震遮断バイパス" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM4b1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M4|b1"
+            app:detailOptionTitle="圧力上昇流量監視/即遮断" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM3b3"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M3|b3"
-          app:detailOptionTitle="デマンドβ更新有無" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM3b4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M3|b4"
+            app:detailOptionTitle="感震遮断バイパス" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM3b2"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M3|b2"
-          app:detailOptionTitle="デマンドα/β" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM3b3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M3|b3"
+            app:detailOptionTitle="デマンドβ更新有無" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM3b1"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M3|b1"
-          app:detailOptionTitle="書込禁止" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM3b2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M3|b2"
+            app:detailOptionTitle="デマンドα/β" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM2b4"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M2|b4"
-          app:detailOptionTitle="安全継続時間バイパス" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM3b1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M3|b1"
+            app:detailOptionTitle="書込禁止" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM2b3"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M2|b3"
-          app:detailOptionTitle="安全継続時間b2" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM2b4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M2|b4"
+            app:detailOptionTitle="安全継続時間バイパス" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM2b2"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M2|b2"
-          app:detailOptionTitle="安全継続時間b1" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM2b3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M2|b3"
+            app:detailOptionTitle="安全継続時間b2" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM2b1"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M2|b1"
-          app:detailOptionTitle="口火流量登録" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM2b2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M2|b2"
+            app:detailOptionTitle="安全継続時間b1" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM1b4"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M1|b4"
-          app:detailOptionTitle="ﾛｰﾄﾞｻｰﾍﾞｲ/ｽﾅｯﾌﾟ測定実施" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM2b1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M2|b1"
+            app:detailOptionTitle="口火流量登録" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM1b3"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M1|b3"
-          app:detailOptionTitle="ﾛｰﾄﾞｻｰﾍﾞｲ/ｽﾅｯﾌﾟ測定値発呼有無" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM1b4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M1|b4"
+            app:detailOptionTitle="ﾛｰﾄﾞｻｰﾍﾞｲ/ｽﾅｯﾌﾟ測定実施" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM1b2"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M1|b2"
-          app:detailOptionTitle="通常電池電圧低下警報/遮断" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM1b3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M1|b3"
+            app:detailOptionTitle="ﾛｰﾄﾞｻｰﾍﾞｲ/ｽﾅｯﾌﾟ測定値発呼有無" />
 
-        <com.wavein.gasmeter.ui.component.DetailOption
-          android:id="@+id/optionM1b1"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:tag="M1|b1"
-          app:detailOptionTitle="定期検針実施" />
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM1b2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M1|b2"
+            app:detailOptionTitle="通常電池電圧低下警報/遮断" />
 
-      </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionM1b1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="M1|b1"
+            app:detailOptionTitle="定期検針実施" />
+
+        </LinearLayout>
+      </androidx.core.widget.NestedScrollView>
+
+    </LinearLayout>
 
   </FrameLayout>
 

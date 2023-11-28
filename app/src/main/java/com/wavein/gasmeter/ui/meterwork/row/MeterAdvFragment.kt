@@ -9,14 +9,18 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.FragmentMeterAdvBinding
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.rd64h.R87Step
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
+import com.wavein.gasmeter.ui.loading.Tip
 import com.wavein.gasmeter.ui.meterwork.MeterBaseFragment
 import com.wavein.gasmeter.ui.meterwork.MeterViewModel
 import com.wavein.gasmeter.ui.meterwork.row.detail.R16DetailSheet
+import com.wavein.gasmeter.ui.meterwork.row.detail.R50DetailSheet
 import com.wavein.gasmeter.ui.setting.CsvViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asStateFlow
@@ -89,33 +93,64 @@ class MeterAdvFragment : Fragment() {
 
 		// todo 詳細按鈕
 		binding.apply {
+			// R16
 			field16.readDetailBtn?.setOnClickListener {
 				val readValue = field16.readValue
 				if (readValue.isEmpty()) return@setOnClickListener
 				preventDoubleClick(it)
-				val r16sheet = R16DetailSheet()
-				r16sheet.arguments = Bundle().apply {
-					putString("type", "read")
-					putString("value", readValue)
+				lifecycleScope.launch {
+					SharedEvent.loadingFlow.value = Tip("正在開啟詳細")
+					delay(500)
+					val r16sheet = R16DetailSheet()
+					r16sheet.arguments = Bundle().apply {
+						putString("type", "read")
+						putString("value", readValue)
+					}
+					r16sheet.show(requireActivity().supportFragmentManager, "r16sheet")
 				}
-				r16sheet.show(requireActivity().supportFragmentManager, "r16sheet")
 			}
 			field16.writeDetailBtn?.setOnClickListener {
 				preventDoubleClick(it)
-				val r16sheet = R16DetailSheet()
-				r16sheet.arguments = Bundle().apply {
-					putString("type", "write")
-					if (field16.writeValue.length != 18) {
-						putString("mask", "@@@@@@@@@")
-						putString("value", field16.readValue)
-					} else {
-						val list = field16.writeValue.chunked(9)
-						putString("mask", list[0])
-						putString("value", list[1])
+				lifecycleScope.launch {
+					SharedEvent.loadingFlow.value = Tip("正在開啟詳細")
+					delay(500)
+					val r16sheet = R16DetailSheet()
+					r16sheet.arguments = Bundle().apply {
+						putString("type", "write")
+						if (field16.writeValue.length != 18) {
+							putString("mask", "@@@@@@@@@")
+							putString("value", field16.readValue)
+						} else {
+							val list = field16.writeValue.chunked(9)
+							putString("mask", list[0])
+							putString("value", list[1])
+						}
 					}
+					r16sheet.show(requireActivity().supportFragmentManager, "r16sheet")
 				}
-				r16sheet.show(requireActivity().supportFragmentManager, "r16sheet")
 			}
+			// R50
+			field50.readDetailBtn?.setOnClickListener {
+				val readValue = field50.readValue
+				if (readValue.isEmpty()) return@setOnClickListener
+				preventDoubleClick(it)
+				val r50sheet = R50DetailSheet()
+				r50sheet.arguments = Bundle().apply {
+					putString("type", "read")
+					putString("value", readValue)
+				}
+				r50sheet.show(requireActivity().supportFragmentManager, "r50sheet")
+			}
+			field50.writeDetailBtn?.setOnClickListener {
+				preventDoubleClick(it)
+				val r50sheet = R50DetailSheet()
+				r50sheet.arguments = Bundle().apply {
+					putString("type", "write")
+					putString("value", if (field50.writeValue.length != 13) field50.readValue else field50.writeValue)
+				}
+				r50sheet.show(requireActivity().supportFragmentManager, "r50sheet")
+			}
+
 		}
 
 		// 訂閱選擇的meterRow
@@ -142,9 +177,8 @@ class MeterAdvFragment : Fragment() {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				advVM.sheetDissmissSharedFlow.collectLatest { event ->
 					when (event) {
-						is SheetResult.S16 -> {
-							binding.field16.setWriteValue(event.data)
-						}
+						is SheetResult.S16 -> binding.field16.setWriteValue(event.data)
+						is SheetResult.S50 -> binding.field50.setWriteValue(event.data)
 						// todo ...
 					}
 				}

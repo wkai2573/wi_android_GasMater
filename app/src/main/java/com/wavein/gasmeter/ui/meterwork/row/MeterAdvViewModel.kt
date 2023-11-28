@@ -27,4 +27,5 @@ class MeterAdvViewModel @Inject constructor(
 // 溝通結束事件
 sealed class SheetResult {
 	data class S16(val data:String) : SheetResult()
+	data class S50(val data:String) : SheetResult()
 }

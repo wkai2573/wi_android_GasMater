@@ -10,7 +10,9 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.wavein.gasmeter.data.model.MeterRow
 import com.wavein.gasmeter.databinding.BsheetR16DetailBinding
+import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.ui.component.DetailOption
+import com.wavein.gasmeter.ui.loading.Tip
 import com.wavein.gasmeter.ui.meterwork.row.SheetResult
 import com.wavein.gasmeter.ui.meterwork.row.MeterAdvViewModel
 
@@ -65,10 +67,14 @@ class R16DetailSheet : BottomSheetDialogFragment() {
 	override fun onViewCreated(view:View, savedInstanceState:Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
 
+		SharedEvent.loadingFlow.value = Tip("")
+
 		BottomSheetBehavior.from(binding.sheet).apply {
-			peekHeight = 9999 // 讓內容置頂
-			state = BottomSheetBehavior.STATE_COLLAPSED
+			peekHeight = 9999
+			state = BottomSheetBehavior.STATE_EXPANDED
 		}
+
+		binding.closeBtn.setOnClickListener { dismiss() }
 
 		//根據傳入值，設定UI(維持按鈕顯示 & 各option的值)
 		when (type) {
