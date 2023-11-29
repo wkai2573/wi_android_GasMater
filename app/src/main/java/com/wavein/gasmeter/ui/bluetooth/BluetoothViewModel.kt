@@ -341,7 +341,7 @@ class BluetoothViewModel @Inject constructor(
 				if (errList.isNotEmpty()) {
 					commResult["error"] = BaseInfo("通信異常，以下通信失敗：\n${errList.joinToString("\n")}")
 				} else {
-					commResult["success"] = BaseInfo("查詢/設定成功")
+					commResult["success"] = BaseInfo("讀取/設定成功")
 				}
 			}
 		}

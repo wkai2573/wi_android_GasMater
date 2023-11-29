@@ -152,9 +152,7 @@ class MeterInfoFragment : Fragment() {
 			MaterialAlertDialogBuilder(requireContext())
 				.setTitle("編輯通信ID")
 				.setView(inputLayout)
-				.setNegativeButton("取消") { dialog, which ->
-					dialog.dismiss()
-				}
+				.setNegativeButton("取消") { dialog, which -> dialog.dismiss() }
 				.setPositiveButton("確定") { dialog, which ->
 					dialog.dismiss()
 					val newMeterId = inputLayout.editText?.text.toString()
@@ -177,9 +175,7 @@ class MeterInfoFragment : Fragment() {
 				}
 				.create()
 				.apply {
-					setOnShowListener {
-						inputLayout.editText?.requestFocus()
-					}
+					setOnShowListener { inputLayout.editText?.requestFocus() }
 					show()
 				}
 		}

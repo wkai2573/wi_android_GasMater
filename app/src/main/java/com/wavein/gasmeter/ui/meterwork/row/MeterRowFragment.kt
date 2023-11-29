@@ -81,7 +81,7 @@ class MeterRowFragment : Fragment() {
 		TabLayoutMediator(binding.infoSetTabLayout, binding.pager) { tab, position ->
 			when (position) {
 				0 -> tab.text = "基本資料"
-				1 -> tab.text = "表查詢 / 設定"
+				1 -> tab.text = "表讀取 / 設定"
 				else -> tab.text = "UNKNOWN: $position"
 			}
 		}.attach()

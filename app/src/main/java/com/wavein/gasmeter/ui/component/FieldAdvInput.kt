@@ -10,7 +10,7 @@ import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.CustFieldAdvInputBinding
 
 
-// 自訂View元件: 進階查詢設定欄位(通用)
+// 自訂View元件: 進階讀取設定欄位(通用)
 class FieldAdvInput : LinearLayout {
 	private var binding:CustFieldAdvInputBinding? = null
 
