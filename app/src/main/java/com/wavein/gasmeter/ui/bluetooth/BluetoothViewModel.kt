@@ -486,9 +486,20 @@ class BluetoothViewModel @Inject constructor(
 
 			is R87Step -> {
 				when (sendStep.op) {
-					"R01" -> commTextStateFlow.value = Tip("正在取得讀數", "R87R01", progressText)
-					"R05" -> commTextStateFlow.value = Tip("正在取得讀數", "R87R05", progressText)
-					"R23" -> commTextStateFlow.value = Tip("正在取得五回遮斷履歷", "R87R23", progressText)
+					"R01" -> commTextStateFlow.value = Tip("正在讀取讀數", "R87R01", progressText)
+					"R05" -> commTextStateFlow.value = Tip("正在讀取讀數", "R87R05", progressText)
+					"R23" -> commTextStateFlow.value = Tip("正在讀取五回遮斷履歷", "R87R23", progressText)
+					"R24" -> commTextStateFlow.value = Tip("正在讀取表內部資料", "R87R24", progressText)
+					"R16" -> commTextStateFlow.value = Tip("正在讀取表狀態", "R87R16", progressText)
+					"S16" -> commTextStateFlow.value = Tip("正在設定表狀態", "R87S16", progressText)
+					"R57" -> commTextStateFlow.value = Tip("正在讀取時間使用量", "R87R57", progressText)
+					"R58" -> commTextStateFlow.value = Tip("正在讀取最大使用量", "R87R58", progressText)
+					"R59" -> commTextStateFlow.value = Tip("正在讀取1日最大使用量", "R87R59", progressText)
+					"S31" -> commTextStateFlow.value = Tip("正在設定登錄母火流量", "R87S31", progressText)
+					"R50" -> commTextStateFlow.value = Tip("正在讀取壓力遮斷判定值", "R87R50", progressText)
+					"S50" -> commTextStateFlow.value = Tip("正在設定壓力遮斷判定值", "R87S50", progressText)
+					"R51" -> commTextStateFlow.value = Tip("正在讀取壓力值", "R87R51", progressText)
+					"C41" -> commTextStateFlow.value = Tip("正在設定中心遮斷", "R87C41", progressText)
 				}
 				val r87 = "ZD${sendStep.adr}R87"
 				val aLine = RD64H.createR87Aline(cc = sendStep.cc, adr = sendStep.adr, op = sendStep.op, data = sendStep.data)

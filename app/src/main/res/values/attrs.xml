@@ -19,6 +19,13 @@
     <attr name="bottomDivider" format="boolean" />
   </declare-styleable>
 
+  <declare-styleable name="FieldAdvFuseFlow">
+    <attr name="fieldAdvFuseFlowTitle" format="string" />
+    <attr name="fieldAdvFuseFlowReadChecked" format="boolean" />
+    <attr name="fieldAdvFuseFlowWriteChecked" format="boolean" />
+    <attr name="fieldAdvFuseFlowBottomDivider" format="boolean" />
+  </declare-styleable>
+
   <declare-styleable name="ErrorTextView">
     <attr name="errorText" format="string" />
   </declare-styleable>

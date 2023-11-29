@@ -46,6 +46,7 @@
           android:layout_height="wrap_content"
           android:orientation="vertical">
 
+          <!-- todo 日文改中文, 移除或隱藏"未使用" -->
           <com.wavein.gasmeter.ui.component.DetailOption
             android:id="@+id/optionM9b4"
             android:layout_width="match_parent"

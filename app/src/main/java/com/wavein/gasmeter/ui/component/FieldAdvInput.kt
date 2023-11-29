@@ -10,7 +10,7 @@ import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.CustFieldAdvInputBinding
 
 
-// 自訂View元件: FieldAdvStr
+// 自訂View元件: 進階查詢設定欄位(通用)
 class FieldAdvInput : LinearLayout {
 	private var binding:CustFieldAdvInputBinding? = null
 
@@ -71,7 +71,11 @@ class FieldAdvInput : LinearLayout {
 		binding?.readDetailBtn?.visibility = if (readDetailBtn) View.VISIBLE else View.GONE
 		binding?.readCheckbox?.isChecked = readChecked
 		binding?.writeLine?.visibility = if (writeLine) View.VISIBLE else View.GONE
-		binding?.writeValueInput?.editText?.setText(writeValue)
+		if (writeValue == "GONE") {
+			binding?.writeValueInput?.visibility = View.INVISIBLE
+		} else {
+			binding?.writeValueInput?.editText?.setText(writeValue)
+		}
 		binding?.writeDetailBtn?.visibility = if (writeDetailBtn) View.VISIBLE else View.GONE
 		binding?.writeCheckbox?.isChecked = writeChecked
 		binding?.bottomDivider?.visibility = if (bottomDivider) View.VISIBLE else View.GONE

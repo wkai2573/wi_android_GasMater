@@ -5,7 +5,7 @@
   android:layout_width="match_parent"
   android:layout_height="wrap_content"
   android:orientation="vertical"
-  tools:context=".ui.component.FieldAdvInput">
+  tools:context=".ui.component.FieldAdvFuseFlow">
 
   <TextView
     android:id="@+id/titleTv"
@@ -40,15 +40,6 @@
       android:paddingVertical="12dp"
       android:textSize="16sp"
       tools:text="欄位數值" />
-
-    <com.google.android.material.button.MaterialButton
-      android:id="@+id/readDetailBtn"
-      style="?attr/materialButtonOutlinedStyle"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:layout_marginStart="4dp"
-      android:text="詳細" />
-
   </LinearLayout>
 
   <LinearLayout
@@ -69,26 +60,44 @@
       app:buttonTint="?attr/colorError" />
 
     <com.google.android.material.textfield.TextInputLayout
-      android:id="@+id/writeValueInput"
+      android:id="@+id/writeLowerLimitInput"
       android:layout_width="0dp"
       android:layout_height="wrap_content"
       android:layout_weight="1"
-      android:hint="設定值">
+      android:hint="下限"
+      app:suffixText="L/h">
 
       <com.google.android.material.textfield.TextInputEditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="4dp"
-        android:enabled="false" />
+        android:inputType="numberDecimal"
+        android:selectAllOnFocus="true" />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <com.google.android.material.button.MaterialButton
-      android:id="@+id/writeDetailBtn"
-      style="?attr/materialButtonOutlinedStyle"
+    <TextView
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:layout_marginStart="4dp"
-      android:text="詳細" />
+      android:layout_marginHorizontal="4dp"
+      android:text="~"
+      android:textSize="18sp" />
+
+    <com.google.android.material.textfield.TextInputLayout
+      android:id="@+id/writeUpperLimitInput"
+      android:layout_width="0dp"
+      android:layout_height="wrap_content"
+      android:layout_weight="1"
+      android:hint="上限"
+      app:suffixText="L/h">
+
+      <com.google.android.material.textfield.TextInputEditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:inputType="numberDecimal"
+        android:selectAllOnFocus="true" />
+    </com.google.android.material.textfield.TextInputLayout>
+
   </LinearLayout>
 
   <com.google.android.material.divider.MaterialDivider

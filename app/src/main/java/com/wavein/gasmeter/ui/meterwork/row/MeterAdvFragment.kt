@@ -1,6 +1,7 @@
 package com.wavein.gasmeter.ui.meterwork.row
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -74,10 +75,22 @@ class MeterAdvFragment : Fragment() {
 
 		// checkbox
 		binding.apply {
-			listOf(field23, field03, field57, field58, field59, field51).forEach { field ->
+			listOf(field23, field03, field57, field58, field59, field51, field41).forEach { field ->
 				field.readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked -> refreshFab() }
 			}
-			listOf(field16, field31, field50).forEach { field ->
+			listOf(field16, field50).forEach { field ->
+				field.readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked ->
+					if (!buttonView.isPressed) return@setOnCheckedChangeListener
+					field.writeCheckbox?.isChecked = false
+					refreshFab()
+				}
+				field.writeCheckbox?.setOnCheckedChangeListener { buttonView, isChecked ->
+					if (!buttonView.isPressed) return@setOnCheckedChangeListener
+					field.readCheckbox?.isChecked = false
+					refreshFab()
+				}
+			}
+			listOf(field31).forEach { field ->
 				field.readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked ->
 					if (!buttonView.isPressed) return@setOnCheckedChangeListener
 					field.writeCheckbox?.isChecked = false
@@ -91,7 +104,7 @@ class MeterAdvFragment : Fragment() {
 			}
 		}
 
-		// todo 詳細按鈕
+		// 詳細按鈕
 		binding.apply {
 			// R16
 			field16.readDetailBtn?.setOnClickListener {
@@ -164,7 +177,13 @@ class MeterAdvFragment : Fragment() {
 						binding.field57.setReadValue(it.hourlyUsage ?: "")
 						binding.field58.setReadValue(it.maximumUsage ?: "")
 						binding.field59.setReadValue(it.oneDayMaximumUsage ?: "")
-						binding.field31.setReadValue("${it.registerFuseFlowRate1} + ${it.registerFuseFlowRate2}")
+						binding.field31.setReadValue(
+							if (it.registerFuseFlowRate1.isNullOrEmpty() || it.registerFuseFlowRate2.isNullOrEmpty()) {
+								""
+							} else {
+								"下限 ${it.registerFuseFlowRate1} ~ 上限${it.registerFuseFlowRate2} L/h"
+							}
+						)
 						binding.field50.setReadValue(it.pressureShutOffJudgmentValue ?: "")
 						binding.field51.setReadValue(it.pressureValue ?: "")
 					}
@@ -235,6 +254,8 @@ class MeterAdvFragment : Fragment() {
 			r87Steps.add(R87Step(adr = meterId, op = "S50", data = binding.field50.writeValue))
 		if (binding.field51.readCheckbox?.isChecked == true)
 			r87Steps.add(R87Step(adr = meterId, op = "R51"))
+		if (binding.field41.readCheckbox?.isChecked == true)
+			r87Steps.add(R87Step(adr = meterId, op = "C41"))
 		return r87Steps
 	}
 
