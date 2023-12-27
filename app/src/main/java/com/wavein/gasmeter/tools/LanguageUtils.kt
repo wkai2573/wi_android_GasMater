@@ -14,7 +14,7 @@ import androidx.annotation.RequiresApi
 import androidx.core.content.edit
 import java.util.*
 
-object LanguageUtil {
+object LanguageUtils {
 
 	/**
 	 * 设置语言的值
@@ -88,10 +88,10 @@ object LanguageUtil {
 	// 手動切換語言
 	// 使用方式: changeLanguage("zh-rTW") "ja" "en"
 	fun changeLanguage(activity:ComponentActivity, langText:String) {
-		val lang = LanguageUtil.getLocale(activity)
+		val lang = LanguageUtils.getLocale(activity)
 		if (lang.language == langText) return
 		val newLang = langText
-		LanguageUtil.setLanguage(activity, newLang)
+		LanguageUtils.setLanguage(activity, newLang)
 		activity.recreate()
 	}
 }

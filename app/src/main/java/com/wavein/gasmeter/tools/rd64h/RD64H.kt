@@ -1,5 +1,10 @@
 package com.wavein.gasmeter.tools.rd64h
 
+import android.util.Log
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
 // RD64H 傳輸方法
 
 @OptIn(ExperimentalUnsignedTypes::class)
@@ -89,9 +94,16 @@ object RD64H {
 		return output.toByteArray()
 	}
 
-
 	/** 產生 R87_ALine部分的字串
 	 *
+	 * @param securityLevel 可選, 安全性, 預設NoSecurity, 根據安全性組成的ALine字串為
+	 * 	 NoSecurity:     CC(4) + SADR(14) + DADR(14) + DP(4) + OPC(1) + OPR(2) + DATA(64) + BCC
+	 * 	  packet >=1:    CC(4) + SADR(14) + DADR(14) +                           DATA(71) + BCC
+	 * 	 Authentication: CC(4) + SADR(14) + DADR(14) + DP(4) + OPC(1) + OPR(2) + DATA(42)                 + 日時(6) + MAC(16) + BCC
+	 * 	  packet >=1:    CC(4) + SADR(14) + DADR(14) +                           DATA(49)                 + 日時(6) + MAC(16) + BCC
+	 * 	 Confidential:   CC(4) + SADR(14) + DADR(14) + DP(4) + OPC(1) + OPR(2) + DATA(32) + SP(2) + 乱数(8) + 日時(6) + MAC(16) + BCC
+	 * 	  packet >=1:    CC(4) + SADR(14) + DADR(14) +                           DATA(48) + SP(1)         + 日時(6) + MAC(16) + BCC
+	 * 	 Key:            缺少技術文件
 	 * @param cc   可選, 預設 "\u0021\u0040\u0000\u0000" 字串[!@\0\0] bytes[21400000]
 	 * @param adr  必填, 瓦斯表ID
 	 * @param dp   可選, 事業體, 通常固定為 "\u0000EN1" 字串[00454>31]
@@ -100,21 +112,55 @@ object RD64H {
 	 * @returns R87_ALine字串
 	 */
 	fun createR87Aline(
+		securityLevel:SecurityLevel = SecurityLevel.NoSecurity,
 		cc:String = "\u0021\u0040\u0000\u0000",
 		adr:String,
 		dp:String = "\u0000EN1",
 		op:String,
 		data:String = "",
+		time:String? = null,
 	):UByteArray {
-		val data64 = data.padEnd(64, ' ')
-		val ccA = textUBusToALine(cc.toUByteArray())
-		val adrA = textUBusToALine(adr.toUByteArray())
-		val dpA = textUBusToALine(dp.toUByteArray())
-		val opA = textUBusToALine(op.toUByteArray())
-		val dataA = textUBusToALine(data64.toUByteArray())  // dataA = "202020..." (總長128)
-		val bcc = getBCC("$cc$adr$adr$dp$op$data".toUByteArray())
-		val bccA = textUBusToALine(ubyteArrayOf(bcc))  // bccA = "08"
-		return ccA + adrA + adrA + dpA + opA + dataA + bccA
+		when (securityLevel) {
+			// todo 認證
+			SecurityLevel.Authentication -> {
+				val ccU = cc.toUByteArray()
+				val ccA = textUBusToALine(ccU)
+				val adrU = adr.toUByteArray()
+				val adrA = textUBusToALine(adrU)
+				val dpU = dp.toUByteArray()
+				val dpA = textUBusToALine(dpU)
+				val opU = op.toUByteArray()
+				val opA = textUBusToALine(opU)
+				val data42U = data.padEnd(42, ' ').toUByteArray() // 認證: data僅42碼
+				val data42A = textUBusToALine(data42U) // 長42*2=84
+				val timeHex = time ?: getNowTimeString()
+				val timeU = convertHexToAscii(timeHex).toUByteArray()
+				val timeA = textUBusToALine(timeU)
+				val macHex = "C53270755C1B0F55F44CA7BD3CF2CC2E"
+				val macU = convertHexToAscii(macHex).toUByteArray()
+				val macA = textUBusToALine(macU)
+				val bcc = getBCC(ccU + adrU + adrU + dpU + opU + data42U + timeU + macU)
+				val bccA = textUBusToALine(ubyteArrayOf(bcc))
+				Log.i("@@@mac", time.toString())
+				return ccA + adrA + adrA + dpA + opA + data42A + timeA + macA + bccA
+			}
+			// 無認證
+			else -> {
+				val ccU = cc.toUByteArray()
+				val ccA = textUBusToALine(ccU)
+				val adrU = adr.toUByteArray()
+				val adrA = textUBusToALine(adrU)
+				val dpU = dp.toUByteArray()
+				val dpA = textUBusToALine(dpU)
+				val opU = op.toUByteArray()
+				val opA = textUBusToALine(opU)
+				val data64U = data.padEnd(64, ' ').toUByteArray()
+				val data64A = textUBusToALine(data64U)  // 長64*2=128
+				val bcc = getBCC(ccU + adrU + adrU + dpU + opU + data64U)
+				val bccA = textUBusToALine(ubyteArrayOf(bcc))
+				return ccA + adrA + adrA + dpA + opA + data64A + bccA
+			}
+		}
 	}
 
 	// UBus轉ALine
@@ -132,7 +178,7 @@ object RD64H {
 	}
 
 	// ALine轉UBus
-	fun textALineToUBus(aLine: String): String {
+	fun textALineToUBus(aLine:String):String {
 		// 每2字元取後面4bit 組成1字元
 		val uBusChars = aLine.chunked(2).map { char2 ->
 			val binaryString = char2.map { c ->
@@ -142,7 +188,28 @@ object RD64H {
 		}
 		return uBusChars.joinToString("")
 	}
+
+	// 16進位字串 轉成 通常字串
+	private fun convertHexToAscii(hexString:String):String {
+		val result = StringBuilder()
+		for (i in hexString.indices step 2) {
+			val hexPair = hexString.substring(i, i + 2)
+			val decimalValue = hexPair.toInt(16)
+			result.append(decimalValue.toChar())
+		}
+		return result.toString()
+	}
+
+	// 取得目前日時
+	fun getNowTimeString():String {
+		val dateFormat = SimpleDateFormat("yyMMddHHmmss", Locale.getDefault())
+		val date = Date()
+		return dateFormat.format(date)
+	}
 }
+
+enum class SecurityLevel { NoSecurity, Authentication, Confidential, Key }
+
 
 // ==轉換方法==
 @OptIn(ExperimentalUnsignedTypes::class)

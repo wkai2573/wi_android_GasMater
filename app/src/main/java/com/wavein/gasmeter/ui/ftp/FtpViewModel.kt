@@ -1,10 +1,8 @@
 package com.wavein.gasmeter.ui.ftp
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.os.Environment
-import android.view.View
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,7 +11,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.tools.Preference
 import com.wavein.gasmeter.tools.SharedEvent
-import com.wavein.gasmeter.tools.TimeUtil
+import com.wavein.gasmeter.tools.TimeUtils
 import com.wavein.gasmeter.ui.meterwork.MeterViewModel
 import com.wavein.gasmeter.ui.setting.CsvViewModel
 import com.wavein.gasmeter.ui.setting.FileState
@@ -256,13 +254,39 @@ class FtpViewModel @Inject constructor(
 		if (path.isEmpty() || !fileState.isOpened) return
 
 		ftpProcess(uploadFtpInfo, path) { ftpClient ->
-			val filenameWithTime = "${fileState.nameWithoutExtension}_${TimeUtil.getCurrentTime("yyyyMMddHH")}.${fileState.extension}"
+			val filenameWithTime = "${fileState.nameWithoutExtension}_${TimeUtils.getCurrentTime("yyyyMMddHH")}.${fileState.extension}"
 			ftpClient.setFileType(FTP.BINARY_FILE_TYPE)
 			context.contentResolver.openFileDescriptor(fileState.uri!!, "r").use { parcelFileDescriptor ->
 				val fileDescriptor = parcelFileDescriptor?.fileDescriptor
 				val inputStream = FileInputStream(fileDescriptor)
 				ftpClient.storeFile(encode(filenameWithTime), inputStream)
 				showSnack("上傳成功, FTP目錄: $path/$filenameWithTime", SharedEvent.Color.Success)
+			}
+		}
+	}
+
+	/** 上傳log: 將手機/Documents/log 裡的檔案上傳至ftp, 上傳成功後移動至 log_uploaded
+	 *  建立log參考: SettingViewModel.createLogFile()
+	 */
+	fun uploadLog() {
+		val documentsFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+		documentsFolder.mkdirs()
+		val logFolder = File(documentsFolder, "log")
+		logFolder.mkdirs()
+		val logUploadedFolder = File(documentsFolder, "log_uploaded")
+		logUploadedFolder.mkdirs()
+		val files = logFolder.listFiles() ?: return
+
+		ftpProcess(systemFtpInfo, "log") { ftpClient ->
+			files.forEach { file ->
+				// 上傳ftp
+				val inputStream = FileInputStream(file)
+				val uploadSuccess = kotlin.runCatching { ftpClient.storeFile(encode(file.name), inputStream) }.getOrElse { false }
+				// 移動檔案 (log > log_uploaded)
+				if (uploadSuccess) {
+					val destinationFile = File(logUploadedFolder, file.name)
+					file.renameTo(destinationFile)
+				}
 			}
 		}
 	}
@@ -345,7 +369,7 @@ class FtpViewModel @Inject constructor(
 		ftpProcess(ftpInfo, path) { ftpClient ->
 			ftpClient.setFileType(FTP.ASCII_FILE_TYPE)
 			val emptyInputStream = "".byteInputStream()
-			ftpClient.storeFile(filename, emptyInputStream)
+			ftpClient.storeFile(encode(filename), emptyInputStream)
 		}
 	}
 

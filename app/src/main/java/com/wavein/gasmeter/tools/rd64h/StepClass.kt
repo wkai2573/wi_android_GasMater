@@ -15,10 +15,18 @@ data class R89Step(val meterId:String) : BaseStep()
 class D36Step : BaseStep()
 data class R70Step(val meterId:String) : BaseStep()
 
-// R87, 參數說明請參考 ALine.kt
-data class R87Step(val cc:String = "\u0021\u0040\u0000\u0000", val adr:String, val op:String, val data:String = "") : BaseStep()
+// R87, 參數說明請參考 ALine.kt | RD64H.kt_createR87Aline
+data class R87Step(
+	val securityLevel:SecurityLevel = SecurityLevel.NoSecurity,
+	val cc:String = "\u0021\u0040\u0000\u0000",
+	val adr:String,
+	val op:String,
+	val data:String = ""
+) : BaseStep()
+
 class D87D01Step : BaseStep()
 class D87D05Step : BaseStep()
+class D87D19Step : BaseStep()
 class D87D23Step : BaseStep()
 class D87D24Step : BaseStep()
 class D87D16Step : BaseStep()

@@ -17,6 +17,8 @@ object Preference {
 	const val USER_DEP = "userDep"
 	const val USER_NAME = "userName"
 
+	const val SESSION_KEY = "sessionKey"
+
 	const val LAST_BT_DEVICE_MAC = "lastBtDeviceMac"
 
 	const val FTP_DOWNLOAD_HOST = "ftpDownloadHost"
@@ -32,7 +34,7 @@ object Preference {
 	const val FTP_SYSTEM_PASSWORD = "ftpSystemPassword"
 	const val FTP_SYSTEM_ROOT = "ftpSystemRoot"
 
-	private const val SHARED_PREF_NAME = "secret_shared_prefs_webrtc"
+	private const val SHARED_PREF_NAME = "secret_shared_prefs_wavein"
 
 	private lateinit var sharedPreferences:SharedPreferences
 

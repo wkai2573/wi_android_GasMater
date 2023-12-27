@@ -6,6 +6,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -28,6 +29,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.FragmentSettingBinding
+import com.wavein.gasmeter.tools.FileUtils
 import com.wavein.gasmeter.tools.NetworkInfo
 import com.wavein.gasmeter.tools.Preference
 import com.wavein.gasmeter.tools.SharedEvent
@@ -40,10 +42,6 @@ import com.wavein.gasmeter.ui.ftp.FtpSettingDialogFragment
 import com.wavein.gasmeter.ui.ftp.FtpViewModel
 import com.wavein.gasmeter.ui.loading.Tip
 import com.wavein.gasmeter.ui.meterwork.MeterViewModel
-import com.wavein.gasmeter.ui.meterwork.row.SheetResult
-import com.wavein.gasmeter.ui.meterwork.row.MeterAdvViewModel
-import com.wavein.gasmeter.ui.meterwork.row.detail.R16DetailSheet
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -61,7 +59,6 @@ class SettingFragment : Fragment() {
 	private val meterVM by activityViewModels<MeterViewModel>()
 	private val ftpVM by activityViewModels<FtpViewModel>()
 	private val settingVM by activityViewModels<SettingViewModel>()
-//	private val advVM by activityViewModels<MeterAdvViewModel>() // todo 暫時
 
 	// cb
 	private var onBluetoothOn:(() -> Unit)? = null
@@ -89,6 +86,12 @@ class SettingFragment : Fragment() {
 	// 當所有權限皆允許
 	private fun onAllPermissionAllow() {
 		binding.permission.layout.visibility = View.GONE
+
+		// todo 測試用
+		binding.testBtn.setOnClickListener {
+			// settingVM.createLogFile("表IDD", "C41", "舊值啦", "新值啦")
+			ftpVM.uploadLog()
+		}
 
 		// 藍牙設備__________
 
@@ -184,38 +187,12 @@ class SettingFragment : Fragment() {
 		}
 
 		binding.selectCsvFromLocalBtn.setOnClickListener {
-			csvVM.openFilePicker(filePickerLauncher)
-
-
-			// todo 暫時
-			// 防連續點
-//			lifecycleScope.launch {
-//				binding.selectCsvFromLocalBtn.isEnabled = false
-//				delay(2000)
-//				binding.selectCsvFromLocalBtn.isEnabled = true
-//			}
-//			val r16sheet = R16DetailSheet()
-//			r16sheet.arguments = Bundle().apply {
-//				putString("type", "write")
-//				putString("mask", "@@@@@@@@@")
-//				putString("value", "@ABCDGJJJ")
-//			}
-//			r16sheet.show(requireActivity().supportFragmentManager, "r16sheet")
+			val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+				addCategory(Intent.CATEGORY_OPENABLE)
+				type = "text/*" // 檔案類型 ("text/csv"會無效)
+			}
+			csvFilePickerLauncher.launch(intent)
 		}
-
-		// todo 暫時
-		// 訂閱detail關閉後寫入設定欄
-//		viewLifecycleOwner.lifecycleScope.launch {
-//			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-//				advVM.sheetDissmissSharedFlow.collectLatest { event ->
-//					when (event) {
-//						is SheetResult.S16 -> {
-//							Log.i("@@@設定結果", event.data)
-//						}
-//					}
-//				}
-//			}
-//		}
 
 		binding.resetDegreeBtn.setOnClickListener {
 			MaterialAlertDialogBuilder(requireContext())
@@ -300,6 +277,31 @@ class SettingFragment : Fragment() {
 				onSaveCallback = { ftpVM.saveFtpInfo(it) })
 		}
 
+		// 通信設定__________
+
+		// 註冊UUID
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				settingVM.sessionKeyFlow.asStateFlow().collectLatest { sessionKey ->
+					if (sessionKey.isEmpty()) {
+						binding.sessionKeyInput.editText?.setText("未設定通信金鑰 (點擊設定)")
+						binding.sessionKeyInput.editText?.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.md_theme_light_error))
+					} else {
+						binding.sessionKeyInput.editText?.setText("已設定通信金鑰 (點擊重新設定)")
+						binding.sessionKeyInput.editText?.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.md_theme_light_tertiary))
+					}
+				}
+			}
+		}
+
+		binding.sessionKeyInput.editText?.setOnClickListener {
+			val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+				addCategory(Intent.CATEGORY_OPENABLE)
+				type = "*/*"
+			}
+			sessionKeyFilePickerLauncher.launch(intent)
+		}
+
 		// 產品註冊__________
 
 		// ui
@@ -362,6 +364,7 @@ class SettingFragment : Fragment() {
 							binding.appActivateBtn.visibility = View.VISIBLE
 							binding.btArea.visibility = View.GONE
 							binding.fileArea.visibility = View.GONE
+							binding.commArea.visibility = View.GONE
 							if (Preference[Preference.APP_ACTIVATED, false]!!) {
 								binding.appActivateBtn.callOnClick()
 							}
@@ -379,6 +382,7 @@ class SettingFragment : Fragment() {
 							binding.appActivateBtn.visibility = View.VISIBLE
 							binding.btArea.visibility = View.GONE
 							binding.fileArea.visibility = View.GONE
+							binding.commArea.visibility = View.GONE
 						}
 
 						AppState.Activated -> {
@@ -394,6 +398,7 @@ class SettingFragment : Fragment() {
 							binding.appActivateBtn.visibility = View.GONE
 							binding.btArea.visibility = View.VISIBLE
 							binding.fileArea.visibility = View.VISIBLE
+							binding.commArea.visibility = View.VISIBLE
 						}
 					}
 				}
@@ -458,9 +463,29 @@ class SettingFragment : Fragment() {
 		this.onBluetoothOn = null
 	}
 
-	// 選擇檔案Launcher
-	private val filePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+	// csv檔案PickerLauncher
+	private val csvFilePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
 		csvVM.readCsvByPicker(requireContext(), result, meterVM)
+	}
+
+	// 通信keyPickerLauncher
+	private val sessionKeyFilePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+		if (result.resultCode == Activity.RESULT_OK) {
+			runCatching {
+				val uri = result.data?.data!!
+				val sessionKey = FileUtils.readFileContent(requireContext(), uri, 1024, listOf(".key", ".txt"))
+				Preference[Preference.SESSION_KEY] = sessionKey
+				settingVM.sessionKeyFlow.value = sessionKey
+				lifecycleScope.launch {
+					SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("通信金鑰設定成功", SharedEvent.Color.Success))
+				}
+			}.onFailure {
+				it.printStackTrace()
+				lifecycleScope.launch {
+					SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(it.message ?: "檔案讀取失敗", SharedEvent.Color.Error))
+				}
+			}
+		}
 	}
 
 	//region __________權限方法__________

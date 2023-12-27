@@ -325,6 +325,7 @@ class BluetoothViewModel @Inject constructor(
 				val errList = mutableListOf<String>()
 				metaInfo.r87Steps!!.forEach { step ->
 					when (step.op) {
+						"R19" -> if (!commResult.containsKey("D87D19")) errList.add("時刻要求")
 						"R23" -> if (!commResult.containsKey("D87D23")) errList.add("五回遮斷履歷")
 						"R24" -> if (!commResult.containsKey("D87D24")) errList.add("告警情報or母火流量")
 						"R16" -> if (!commResult.containsKey("D87D16")) errList.add("表狀態")
@@ -339,7 +340,14 @@ class BluetoothViewModel @Inject constructor(
 					}
 				}
 				if (errList.isNotEmpty()) {
-					commResult["error"] = BaseInfo("通信異常，以下通信失敗：\n${errList.joinToString("\n")}")
+					val errorType = if (commResult.containsKey("error_D16")) {
+						"HHD用GW終端無回應(D16)"
+					} else if (commResult.containsKey("error_D36")) {
+						"對表U-bus通信異常(D36)"
+					} else {
+						"通信異常"
+					}
+					commResult["error"] = BaseInfo("$errorType，以下通信失敗：\n${errList.joinToString("\n")}")
 				} else {
 					commResult["success"] = BaseInfo("讀取/設定成功")
 				}
@@ -423,6 +431,7 @@ class BluetoothViewModel @Inject constructor(
 				when (step.op) {
 					"R01" -> listOf(D87D01Step())
 					"R05" -> listOf(D87D05Step())
+					"R19" -> listOf(D87D19Step())
 					"R23" -> listOf(D87D23Step(), D87D23Step()) //R23有2part
 					"R24" -> listOf(D87D24Step())
 					"R16" -> listOf(D87D16Step())
@@ -477,7 +486,7 @@ class BluetoothViewModel @Inject constructor(
 			}
 
 			is R89Step -> {
-				commTextStateFlow.value = Tip("正在要求設定", "R89↔D36", progressText)
+				commTextStateFlow.value = Tip("正在要求通信許可", "R89↔D36", progressText)
 				val sendText = "ZA${sendStep.meterId}R8966ZD${sendStep.meterId}R36"
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
 				wt134()
@@ -488,6 +497,7 @@ class BluetoothViewModel @Inject constructor(
 				when (sendStep.op) {
 					"R01" -> commTextStateFlow.value = Tip("正在讀取讀數", "R87R01", progressText)
 					"R05" -> commTextStateFlow.value = Tip("正在讀取讀數", "R87R05", progressText)
+					"R19" -> commTextStateFlow.value = Tip("正在讀取時刻", "R87R19", progressText)
 					"R23" -> commTextStateFlow.value = Tip("正在讀取五回遮斷履歷", "R87R23", progressText)
 					"R24" -> commTextStateFlow.value = Tip("正在讀取表內部資料", "R87R24", progressText)
 					"R16" -> commTextStateFlow.value = Tip("正在讀取表狀態", "R87R16", progressText)
@@ -502,7 +512,15 @@ class BluetoothViewModel @Inject constructor(
 					"C41" -> commTextStateFlow.value = Tip("正在設定中心遮斷", "R87C41", progressText)
 				}
 				val r87 = "ZD${sendStep.adr}R87"
-				val aLine = RD64H.createR87Aline(cc = sendStep.cc, adr = sendStep.adr, op = sendStep.op, data = sendStep.data)
+				val d19Time = if (commResult.containsKey("D87D19")) {
+					(commResult["D87D19"] as D87D19Info).data
+				} else {
+					null
+				}
+				val aLine = RD64H.createR87Aline(
+					securityLevel = sendStep.securityLevel, time = d19Time,
+					cc = sendStep.cc, adr = sendStep.adr, op = sendStep.op, data = sendStep.data
+				)
 				val sendText = r87 + aLine.toByteArray().toText()
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
 				wt2()
@@ -600,6 +618,13 @@ class BluetoothViewModel @Inject constructor(
 					continueSend = true
 				}
 
+				is D87D19Step -> {
+					val info = BaseInfo.get(respText, D87D19Info::class.java) as D87D19Info
+					commResult["D87D19"] = info
+					receiveSteps.removeAt(0)
+					continueSend = true
+				}
+
 				is D87D23Step -> {
 					val info = (
 							if (commResult.containsKey("D87D23")) commResult["D87D23"]
@@ -634,13 +659,12 @@ class BluetoothViewModel @Inject constructor(
 			// 錯誤處理: 檢查是不是D16 或 D36
 			kotlin.runCatching {
 				val info = BaseInfo.get(respText, D16Info::class.java) as D16Info
-				commResult["D16"] = info
+				commResult["error_D16"] = info
 			}
 			kotlin.runCatching {
 				val info = BaseInfo.get(respText, D36Info::class.java) as D36Info
-				commResult["D36"] = info
+				commResult["error_D36"] = info
 			}
-			commResult["Error"] = BaseInfo(respText)
 			onCommEnd()
 		}
 	}

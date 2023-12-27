@@ -21,6 +21,7 @@ import com.wavein.gasmeter.data.model.MeterRow
 import com.wavein.gasmeter.data.model.toCsvRows
 import com.wavein.gasmeter.data.model.toMeterGroups
 import com.wavein.gasmeter.data.model.toMeterRows
+import com.wavein.gasmeter.tools.FileUtils
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.ui.meterwork.MeterViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,13 +29,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.BufferedReader
 import java.io.File
 import java.io.FileDescriptor
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.FileReader
+import java.io.IOException
 import javax.inject.Inject
 
-val bom = byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte())
+private val bom = byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte())
 
 @HiltViewModel
 class CsvViewModel @Inject constructor(
@@ -45,15 +49,6 @@ class CsvViewModel @Inject constructor(
 
 	private val readFileStateFlow = MutableStateFlow(ReadFileState())
 	val selectedFileStateFlow = MutableStateFlow(FileState())
-
-	// 檔案選取器
-	fun openFilePicker(filePickerLauncher:ActivityResultLauncher<Intent>) {
-		val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-			addCategory(Intent.CATEGORY_OPENABLE)
-			type = "text/*" // 檔案類型 ("text/csv"會無效)
-		}
-		filePickerLauncher.launch(intent)
-	}
 
 	// 讀取csv檔案 by picker
 	fun readCsvByPicker(context:Context, result:ActivityResult, meterVM:MeterViewModel) = viewModelScope.launch {
@@ -95,12 +90,12 @@ class CsvViewModel @Inject constructor(
 	}
 
 	// 檢查CSV資料合法
-	//  1. 抄表順路 & 客戶編號 & 表ID 不可重複
+	//  1. 抄錶順路 & 客戶編號 & 表ID 不可重複
 	//  2. 單群最多45台瓦斯表
 	private fun checkRowsLegal(meterRows:List<MeterRow>):String {
 		val duplicateQueue = meterRows.groupingBy { it.queue }.eachCount().filter { it.value > 1 }.keys
 		if (duplicateQueue.isNotEmpty())
-			return "抄表順路重複: ${duplicateQueue.joinToString()}"
+			return "抄錶順路重複: ${duplicateQueue.joinToString()}"
 
 		val duplicateCustId = meterRows.groupingBy { it.custId }.eachCount().filter { it.value > 1 }.keys
 		if (duplicateCustId.isNotEmpty())
@@ -121,20 +116,12 @@ class CsvViewModel @Inject constructor(
 	@SuppressLint("Range")
 	private fun setFileState(context:Context, uri:Uri, specifiedFilename:String = "") {
 		val contentResolver:ContentResolver = context.contentResolver
-		val cursor:Cursor? = contentResolver.query(uri, null, null, null, null)
 		val filepath = uri.path ?: ""
 		var filename = specifiedFilename
-		var size = 0L
 		if (filename.isEmpty()) {
-			cursor?.use {
-				if (it.moveToFirst()) {
-					filename = it.getString(it.getColumnIndex(OpenableColumns.DISPLAY_NAME))
-					size = it.getLong(it.getColumnIndex(OpenableColumns.SIZE))
-					it.close()
-				}
-			}
+			filename = FileUtils.getFilename(context, uri) ?: ""
 		}
-		val fileState = FileState(uri = uri, path = filepath, name = filename, size = size)
+		val fileState = FileState(uri = uri, path = filepath, name = filename)
 		selectedFileStateFlow.value = fileState
 	}
 
@@ -195,11 +182,10 @@ class CsvViewModel @Inject constructor(
 			}
 		}
 	}
-
 }
 
 // 檔案資訊
-data class FileState(val uri:Uri? = null, val path:String = "", val name:String = "", val size:Long = 0L) {
+data class FileState(val uri:Uri? = null, val path:String = "", val name:String = "") {
 	val isOpened get() = uri != null && path.isNotEmpty()
 	val extension:String
 		get() {

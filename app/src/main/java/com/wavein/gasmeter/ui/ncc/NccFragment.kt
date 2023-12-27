@@ -13,6 +13,7 @@ import android.text.Html
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -233,11 +234,20 @@ class NccFragment : Fragment() {
 			// 		)
 			// 	)
 			// }
+			// [R87_R19]
+			// checkBluetoothOn {
+			// 	blVM.sendR87Telegram(
+			// 		meterId, listOf(
+			// 			R87Step(adr = meterId, op = "R19"), // 時刻
+			// 		)
+			// 	)
+			// }
 			// [R87_R16]
 			checkBluetoothOn {
 				blVM.sendR87Telegram(
 					meterId, listOf(
-						R87Step(adr = meterId, op = "R16"), // 表狀態
+						R87Step(adr = meterId, op = "R19"), // 時刻
+						R87Step(adr = meterId, op = "R16", securityLevel = SecurityLevel.Authentication), // 表狀態
 					)
 				)
 			}

@@ -23,7 +23,7 @@ import com.wavein.gasmeter.R
 import com.wavein.gasmeter.data.model.MeterRow
 import com.wavein.gasmeter.databinding.FragmentMeterBaseBinding
 import com.wavein.gasmeter.tools.SharedEvent
-import com.wavein.gasmeter.tools.TimeUtil
+import com.wavein.gasmeter.tools.TimeUtils
 import com.wavein.gasmeter.tools.rd64h.info.D05mInfo
 import com.wavein.gasmeter.tools.rd64h.info.D87D16Info
 import com.wavein.gasmeter.tools.rd64h.info.D87D23Info
@@ -330,7 +330,7 @@ class MeterBaseFragment : Fragment() {
 							meterRow.copy(
 								isManualMeterDegree = false,
 								meterDegree = d05Info.meterDegree,
-								meterReadTime = TimeUtil.getCurrentTime(),
+								meterReadTime = TimeUtils.getCurrentTime(),
 								alarmInfo1 = d05Info.alarmInfo1,
 								batteryVoltageDropAlarm = batteryVoltageDropAlarm,
 								innerPipeLeakageAlarm = d05Info.alarmInfoDetail["A5"]?.get("b1"),
@@ -381,6 +381,7 @@ class MeterBaseFragment : Fragment() {
 
 			// todo ftp log 紀錄有更新瓦斯表的功能
 			// ...
+
 			// 更新ui並儲存csv
 			csvVM.updateSaveCsv(newCsvRows, meterVM)
 		}

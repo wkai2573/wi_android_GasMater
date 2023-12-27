@@ -39,6 +39,12 @@
         android:paddingBottom="64dp">
 
         <!-- 藍牙裝置 -->
+        <Button
+          android:id="@+id/testBtn"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:text="TEST" />
+
         <LinearLayout
           android:id="@+id/btArea"
           android:layout_width="match_parent"
@@ -194,6 +200,44 @@
             android:layout_marginVertical="16dp" />
         </LinearLayout>
 
+        <!-- 通信設定 -->
+        <LinearLayout
+          android:id="@+id/commArea"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:orientation="vertical">
+
+          <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginVertical="8dp"
+            android:text="通信設定"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="16sp" />
+
+          <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/sessionKeyInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:hint="通信金鑰 (Session key)">
+
+            <com.google.android.material.textfield.TextInputEditText
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:layout_marginBottom="4dp"
+              android:focusable="false"
+              android:inputType="text"
+              android:maxLines="1" />
+          </com.google.android.material.textfield.TextInputLayout>
+
+          <com.google.android.material.divider.MaterialDivider
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="16dp" />
+        </LinearLayout>
+
         <!-- 產品註冊 -->
         <LinearLayout
           android:id="@+id/appkeyArea"
@@ -290,6 +334,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginVertical="16dp" />
+
         </LinearLayout>
 
         <!-- 系統設定 -->

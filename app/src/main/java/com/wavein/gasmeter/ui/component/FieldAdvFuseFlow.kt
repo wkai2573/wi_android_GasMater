@@ -24,9 +24,9 @@ class FieldAdvFuseFlow : LinearLayout {
 	val readValue get() = binding?.readValueTv?.text ?: ""
 	val writeValue:String
 		get() {
-			val writeLowerLimit = kotlin.runCatching { binding?.writeLowerLimitInput?.editText?.text?.toString()?.toFloat() }.getOrNull() ?: 0f
+			val writeLowerLimit = kotlin.runCatching { binding?.writeLowerLimitInput?.editText?.text?.toString()?.toFloat() }.getOrElse { 0f }
 			val writeLowerLimitStr = String.format("%.2f", writeLowerLimit).replace(".", "").padStart(4, '0')
-			val writeUpperLimit = kotlin.runCatching { binding?.writeUpperLimitInput?.editText?.text?.toString()?.toFloat() }.getOrNull() ?: 0f
+			val writeUpperLimit = kotlin.runCatching { binding?.writeUpperLimitInput?.editText?.text?.toString()?.toFloat() }.getOrElse { 0f }
 			val writeUpperLimitStr = String.format("%.2f", writeUpperLimit).replace(".", "").padStart(4, '0')
 			return writeLowerLimitStr + writeUpperLimitStr
 		}

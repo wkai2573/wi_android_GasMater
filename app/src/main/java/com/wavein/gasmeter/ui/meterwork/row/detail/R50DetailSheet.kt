@@ -26,11 +26,11 @@ class R50DetailSheet : BottomSheetDialogFragment() {
 	// 傳入值
 	private val type by lazy { arguments?.getString("type") ?: "read" }
 	private val value by lazy { arguments?.getString("value") ?: "" }
-	private val param1 by lazy { kotlin.runCatching { value.substring(0, 3).toInt().toString() }.getOrNull() ?: "" }
-	private val param2 by lazy { kotlin.runCatching { value.substring(3, 6).toInt().toString() }.getOrNull() ?: "" }
-	private val param3 by lazy { kotlin.runCatching { value.substring(6, 9).toInt().toString() }.getOrNull() ?: "" }
-	private val param4 by lazy { kotlin.runCatching { value.substring(9, 12).toInt().toString() }.getOrNull() ?: "" }
-	private val param5 by lazy { kotlin.runCatching { value.substring(12, 13).toInt().toString() }.getOrNull() ?: "" }
+	private val param1 by lazy { kotlin.runCatching { value.substring(0, 3).toInt().toString() }.getOrElse { "" } }
+	private val param2 by lazy { kotlin.runCatching { value.substring(3, 6).toInt().toString() }.getOrElse { "" } }
+	private val param3 by lazy { kotlin.runCatching { value.substring(6, 9).toInt().toString() }.getOrElse { "" } }
+	private val param4 by lazy { kotlin.runCatching { value.substring(9, 12).toInt().toString() }.getOrElse { "" } }
+	private val param5 by lazy { kotlin.runCatching { value.substring(12, 13).toInt().toString() }.getOrElse { "" } }
 
 	override fun onDismiss(dialog:DialogInterface) {
 		super.onDismiss(dialog)

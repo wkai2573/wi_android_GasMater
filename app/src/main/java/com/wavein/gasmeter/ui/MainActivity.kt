@@ -4,7 +4,6 @@ import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -15,7 +14,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
@@ -24,7 +22,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.ActivityMainBinding
 import com.wavein.gasmeter.tools.AppManager
-import com.wavein.gasmeter.tools.LanguageUtil
+import com.wavein.gasmeter.tools.LanguageUtils
 import com.wavein.gasmeter.tools.NetworkInfo
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.VibrationAndSoundUtil
@@ -62,7 +60,7 @@ class MainActivity : AppCompatActivity() {
 	// 切換語言
 	override fun attachBaseContext(newBase:Context?) {
 		val context = newBase?.let {
-			LanguageUtil.wrap(newBase, LanguageUtil.getLocale(newBase))
+			LanguageUtils.wrap(newBase, LanguageUtils.getLocale(newBase))
 		}
 		super.attachBaseContext(context)
 	}

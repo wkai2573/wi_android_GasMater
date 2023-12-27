@@ -17,7 +17,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.databinding.FragmentMeterInfoBinding
 import com.wavein.gasmeter.databinding.InputLayoutBinding
 import com.wavein.gasmeter.tools.SharedEvent
-import com.wavein.gasmeter.tools.TimeUtil
+import com.wavein.gasmeter.tools.TimeUtils
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.meterwork.MeterBaseFragment
 import com.wavein.gasmeter.ui.meterwork.MeterViewModel
@@ -128,7 +128,7 @@ class MeterInfoFragment : Fragment() {
 								val newMeterRow = meterVM.selectedMeterRowFlow.value?.copy(
 									isManualMeterDegree = true,
 									meterDegree = newDegree,
-									meterReadTime = TimeUtil.getCurrentTime(),
+									meterReadTime = TimeUtils.getCurrentTime(),
 								)!!
 								meterBaseFragment.updateCsvRowManual(newMeterRow)
 								this.dismiss()
