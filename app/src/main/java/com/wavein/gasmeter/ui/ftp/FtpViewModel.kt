@@ -26,6 +26,8 @@ import java.io.File
 import java.io.FileDescriptor
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
@@ -265,7 +267,7 @@ class FtpViewModel @Inject constructor(
 		}
 	}
 
-	/** 上傳log: 將手機/Documents/log 裡的檔案上傳至ftp, 上傳成功後移動至 log_uploaded
+	/** 上傳log: 將手機/Documents/log 裡的檔案上傳至ftp, 上傳成功後移動至 log_uploaded_yyyy, 移除3年前的 log_uploaded_yyyy
 	 *  建立log參考: SettingViewModel.createLogFile()
 	 */
 	fun uploadLog() {
@@ -273,7 +275,7 @@ class FtpViewModel @Inject constructor(
 		documentsFolder.mkdirs()
 		val logFolder = File(documentsFolder, "log")
 		logFolder.mkdirs()
-		val logUploadedFolder = File(documentsFolder, "log_uploaded")
+		val logUploadedFolder = File(documentsFolder, "log_uploaded_${TimeUtils.getCurrentTime("yyyy")}")
 		logUploadedFolder.mkdirs()
 		val files = logFolder.listFiles() ?: return
 
@@ -282,13 +284,18 @@ class FtpViewModel @Inject constructor(
 				// 上傳ftp
 				val inputStream = FileInputStream(file)
 				val uploadSuccess = kotlin.runCatching { ftpClient.storeFile(encode(file.name), inputStream) }.getOrElse { false }
-				// 移動檔案 (log > log_uploaded)
+				// 移動檔案 (log > log_uploaded_yyyy)
 				if (uploadSuccess) {
 					val destinationFile = File(logUploadedFolder, file.name)
 					file.renameTo(destinationFile)
 				}
 			}
 		}
+
+		// 移除3年前的 log_uploaded_yyyy
+		val threeYearsAgo = LocalDate.now().minusYears(3).format(DateTimeFormatter.ofPattern("yyyy"))
+		val log3yearsAgoFolder = File(documentsFolder, "log_uploaded_$threeYearsAgo")
+		log3yearsAgoFolder.deleteRecursively()
 	}
 
 	// ==DOWNLOAD==

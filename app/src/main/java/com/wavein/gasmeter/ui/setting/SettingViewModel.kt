@@ -64,28 +64,26 @@ class SettingViewModel @Inject constructor(
 
 	// 讀取UUID
 	private fun readDocumentFileContent():String? {
-		try {
+		runCatching {
 			val documentsDirectory = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), uuidFilename)
 
-			return if (documentsDirectory.exists()) {
-				val reader = BufferedReader(FileReader(documentsDirectory))
+			if (documentsDirectory.exists()) {
 				val stringBuilder = StringBuilder()
-				var line:String? = reader.readLine()
-				while (line != null) {
-					stringBuilder.append(line).append("\n")
-					line = reader.readLine()
+				BufferedReader(FileReader(documentsDirectory)).use { reader ->
+					var line:String? = reader.readLine()
+					while (line != null) {
+						stringBuilder.append(line).append("\n")
+						line = reader.readLine()
+					}
 				}
-				reader.close()
 
 				val fileContent = stringBuilder.toString().trimEnd('\n')
-				fileContent
-			} else {
-				null // File does not exist.
+				return fileContent
 			}
-		} catch (e:Exception) {
-			e.printStackTrace()
-			return null
+		}.onFailure {
+			it.printStackTrace()
 		}
+		return null
 	}
 
 	// 產生UUID檔案並儲存至文件資料夾
@@ -128,7 +126,7 @@ class SettingViewModel @Inject constructor(
 		val csvContent = csvWriter().writeAllAsString(rows)
 
 		// 寫入本機/documents
-		try {
+		runCatching {
 			val externalStorageState = Environment.getExternalStorageState()
 			if (Environment.MEDIA_MOUNTED == externalStorageState) {
 				val documentsFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
@@ -139,8 +137,8 @@ class SettingViewModel @Inject constructor(
 				val outputStream = FileOutputStream(file)
 				outputStream.write(bom + csvContent.toByteArray())
 			}
-		} catch (e:Exception) {
-			e.printStackTrace()
+		}.onFailure {
+			it.printStackTrace()
 		}
 	}
 
