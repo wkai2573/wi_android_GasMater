@@ -6,7 +6,27 @@
     <attr name="fieldValue" format="string" />
   </declare-styleable>
 
-  <declare-styleable name="FieldAdvInput">
+  <declare-styleable name="FieldAdv23">
+    <attr name="fieldAdv23Title" format="string" />
+    <attr name="fieldAdv23ReadValue" format="string" />
+  </declare-styleable>
+
+  <declare-styleable name="FieldAdv03">
+    <attr name="fieldAdv03Title" format="string" />
+    <attr name="fieldAdv03ReadValue" format="string" />
+  </declare-styleable>
+
+  <declare-styleable name="FieldAdv16">
+    <attr name="fieldAdv16Title" format="string" />
+    <attr name="fieldAdv16ReadValue" format="string" />
+  </declare-styleable>
+
+  <declare-styleable name="FieldAdv41">
+    <attr name="fieldAdv41Title" format="string" />
+  </declare-styleable>
+
+  <!-- todo 待改成基本讀取(預計用57) -->
+  <declare-styleable name="FieldAdvInputDetail">
     <attr name="fieldAdvTitle" format="string" />
     <attr name="readLine" format="boolean" />
     <attr name="readValue" format="string" />
@@ -19,6 +39,7 @@
     <attr name="bottomDivider" format="boolean" />
   </declare-styleable>
 
+  <!-- todo 待改成FieldAdv50 -->
   <declare-styleable name="FieldAdvFuseFlow">
     <attr name="fieldAdvFuseFlowTitle" format="string" />
     <attr name="fieldAdvFuseFlowReadChecked" format="boolean" />
@@ -33,6 +54,7 @@
   <declare-styleable name="DetailOption">
     <attr name="detailOptionTitle" format="string" />
     <attr name="detailOptionEditable" format="boolean" />
+    <attr name="detailOptionText" format="string" />
   </declare-styleable>
 
 </resources>

@@ -60,9 +60,14 @@ class DetailOption : LinearLayout {
 			context.obtainStyledAttributes(attrs, R.styleable.DetailOption, defStyle, 0)
 		val title = typedArray.getString(R.styleable.DetailOption_detailOptionTitle)
 		val editable = typedArray.getBoolean(R.styleable.DetailOption_detailOptionEditable, true)
+		val optionText = typedArray.getString(R.styleable.DetailOption_detailOptionText) ?: "維持|啟用|關閉"
 		typedArray.recycle()
 		// ui
 		binding?.titleTv?.text = title
 		setEditable(editable)
+		val optionTextList = optionText.split("|")
+		binding?.btn1?.text = optionTextList.getOrElse(0) { "" }
+		binding?.btn2?.text = optionTextList.getOrElse(1) { "" }
+		binding?.btn3?.text = optionTextList.getOrElse(2) { "" }
 	}
 }

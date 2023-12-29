@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="wrap_content"
+  android:orientation="vertical"
+  tools:context=".ui.component.FieldAdv16">
+
+  <TextView
+    android:id="@+id/titleTv"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:textColor="?attr/colorPrimary"
+    android:textSize="12sp"
+    tools:text="欄位標題" />
+
+
+  <androidx.gridlayout.widget.GridLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:columnCount="3"
+    app:rowCount="2">
+
+    <androidx.appcompat.widget.AppCompatCheckBox
+      android:id="@+id/readCheckbox"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:gravity="center"
+      android:text="要求"
+      android:textColor="?attr/colorPrimary"
+      app:buttonTint="?attr/colorPrimary" />
+
+    <TextView
+      android:id="@+id/readValueTv"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:gravity="center"
+      android:maxWidth="150dp"
+      android:paddingHorizontal="16dp"
+      app:layout_columnWeight="1"
+      app:layout_gravity="fill"
+      tools:text="BC@IIB@DB" />
+
+    <com.google.android.material.button.MaterialButton
+      android:id="@+id/readDetailBtn"
+      style="?attr/materialButtonOutlinedStyle"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="詳細" />
+
+    <androidx.appcompat.widget.AppCompatCheckBox
+      android:id="@+id/writeCheckbox"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:gravity="center"
+      android:text="設定"
+      android:textColor="?attr/colorError"
+      app:buttonTint="?attr/colorError" />
+
+    <TextView
+      android:id="@+id/writeValueTv"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:gravity="center"
+      android:maxWidth="150dp"
+      android:paddingHorizontal="16dp"
+      app:layout_columnWeight="1"
+      app:layout_gravity="fill"
+      tools:text="@@@@@@@@BBC@IIB@DB" />
+
+    <com.google.android.material.button.MaterialButton
+      android:id="@+id/writeDetailBtn"
+      style="?attr/materialButtonOutlinedStyle"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="詳細" />
+
+  </androidx.gridlayout.widget.GridLayout>
+
+  <com.google.android.material.divider.MaterialDivider
+    android:id="@+id/bottomDivider"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginVertical="8dp"
+    app:dividerInsetEnd="32dp" />
+
+</LinearLayout>

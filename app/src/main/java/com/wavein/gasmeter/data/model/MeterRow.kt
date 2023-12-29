@@ -35,23 +35,23 @@ data class MeterRow(
 	val dash:String? = null,                     // -
 
 	// 進階欄位
-	val alarmInfo1:String? = null,               // *告警1 (アラーム情報1 03-01)
-	val alarmInfo2:String? = null,               // *告警2 (アラーム情報2 03-02) (讀取時用R24)
-	val batteryVoltageDropAlarm:Boolean? = null, // *電池電壓警報
-	val innerPipeLeakageAlarm:Boolean? = null,   // *洩漏警報
-	val shutoff:Boolean? = null,                 // *遮斷
-	val pressureValue:String? = null,            // *壓力值 (現在圧力値 51-01)
-	val shutdownHistory1:String? = null,         // *遮斷履歷1 (遮断5回分履歴 23-01)
-	val shutdownHistory2:String? = null,         // *遮斷履歷2
-	val shutdownHistory3:String? = null,         // *遮斷履歷3
-	val shutdownHistory4:String? = null,         // *遮斷履歷4
-	val shutdownHistory5:String? = null,         // *遮斷履歷5
-	val meterStatus:String? = null,              // 表狀態 (メーター状態 16-02)
-	val hourlyUsage:String? = null,              // 每小時使用量 (時間使用量 57-01)
-	val maximumUsage:String? = null,             // 最大使用量 (最大使用量 58-01)
-	val oneDayMaximumUsage:String? = null,       // 1日最大使用量 (1日最大使用量 59-01)
-	val registerFuseFlowRate1:String? = null,    // 登錄母火流量1 (登録口火流量1 24-06) (設定時用S31)
-	val registerFuseFlowRate2:String? = null,    // 登錄母火流量2
+	val alarmInfo1:String? = null,                   // *告警1 (アラーム情報1 03-01)
+	val alarmInfo2:String? = null,                   // *告警2 (アラーム情報2 03-02) (讀取時用R24)
+	val batteryVoltageDropAlarm:Boolean? = null,     // *電池電壓警報
+	val innerPipeLeakageAlarm:Boolean? = null,       // *洩漏警報
+	val shutoff:Boolean? = null,                     // *遮斷
+	val pressureValue:String? = null,                // *壓力值 (現在圧力値 51-01)
+	val shutdownHistory1:String? = null,             // *遮斷履歷1 (遮断5回分履歴 23-01)
+	val shutdownHistory2:String? = null,             // *遮斷履歷2
+	val shutdownHistory3:String? = null,             // *遮斷履歷3
+	val shutdownHistory4:String? = null,             // *遮斷履歷4
+	val shutdownHistory5:String? = null,             // *遮斷履歷5
+	val meterStatus:String? = null,                  // 表狀態 (メーター状態 16-02)
+	val hourlyUsage:String? = null,                  // 每小時使用量 (時間使用量 57-01)
+	val maximumUsage:String? = null,                 // 最大使用量 (最大使用量 58-01)
+	val oneDayMaximumUsage:String? = null,           // 1日最大使用量 (1日最大使用量 59-01)
+	val registerFuseFlowRate1:String? = null,        // 登錄母火流量1 (登録口火流量1 24-06) (設定時用S31)
+	val registerFuseFlowRate2:String? = null,        // 登錄母火流量2
 	/** 壓力遮斷判定值 (圧力遮断判定値 50-01~50-05)
 	 * 3bit (圧力低下判定値 50-01)
 	 * 3bit (低下復圧状態判定値 50-02)
@@ -66,35 +66,8 @@ data class MeterRow(
 	val degreeUsed get() = if (meterDegree == null || lastMeterDegree == null) null else meterDegree - lastMeterDegree
 
 	// 欄位顯示用
-	val shutdownHistoryForFieldShow:String
-		get() = "1. $shutdownHistory1 ${shutdownHistoryMeaning(shutdownHistory1)}\n" +
-				"2. $shutdownHistory2 ${shutdownHistoryMeaning(shutdownHistory2)}\n" +
-				"3. $shutdownHistory3 ${shutdownHistoryMeaning(shutdownHistory3)}\n" +
-				"4. $shutdownHistory4 ${shutdownHistoryMeaning(shutdownHistory4)}\n" +
-				"5. $shutdownHistory5 ${shutdownHistoryMeaning(shutdownHistory5)}"
 
-	private fun shutdownHistoryMeaning(shutdownHistory:String?):String {
-		if (shutdownHistory.isNullOrEmpty()) return ""
-		return when (shutdownHistory[0]) {
-			'0' -> "無遮斷"
-			'1' -> "內管洩漏遮斷"
-			'2' -> "超出合計最大流量遮斷"
-			'3' -> "超出個別最大流量遮斷"
-			'4' -> "超出安全繼續時間遮斷"
-			'5' -> "感震遮斷"
-			'6' -> "壓力低下遮斷"
-			'7' -> "警報器遮斷"
-			'8' -> "常時電池電壓低下遮斷"
-			'9' -> "通常電池電壓低下遮斷"
-			'A' -> "壓力上昇遮斷"
-			else -> ""
-		}
-	}
-
-	val alarmInfoForFieldShow:String
-		get() = "1. $alarmInfo1\n${alarmInfoMeaning(alarmInfo1)}\n\n" +
-				"2. $alarmInfo2\n${alarmInfoMeaning(alarmInfo2)}"
-
+	// todo 待刪
 	private fun alarmInfoMeaning(alarmInfo:String?):String {
 		if (alarmInfo == null) return ""
 		val alarmInfoDetail = data2BitsMap(alarmInfo, "A")

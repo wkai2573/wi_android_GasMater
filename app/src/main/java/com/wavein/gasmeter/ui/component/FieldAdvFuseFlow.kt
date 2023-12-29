@@ -17,10 +17,8 @@ import com.wavein.gasmeter.databinding.CustFieldAdvFuseflowBinding
 
 // 自訂View元件: 進階讀取設定欄位(登錄母火流量)
 class FieldAdvFuseFlow : LinearLayout {
-	private var binding:CustFieldAdvFuseflowBinding? = null
+	var binding:CustFieldAdvFuseflowBinding? = null
 
-	val readCheckbox get() = binding?.readCheckbox
-	val writeCheckbox get() = binding?.writeCheckbox
 	val readValue get() = binding?.readValueTv?.text ?: ""
 	val writeValue:String
 		get() {

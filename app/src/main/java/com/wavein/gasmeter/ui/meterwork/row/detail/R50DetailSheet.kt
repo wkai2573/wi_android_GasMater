@@ -8,11 +8,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.BsheetR50DetailBinding
 import com.wavein.gasmeter.ui.meterwork.row.MeterAdvViewModel
 import com.wavein.gasmeter.ui.meterwork.row.SheetResult

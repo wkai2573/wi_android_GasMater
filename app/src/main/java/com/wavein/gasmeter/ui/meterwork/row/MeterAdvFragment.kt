@@ -5,6 +5,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -20,6 +21,7 @@ import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.loading.Tip
 import com.wavein.gasmeter.ui.meterwork.MeterBaseFragment
 import com.wavein.gasmeter.ui.meterwork.MeterViewModel
+import com.wavein.gasmeter.ui.meterwork.row.detail.R03DetailSheet
 import com.wavein.gasmeter.ui.meterwork.row.detail.R16DetailSheet
 import com.wavein.gasmeter.ui.meterwork.row.detail.R50DetailSheet
 import com.wavein.gasmeter.ui.setting.CsvViewModel
@@ -106,42 +108,52 @@ class MeterAdvFragment : Fragment() {
 
 		// checkbox
 		binding.apply {
-			listOf(field23, field03, field57, field58, field59, field51).forEach { field ->
-				field.readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked -> refresh() }
-			}
-			listOf(field41).forEach { field ->
-				field.writeCheckbox?.setOnCheckedChangeListener { buttonView, isChecked -> refresh() }
-			}
-			listOf(field16, field50).forEach { field ->
-				field.readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked ->
-					if (!buttonView.isPressed) return@setOnCheckedChangeListener
-					field.writeCheckbox?.isChecked = false
-					refresh()
-				}
-				field.writeCheckbox?.setOnCheckedChangeListener { buttonView, isChecked ->
-					if (!buttonView.isPressed) return@setOnCheckedChangeListener
-					field.readCheckbox?.isChecked = false
-					refresh()
-				}
-			}
-			listOf(field31).forEach { field ->
-				field.readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked ->
-					if (!buttonView.isPressed) return@setOnCheckedChangeListener
-					field.writeCheckbox?.isChecked = false
-					refresh()
-				}
-				field.writeCheckbox?.setOnCheckedChangeListener { buttonView, isChecked ->
-					if (!buttonView.isPressed) return@setOnCheckedChangeListener
-					field.readCheckbox?.isChecked = false
-					refresh()
-				}
-			}
+			field23.binding?.readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked -> refresh() }
+			field03.binding?.readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked -> refresh() }
+			setCheckedChangeWithReadAndWrite(field16.binding?.readCheckbox, field16.binding?.writeCheckbox)
+			field57.binding?.readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked -> refresh() }
+			field58.binding?.readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked -> refresh() }
+			field59.binding?.readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked -> refresh() }
+			setCheckedChangeWithReadAndWrite(field31.binding?.readCheckbox, field31.binding?.writeCheckbox)
+			setCheckedChangeWithReadAndWrite(field50.binding?.readCheckbox, field50.binding?.writeCheckbox)
+			field51.binding?.readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked -> refresh() }
+			field41.binding?.writeCheckbox?.setOnCheckedChangeListener { buttonView, isChecked -> refresh() }
 		}
 
 		// 詳細按鈕
 		binding.apply {
+			// R03
+			field03.binding?.row1DetailBtn?.setOnClickListener {
+				val alarmInfo = field03.binding?.row1AlarmInfo?.text.toString()
+				if (alarmInfo.length != 8) return@setOnClickListener
+				preventDoubleClick(it)
+				lifecycleScope.launch {
+					SharedEvent.loadingFlow.value = Tip("正在開啟詳細")
+					delay(500)
+					val r03sheet = R03DetailSheet()
+					r03sheet.arguments = Bundle().apply {
+						putString("value", alarmInfo)
+					}
+					r03sheet.show(requireActivity().supportFragmentManager, "r03sheet")
+				}
+			}
+			field03.binding?.row2DetailBtn?.setOnClickListener {
+				val alarmInfo = field03.binding?.row2AlarmInfo?.text.toString()
+				if (alarmInfo.length != 8) return@setOnClickListener
+				preventDoubleClick(it)
+				lifecycleScope.launch {
+					SharedEvent.loadingFlow.value = Tip("正在開啟詳細")
+					delay(500)
+					val r03sheet = R03DetailSheet()
+					r03sheet.arguments = Bundle().apply {
+						putString("value", alarmInfo)
+					}
+					r03sheet.show(requireActivity().supportFragmentManager, "r03sheet")
+				}
+			}
+
 			// R16
-			field16.readDetailBtn?.setOnClickListener {
+			field16.binding?.readDetailBtn?.setOnClickListener {
 				val readValue = field16.readValue
 				if (readValue.isEmpty()) return@setOnClickListener
 				preventDoubleClick(it)
@@ -156,7 +168,7 @@ class MeterAdvFragment : Fragment() {
 					r16sheet.show(requireActivity().supportFragmentManager, "r16sheet")
 				}
 			}
-			field16.writeDetailBtn?.setOnClickListener {
+			field16.binding?.writeDetailBtn?.setOnClickListener {
 				preventDoubleClick(it)
 				lifecycleScope.launch {
 					SharedEvent.loadingFlow.value = Tip("正在開啟詳細")
@@ -177,7 +189,7 @@ class MeterAdvFragment : Fragment() {
 				}
 			}
 			// R50
-			field50.readDetailBtn?.setOnClickListener {
+			field50.binding?.readDetailBtn?.setOnClickListener {
 				val readValue = field50.readValue
 				if (readValue.isEmpty()) return@setOnClickListener
 				preventDoubleClick(it)
@@ -188,7 +200,7 @@ class MeterAdvFragment : Fragment() {
 				}
 				r50sheet.show(requireActivity().supportFragmentManager, "r50sheet")
 			}
-			field50.writeDetailBtn?.setOnClickListener {
+			field50.binding?.writeDetailBtn?.setOnClickListener {
 				preventDoubleClick(it)
 				val r50sheet = R50DetailSheet()
 				r50sheet.arguments = Bundle().apply {
@@ -205,8 +217,8 @@ class MeterAdvFragment : Fragment() {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				meterVM.selectedMeterRowFlow.asStateFlow().collectLatest {
 					it?.let {
-						binding.field23.setReadValue(it.shutdownHistoryForFieldShow)
-						binding.field03.setReadValue(it.alarmInfoForFieldShow)
+						binding.field23.setReadValue(it.shutdownHistory1 + it.shutdownHistory2 + it.shutdownHistory3 + it.shutdownHistory4 + it.shutdownHistory5)
+						binding.field03.setReadValue(it.alarmInfo1 + it.alarmInfo2)
 						binding.field16.setReadValue(it.meterStatus ?: "")
 						binding.field57.setReadValue(it.hourlyUsage ?: "")
 						binding.field58.setReadValue(it.maximumUsage ?: "")
@@ -238,6 +250,19 @@ class MeterAdvFragment : Fragment() {
 		}
 
 		refresh()
+	}
+
+	private fun FragmentMeterAdvBinding.setCheckedChangeWithReadAndWrite(readCheckbox:CheckBox?, writeCheckbox:CheckBox?) {
+		readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked ->
+			if (!buttonView.isPressed) return@setOnCheckedChangeListener
+			writeCheckbox?.isChecked = false
+			refresh()
+		}
+		writeCheckbox?.setOnCheckedChangeListener { buttonView, isChecked ->
+			if (!buttonView.isPressed) return@setOnCheckedChangeListener
+			readCheckbox?.isChecked = false
+			refresh()
+		}
 	}
 
 	// 防連點
@@ -274,29 +299,29 @@ class MeterAdvFragment : Fragment() {
 	private fun refreshSteps() {
 		r87Steps = mutableListOf()
 		val meterId = meterVM.selectedMeterRowFlow.value?.meterId ?: return
-		if (binding.field23.readCheckbox?.isChecked == true)
+		if (binding.field23.binding?.readCheckbox?.isChecked == true)
 			r87Steps.add(R87Step(adr = meterId, op = "R23"))
-		if (binding.field03.readCheckbox?.isChecked == true || binding.field31.readCheckbox?.isChecked == true)
+		if (binding.field03.binding?.readCheckbox?.isChecked == true || binding.field31.binding?.readCheckbox?.isChecked == true)
 			r87Steps.add(R87Step(adr = meterId, op = "R24"))
-		if (binding.field16.readCheckbox?.isChecked == true)
+		if (binding.field16.binding?.readCheckbox?.isChecked == true)
 			r87Steps.add(R87Step(adr = meterId, op = "R16"))
-		if (binding.field16.writeCheckbox?.isChecked == true)
+		if (binding.field16.binding?.writeCheckbox?.isChecked == true)
 			r87Steps.add(R87Step(adr = meterId, op = "S16", data = binding.field16.writeValue))
-		if (binding.field57.readCheckbox?.isChecked == true)
+		if (binding.field57.binding?.readCheckbox?.isChecked == true)
 			r87Steps.add(R87Step(adr = meterId, op = "R57"))
-		if (binding.field58.readCheckbox?.isChecked == true)
+		if (binding.field58.binding?.readCheckbox?.isChecked == true)
 			r87Steps.add(R87Step(adr = meterId, op = "R58"))
-		if (binding.field59.readCheckbox?.isChecked == true)
+		if (binding.field59.binding?.readCheckbox?.isChecked == true)
 			r87Steps.add(R87Step(adr = meterId, op = "R59"))
-		if (binding.field31.writeCheckbox?.isChecked == true)
+		if (binding.field31.binding?.writeCheckbox?.isChecked == true)
 			r87Steps.add(R87Step(adr = meterId, op = "S31", data = binding.field31.writeValue))
-		if (binding.field50.readCheckbox?.isChecked == true)
+		if (binding.field50.binding?.readCheckbox?.isChecked == true)
 			r87Steps.add(R87Step(adr = meterId, op = "R50"))
-		if (binding.field50.writeCheckbox?.isChecked == true)
+		if (binding.field50.binding?.writeCheckbox?.isChecked == true)
 			r87Steps.add(R87Step(adr = meterId, op = "S50", data = binding.field50.writeValue))
-		if (binding.field51.readCheckbox?.isChecked == true)
+		if (binding.field51.binding?.readCheckbox?.isChecked == true)
 			r87Steps.add(R87Step(adr = meterId, op = "R51"))
-		if (binding.field41.writeCheckbox?.isChecked == true)
+		if (binding.field41.binding?.writeCheckbox?.isChecked == true)
 			r87Steps.add(R87Step(adr = meterId, op = "C41"))
 	}
 

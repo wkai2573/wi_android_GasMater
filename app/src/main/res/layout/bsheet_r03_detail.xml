@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  xmlns:tools="http://schemas.android.com/tools"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  tools:context=".ui.meterwork.row.detail.R16DetailSheet">
+
+  <FrameLayout
+    android:id="@+id/sheet"
+    android:layout_width="match_parent"
+    android:layout_height="500dp"
+    app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+    <!-- Bottom sheet contents. -->
+
+    <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical">
+
+      <ImageView
+        android:layout_width="70dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center|top"
+        android:contentDescription="dragDash"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_remove_24"
+        app:tint="#AAAAAA" />
+
+      <Button
+        android:id="@+id/closeBtn"
+        style="?attr/materialButtonOutlinedStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="4dp"
+        android:text="確定" />
+
+      <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical">
+
+          <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingVertical="8dp"
+            android:paddingHorizontal="30dp"
+            android:text="警報"
+            android:textAlignment="textEnd" />
+
+          <!-- todo 日文改中文, 移除或隱藏"未使用" -->
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA8b4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A8|b4"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="常時電池電壓低下遮斷" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA8b3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A8|b3"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="-" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA8b2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A8|b2"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="內管洩漏警報再通知" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA8b1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A8|b1"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="內管洩漏遮斷" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA7b4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A7|b4"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="遠隔復歸" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA7b3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A7|b3"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="自動復歸" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA7b2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A7|b2"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="感震遮斷自動復歸成功" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA7b1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A7|b1"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="-" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA6b4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A6|b4"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="手動復歸" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA6b3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A6|b3"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="Table遮斷預告" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA6b2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A6|b2"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="測試發報" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA6b1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A6|b1"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="解除後遮斷" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA5b4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A5|b4"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="遮斷預告解除" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA5b3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A5|b3"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="5分前遮斷預告" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA5b2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A5|b2"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="內管洩漏警報解除" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA5b1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A5|b1"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="內管洩漏警報" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA4b4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A4|b4"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="通常電池電壓低下遮斷" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA4b3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A4|b3"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="通常電池電壓低下警報" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA4b2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A4|b2"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="測試遮斷" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA4b1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A4|b1"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="遮斷中有脈衝遮斷" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA3b4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A3|b4"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="遮斷履歷5回" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA3b3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A3|b3"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="-" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA3b2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A3|b2"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="壓力上昇遮斷" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA3b1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A3|b1"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="中心遮斷" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA2b4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A2|b4"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="復歸洩漏確認遮斷" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA2b3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A2|b3"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="警報器遮斷" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA2b2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A2|b2"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="壓力低下遮斷" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA2b1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A2|b1"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="感震遮斷" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA1b4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A1|b4"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="安全繼續時間over遮斷" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA1b3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A1|b3"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="個別最大流量over遮斷" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA1b2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A1|b2"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="合計最大流量over遮斷" />
+
+          <com.wavein.gasmeter.ui.component.DetailOption
+            android:id="@+id/optionA1b1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="A1|b1"
+            app:detailOptionText="|有|無"
+            app:detailOptionTitle="通常模式" />
+
+        </LinearLayout>
+      </androidx.core.widget.NestedScrollView>
+
+    </LinearLayout>
+
+  </FrameLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

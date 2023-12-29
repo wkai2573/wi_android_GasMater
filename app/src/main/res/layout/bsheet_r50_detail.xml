@@ -41,9 +41,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:hint="壓力低下判定值(Pa)"
+        android:hint="壓力低下判定值(10Pa)"
         app:counterMaxLength="3"
-        app:suffixText="Pa">
+        app:suffixText="x10Pa">
 
         <com.google.android.material.textfield.TextInputEditText
           android:layout_width="match_parent"
@@ -57,9 +57,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:hint="低下復壓狀態判定值(Pa)"
+        android:hint="低下復壓狀態判定值(10Pa)"
         app:counterMaxLength="3"
-        app:suffixText="Pa">
+        app:suffixText="x10Pa">
 
         <com.google.android.material.textfield.TextInputEditText
           android:layout_width="match_parent"
@@ -73,9 +73,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:hint="上昇復壓狀態判定值(Pa)"
+        android:hint="上昇復壓狀態判定值(10Pa)"
         app:counterMaxLength="3"
-        app:suffixText="Pa">
+        app:suffixText="x10Pa">
 
         <com.google.android.material.textfield.TextInputEditText
           android:layout_width="match_parent"
@@ -89,9 +89,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:hint="壓力上昇判定值(Pa)"
+        android:hint="壓力上昇判定值(10Pa)"
         app:counterMaxLength="3"
-        app:suffixText="Pa">
+        app:suffixText="x10Pa">
 
         <com.google.android.material.textfield.TextInputEditText
           android:layout_width="match_parent"

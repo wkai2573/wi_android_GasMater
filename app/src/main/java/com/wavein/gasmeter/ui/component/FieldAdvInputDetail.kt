@@ -7,19 +7,14 @@ import android.view.View
 import android.widget.LinearLayout
 import androidx.annotation.ColorInt
 import com.wavein.gasmeter.R
-import com.wavein.gasmeter.databinding.CustFieldAdvInputBinding
-
+import com.wavein.gasmeter.databinding.CustFieldAdvInputDetailBinding
 
 // 自訂View元件: 進階讀取設定欄位(通用)
-class FieldAdvInput : LinearLayout {
-	private var binding:CustFieldAdvInputBinding? = null
+class FieldAdvInputDetail : LinearLayout {
+	var binding:CustFieldAdvInputDetailBinding? = null
 
-	val readCheckbox get() = binding?.readCheckbox
 	val readValue get() = binding?.readValueTv?.text?.toString() ?: ""
-	val readDetailBtn get() = binding?.readDetailBtn
-	val writeCheckbox get() = binding?.writeCheckbox
 	val writeValue get() = binding?.writeValueInput?.editText?.text?.toString() ?: ""
-	val writeDetailBtn get() = binding?.writeDetailBtn
 
 	fun setReadValue(text:String, @ColorInt color:Int? = null) {
 		binding?.readValueTv?.text = text
@@ -31,18 +26,18 @@ class FieldAdvInput : LinearLayout {
 	}
 
 	constructor(context:Context?) : super(context) {
-		binding = CustFieldAdvInputBinding.inflate(LayoutInflater.from(getContext()), this, false)
+		binding = CustFieldAdvInputDetailBinding.inflate(LayoutInflater.from(getContext()), this, false)
 		addView(binding?.root)
 	}
 
 	constructor(context:Context?, attrs:AttributeSet?) : super(context, attrs) {
-		binding = CustFieldAdvInputBinding.inflate(LayoutInflater.from(getContext()), this, false)
+		binding = CustFieldAdvInputDetailBinding.inflate(LayoutInflater.from(getContext()), this, false)
 		addView(binding?.root)
 		initLayout(attrs)
 	}
 
 	constructor(context:Context?, attrs:AttributeSet?, defStyle:Int) : super(context, attrs, defStyle) {
-		binding = CustFieldAdvInputBinding.inflate(LayoutInflater.from(getContext()), this, false)
+		binding = CustFieldAdvInputDetailBinding.inflate(LayoutInflater.from(getContext()), this, false)
 		addView(binding?.root)
 		initLayout(attrs, defStyle)
 	}
@@ -50,19 +45,19 @@ class FieldAdvInput : LinearLayout {
 	private fun initLayout(attrs:AttributeSet?, defStyle:Int? = null) {
 		// 取得 xml 傳入參數
 		val typedArray = if (defStyle == null)
-			context.obtainStyledAttributes(attrs, R.styleable.FieldAdvInput)
+			context.obtainStyledAttributes(attrs, R.styleable.FieldAdvInputDetail)
 		else
-			context.obtainStyledAttributes(attrs, R.styleable.FieldAdvInput, defStyle, 0)
-		val title = typedArray.getString(R.styleable.FieldAdvInput_fieldAdvTitle)
-		val readLine = typedArray.getBoolean(R.styleable.FieldAdvInput_readLine, true)
-		val readValue = typedArray.getString(R.styleable.FieldAdvInput_readValue)
-		val readDetailBtn = typedArray.getBoolean(R.styleable.FieldAdvInput_readDetailBtn, false)
-		val readChecked = typedArray.getBoolean(R.styleable.FieldAdvInput_readChecked, false)
-		val writeLine = typedArray.getBoolean(R.styleable.FieldAdvInput_writeLine, false)
-		val writeValue = typedArray.getString(R.styleable.FieldAdvInput_writeValue)
-		val writeDetailBtn = typedArray.getBoolean(R.styleable.FieldAdvInput_writeDetailBtn, false)
-		val writeChecked = typedArray.getBoolean(R.styleable.FieldAdvInput_writeChecked, false)
-		val bottomDivider = typedArray.getBoolean(R.styleable.FieldAdvInput_bottomDivider, true)
+			context.obtainStyledAttributes(attrs, R.styleable.FieldAdvInputDetail, defStyle, 0)
+		val title = typedArray.getString(R.styleable.FieldAdvInputDetail_fieldAdvTitle)
+		val readLine = typedArray.getBoolean(R.styleable.FieldAdvInputDetail_readLine, true)
+		val readValue = typedArray.getString(R.styleable.FieldAdvInputDetail_readValue)
+		val readDetailBtn = typedArray.getBoolean(R.styleable.FieldAdvInputDetail_readDetailBtn, false)
+		val readChecked = typedArray.getBoolean(R.styleable.FieldAdvInputDetail_readChecked, false)
+		val writeLine = typedArray.getBoolean(R.styleable.FieldAdvInputDetail_writeLine, false)
+		val writeValue = typedArray.getString(R.styleable.FieldAdvInputDetail_writeValue)
+		val writeDetailBtn = typedArray.getBoolean(R.styleable.FieldAdvInputDetail_writeDetailBtn, false)
+		val writeChecked = typedArray.getBoolean(R.styleable.FieldAdvInputDetail_writeChecked, false)
+		val bottomDivider = typedArray.getBoolean(R.styleable.FieldAdvInputDetail_bottomDivider, true)
 		typedArray.recycle()
 		// ui
 		binding?.titleTv?.text = title
