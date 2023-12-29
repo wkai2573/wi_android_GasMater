@@ -56,26 +56,29 @@
         app:fieldAdv16Title="16. 表狀態"
         tools:fieldAdv16ReadValue="BC@IIB@DB" />
 
-      <com.wavein.gasmeter.ui.component.FieldAdvInputDetail
+      <com.wavein.gasmeter.ui.component.FieldAdv51
         android:id="@+id/field_57"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:fieldAdvTitle="57. 時間使用量"
-        tools:readValue="00011" />
+        app:fieldAdv51Title="57. 時間使用量"
+        app:fieldAdv51Unit="L"
+        tools:fieldAdv51ReadValue="00011" />
 
-      <com.wavein.gasmeter.ui.component.FieldAdvInputDetail
+      <com.wavein.gasmeter.ui.component.FieldAdv51
         android:id="@+id/field_58"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:fieldAdvTitle="58. 最大使用量"
-        tools:readValue="00011" />
+        app:fieldAdv51Title="58. 最大使用量"
+        app:fieldAdv51Unit="L"
+        tools:fieldAdv51ReadValue="00011" />
 
-      <com.wavein.gasmeter.ui.component.FieldAdvInputDetail
+      <com.wavein.gasmeter.ui.component.FieldAdv51
         android:id="@+id/field_59"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:fieldAdvTitle="59. 1日最大使用量"
-        tools:readValue="00011" />
+        app:fieldAdv51Title="59. 1日最大使用量"
+        app:fieldAdv51Unit="L"
+        tools:fieldAdv51ReadValue="00011" />
 
       <com.wavein.gasmeter.ui.component.FieldAdvFuseFlow
         android:id="@+id/field_31"
@@ -90,12 +93,13 @@
         app:fieldAdv16Title="50. 壓力遮斷判定值"
         tools:fieldAdv16ReadValue="1112223334445" />
 
-      <com.wavein.gasmeter.ui.component.FieldAdvInputDetail
+      <com.wavein.gasmeter.ui.component.FieldAdv51
         android:id="@+id/field_51"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:fieldAdvTitle="51. 現在壓力值"
-        tools:readValue="00011" />
+        app:fieldAdv51Title="51. 現在壓力值"
+        app:fieldAdv51Unit="Pa"
+        tools:fieldAdv51ReadValue="00011" />
 
       <com.wavein.gasmeter.ui.component.FieldAdv41
         android:id="@+id/field_41"

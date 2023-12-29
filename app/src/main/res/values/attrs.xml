@@ -25,18 +25,11 @@
     <attr name="fieldAdv41Title" format="string" />
   </declare-styleable>
 
-  <!-- todo 待改成基本讀取(預計用57) -->
-  <declare-styleable name="FieldAdvInputDetail">
-    <attr name="fieldAdvTitle" format="string" />
-    <attr name="readLine" format="boolean" />
-    <attr name="readValue" format="string" />
-    <attr name="readDetailBtn" format="boolean" />
-    <attr name="readChecked" format="boolean" />
-    <attr name="writeLine" format="boolean" />
-    <attr name="writeValue" format="string" />
-    <attr name="writeDetailBtn" format="boolean" />
-    <attr name="writeChecked" format="boolean" />
-    <attr name="bottomDivider" format="boolean" />
+  <!-- todo 待改成基本讀取(預計用51) -->
+  <declare-styleable name="FieldAdv51">
+    <attr name="fieldAdv51Title" format="string" />
+    <attr name="fieldAdv51ReadValue" format="string" />
+    <attr name="fieldAdv51Unit" format="string" />
   </declare-styleable>
 
   <!-- todo 待改成FieldAdv50 -->
