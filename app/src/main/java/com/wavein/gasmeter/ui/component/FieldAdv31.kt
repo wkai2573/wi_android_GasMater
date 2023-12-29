@@ -4,22 +4,24 @@ import android.content.Context
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.AttributeSet
-import android.view.KeyEvent
 import android.view.LayoutInflater
-import android.view.View
-import android.widget.EditText
 import android.widget.LinearLayout
-import androidx.core.widget.addTextChangedListener
-import com.google.android.material.textfield.TextInputLayout
 import com.wavein.gasmeter.R
-import com.wavein.gasmeter.databinding.CustFieldAdvFuseflowBinding
+import com.wavein.gasmeter.databinding.CustFieldAdv31Binding
 
 
-// 自訂View元件: 進階讀取設定欄位(登錄母火流量)
-class FieldAdvFuseFlow : LinearLayout {
-	var binding:CustFieldAdvFuseflowBinding? = null
+// 自訂View元件: 進階讀取設定欄位_登錄母火流量(RS31)
+class FieldAdv31 : LinearLayout {
+	var binding:CustFieldAdv31Binding? = null
 
-	val readValue get() = binding?.readValueTv?.text ?: ""
+	val readValue:String
+		get() {
+			val readLowerLimit = kotlin.runCatching { binding?.readLowerLimitInput?.editText?.text?.toString()?.toFloat() }.getOrElse { 0f }
+			val readLowerLimitStr = String.format("%.2f", readLowerLimit).replace(".", "").padStart(4, '0')
+			val readUpperLimit = kotlin.runCatching { binding?.readUpperLimitInput?.editText?.text?.toString()?.toFloat() }.getOrElse { 0f }
+			val readUpperLimitStr = String.format("%.2f", readUpperLimit).replace(".", "").padStart(4, '0')
+			return readLowerLimitStr + readUpperLimitStr
+		}
 	val writeValue:String
 		get() {
 			val writeLowerLimit = kotlin.runCatching { binding?.writeLowerLimitInput?.editText?.text?.toString()?.toFloat() }.getOrElse { 0f }
@@ -29,31 +31,29 @@ class FieldAdvFuseFlow : LinearLayout {
 			return writeLowerLimitStr + writeUpperLimitStr
 		}
 
-	fun setReadValue(text:String) {
-		binding?.readValueTv?.text = text
-	}
-
-	fun setWriteLowerLimit(text:String) {
-		binding?.writeLowerLimitInput?.editText?.setText(text)
-	}
-
-	fun setWriteUpperLimit(text:String) {
-		binding?.writeUpperLimitInput?.editText?.setText(text)
+	fun setReadValue(data:String) {
+		if (data.length != 8) return
+		val list = data.chunked(8).map {
+			val value = it.toFloat()
+			return@map if (value == 0f) 0 else value / 100
+		}
+		binding?.readLowerLimitInput?.editText?.setText(list[0].toString())
+		binding?.readUpperLimitInput?.editText?.setText(list[1].toString())
 	}
 
 	constructor(context:Context?) : super(context) {
-		binding = CustFieldAdvFuseflowBinding.inflate(LayoutInflater.from(getContext()), this, false)
+		binding = CustFieldAdv31Binding.inflate(LayoutInflater.from(getContext()), this, false)
 		addView(binding?.root)
 	}
 
 	constructor(context:Context?, attrs:AttributeSet?) : super(context, attrs) {
-		binding = CustFieldAdvFuseflowBinding.inflate(LayoutInflater.from(getContext()), this, false)
+		binding = CustFieldAdv31Binding.inflate(LayoutInflater.from(getContext()), this, false)
 		addView(binding?.root)
 		initLayout(attrs)
 	}
 
 	constructor(context:Context?, attrs:AttributeSet?, defStyle:Int) : super(context, attrs, defStyle) {
-		binding = CustFieldAdvFuseflowBinding.inflate(LayoutInflater.from(getContext()), this, false)
+		binding = CustFieldAdv31Binding.inflate(LayoutInflater.from(getContext()), this, false)
 		addView(binding?.root)
 		initLayout(attrs, defStyle)
 	}
@@ -61,19 +61,17 @@ class FieldAdvFuseFlow : LinearLayout {
 	private fun initLayout(attrs:AttributeSet?, defStyle:Int? = null) {
 		// 取得 xml 傳入參數
 		val typedArray = if (defStyle == null)
-			context.obtainStyledAttributes(attrs, R.styleable.FieldAdvFuseFlow)
+			context.obtainStyledAttributes(attrs, R.styleable.FieldAdv31)
 		else
-			context.obtainStyledAttributes(attrs, R.styleable.FieldAdvFuseFlow, defStyle, 0)
-		val title = typedArray.getString(R.styleable.FieldAdvFuseFlow_fieldAdvFuseFlowTitle)
-		val readChecked = typedArray.getBoolean(R.styleable.FieldAdvFuseFlow_fieldAdvFuseFlowReadChecked, false)
-		val writeChecked = typedArray.getBoolean(R.styleable.FieldAdvFuseFlow_fieldAdvFuseFlowWriteChecked, false)
-		val bottomDivider = typedArray.getBoolean(R.styleable.FieldAdvFuseFlow_fieldAdvFuseFlowBottomDivider, true)
+			context.obtainStyledAttributes(attrs, R.styleable.FieldAdv31, defStyle, 0)
+		val title = typedArray.getString(R.styleable.FieldAdv31_fieldAdv31Title)
+		val readChecked = typedArray.getBoolean(R.styleable.FieldAdv31_fieldAdv31ReadChecked, false)
+		val writeChecked = typedArray.getBoolean(R.styleable.FieldAdv31_fieldAdv31WriteChecked, false)
 		typedArray.recycle()
 		// ui
 		binding?.titleTv?.text = title
 		binding?.readCheckbox?.isChecked = readChecked
 		binding?.writeCheckbox?.isChecked = writeChecked
-		binding?.bottomDivider?.visibility = if (bottomDivider) View.VISIBLE else View.GONE
 		binding?.writeLowerLimitInput?.editText?.addTextChangedListener(textWatcher())
 		binding?.writeUpperLimitInput?.editText?.addTextChangedListener(textWatcher())
 	}

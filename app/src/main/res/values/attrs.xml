@@ -25,19 +25,17 @@
     <attr name="fieldAdv41Title" format="string" />
   </declare-styleable>
 
-  <!-- todo 待改成基本讀取(預計用51) -->
   <declare-styleable name="FieldAdv51">
     <attr name="fieldAdv51Title" format="string" />
     <attr name="fieldAdv51ReadValue" format="string" />
     <attr name="fieldAdv51Unit" format="string" />
   </declare-styleable>
 
-  <!-- todo 待改成FieldAdv50 -->
-  <declare-styleable name="FieldAdvFuseFlow">
-    <attr name="fieldAdvFuseFlowTitle" format="string" />
-    <attr name="fieldAdvFuseFlowReadChecked" format="boolean" />
-    <attr name="fieldAdvFuseFlowWriteChecked" format="boolean" />
-    <attr name="fieldAdvFuseFlowBottomDivider" format="boolean" />
+  <!-- todo 待改成FieldAdv31 -->
+  <declare-styleable name="FieldAdv31">
+    <attr name="fieldAdv31Title" format="string" />
+    <attr name="fieldAdv31ReadChecked" format="boolean" />
+    <attr name="fieldAdv31WriteChecked" format="boolean" />
   </declare-styleable>
 
   <declare-styleable name="ErrorTextView">

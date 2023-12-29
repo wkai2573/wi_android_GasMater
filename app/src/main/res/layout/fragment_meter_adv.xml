@@ -80,11 +80,11 @@
         app:fieldAdv51Unit="L"
         tools:fieldAdv51ReadValue="00011" />
 
-      <com.wavein.gasmeter.ui.component.FieldAdvFuseFlow
+      <com.wavein.gasmeter.ui.component.FieldAdv31
         android:id="@+id/field_31"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:fieldAdvFuseFlowTitle="31. 登錄母火流量" />
+        app:fieldAdv31Title="31. 登錄母火流量" />
 
       <com.wavein.gasmeter.ui.component.FieldAdv16
         android:id="@+id/field_50"
