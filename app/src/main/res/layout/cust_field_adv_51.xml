@@ -5,7 +5,7 @@
   android:layout_width="match_parent"
   android:layout_height="wrap_content"
   android:orientation="vertical"
-  tools:context=".ui.component.FieldAdv16">
+  tools:context=".ui.component.FieldAdv51">
 
   <TextView
     android:id="@+id/titleTv"
@@ -18,39 +18,31 @@
   <androidx.gridlayout.widget.GridLayout
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    app:columnCount="3"
+    android:layout_marginTop="16dp"
+    app:columnCount="2"
     app:rowCount="1">
 
     <androidx.appcompat.widget.AppCompatCheckBox
       android:id="@+id/readCheckbox"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
+      android:layout_marginEnd="16dp"
       android:gravity="center"
       android:text="要求"
       android:textColor="?attr/colorPrimary"
       app:buttonTint="?attr/colorPrimary" />
 
-    <TextView
-      android:id="@+id/readValueTv"
+    <androidx.gridlayout.widget.GridLayout
+      android:id="@+id/gridLayout"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:gravity="center"
-      android:maxWidth="150dp"
-      android:paddingHorizontal="16dp"
+      app:columnCount="1"
       app:layout_columnWeight="1"
       app:layout_gravity="fill"
-      tools:text="123" />
+      app:orientation="horizontal"
+      app:rowCount="2">
 
-    <TextView
-      android:id="@+id/readUnitTv"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:gravity="center_vertical|start"
-      android:maxWidth="150dp"
-      android:paddingHorizontal="16dp"
-      app:layout_columnWeight="1"
-      app:layout_gravity="fill"
-      tools:text="Pa" />
+    </androidx.gridlayout.widget.GridLayout>
 
   </androidx.gridlayout.widget.GridLayout>
 

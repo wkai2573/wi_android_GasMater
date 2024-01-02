@@ -6,13 +6,11 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -46,7 +44,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-
 
 @SuppressLint("MissingPermission")
 class SettingFragment : Fragment() {
@@ -90,14 +87,14 @@ class SettingFragment : Fragment() {
 		// todo 測試用
 		binding.testBtn.setOnClickListener {
 			// settingVM.createLogFile("表IDD", "C41", "舊值啦", "新值啦")
-			ftpVM.uploadLog()
+			// ftpVM.uploadLog()
 		}
 
 		// 藍牙設備__________
 
 		// APP開啟時 首次選擇上次設備
-		if (SettingFragment.firstSelectLastBtDevice) {
-			SettingFragment.firstSelectLastBtDevice = false
+		if (firstSelectLastBtDevice) {
+			firstSelectLastBtDevice = false
 			val lastBtDeviceMac = Preference[Preference.LAST_BT_DEVICE_MAC, ""]!!
 			if (lastBtDeviceMac.isNotEmpty()) {
 				checkBluetoothOn {
@@ -158,7 +155,6 @@ class SettingFragment : Fragment() {
 
 						is ConnectEvent.BytesSent -> {}
 						is ConnectEvent.BytesReceived -> {}
-						else -> {}
 					}
 				}
 			}

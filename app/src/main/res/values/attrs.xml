@@ -27,8 +27,8 @@
 
   <declare-styleable name="FieldAdv51">
     <attr name="fieldAdv51Title" format="string" />
-    <attr name="fieldAdv51ReadValue" format="string" />
-    <attr name="fieldAdv51Unit" format="string" />
+    <attr name="fieldAdv51ReadHeaders" format="string" />
+    <attr name="fieldAdv51ReadValues" format="string" />
   </declare-styleable>
 
   <!-- todo 待改成FieldAdv31 -->

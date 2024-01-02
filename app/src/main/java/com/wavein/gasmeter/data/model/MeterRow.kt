@@ -49,7 +49,9 @@ data class MeterRow(
 	val meterStatus:String? = null,                  // 表狀態 (メーター状態 16-02)
 	val hourlyUsage:String? = null,                  // 每小時使用量 (時間使用量 57-01)
 	val maximumUsage:String? = null,                 // 最大使用量 (最大使用量 58-01)
+	val maximumUsageTime:String? = null,             // 最大使用量時間 (最大使用量日時 58-01)
 	val oneDayMaximumUsage:String? = null,           // 1日最大使用量 (1日最大使用量 59-01)
+	val oneDayMaximumUsageDate:String? = null,       // 1日最大使用量日期 (1日最大使用量月日 59-01)
 	val registerFuseFlowRate1:String? = null,        // 登錄母火流量1 (登録口火流量1 24-06) (設定時用S31)
 	val registerFuseFlowRate2:String? = null,        // 登錄母火流量2
 	/** 壓力遮斷判定值 (圧力遮断判定値 50-01~50-05)
@@ -64,31 +66,6 @@ data class MeterRow(
 	) {
 	// 使用量
 	val degreeUsed get() = if (meterDegree == null || lastMeterDegree == null) null else meterDegree - lastMeterDegree
-
-	// 欄位顯示用
-
-	// todo 待刪
-	private fun alarmInfoMeaning(alarmInfo:String?):String {
-		if (alarmInfo == null) return ""
-		val alarmInfoDetail = data2BitsMap(alarmInfo, "A")
-		val list = mutableListOf<String>()
-		if (alarmInfoDetail["A8"]?.get("b4") == true) list.add("常時電池電壓低下遮斷")
-		if (alarmInfoDetail["A4"]?.get("b4") == true) list.add("通常電池電壓低下遮斷")
-		if (alarmInfoDetail["A2"]?.get("b4") == true) list.add("復歸洩漏確認遮斷")
-		if (alarmInfoDetail["A1"]?.get("b4") == true) list.add("超出安全繼續時間遮斷")
-		if (alarmInfoDetail["A2"]?.get("b3") == true) list.add("警報器遮斷")
-		if (alarmInfoDetail["A1"]?.get("b3") == true) list.add("超出個別最大流量遮斷")
-		if (alarmInfoDetail["A4"]?.get("b2") == true) list.add("測試遮斷")
-		if (alarmInfoDetail["A3"]?.get("b2") == true) list.add("壓力上昇遮斷")
-		if (alarmInfoDetail["A2"]?.get("b2") == true) list.add("壓力低下遮斷")
-		if (alarmInfoDetail["A1"]?.get("b2") == true) list.add("超出合計最大流量遮斷")
-		if (alarmInfoDetail["A8"]?.get("b1") == true) list.add("內管洩漏遮斷")
-		if (alarmInfoDetail["A6"]?.get("b1") == true) list.add("解除後遮斷")
-		if (alarmInfoDetail["A4"]?.get("b1") == true) list.add("遮斷中有脈衝遮斷")
-		if (alarmInfoDetail["A3"]?.get("b1") == true) list.add("中心遮斷")
-		if (alarmInfoDetail["A2"]?.get("b1") == true) list.add("感震遮斷")
-		return list.joinToString("; ")
-	}
 
 	// 已抄數量提示
 	val degreeRead:Boolean get() = meterDegree != null // 已抄表

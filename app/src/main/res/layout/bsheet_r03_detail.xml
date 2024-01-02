@@ -54,7 +54,7 @@
             android:text="警報"
             android:textAlignment="textEnd" />
 
-          <!-- todo 日文改中文, 移除或隱藏"未使用" -->
+          <!-- todo 移除或隱藏"未使用" -->
           <com.wavein.gasmeter.ui.component.DetailOption
             android:id="@+id/optionA8b4"
             android:layout_width="match_parent"

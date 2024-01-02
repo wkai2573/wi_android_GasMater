@@ -1,7 +1,6 @@
 package com.wavein.gasmeter.ui.meterwork.row
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -220,9 +219,9 @@ class MeterAdvFragment : Fragment() {
 						binding.field23.setReadValue(it.shutdownHistory1 + it.shutdownHistory2 + it.shutdownHistory3 + it.shutdownHistory4 + it.shutdownHistory5)
 						binding.field03.setReadValue(it.alarmInfo1 + it.alarmInfo2)
 						binding.field16.setReadValue(it.meterStatus ?: "")
-						binding.field57.setReadValue(it.hourlyUsage ?: "")
-						binding.field58.setReadValue(it.maximumUsage ?: "")
-						binding.field59.setReadValue(it.oneDayMaximumUsage ?: "")
+						binding.field57.setReadValues(splitStringByLength(it.hourlyUsage ?: "", 4))
+						binding.field58.setReadValues(splitStringByLength((it.maximumUsage ?: "").padStart(4) + it.maximumUsageTime, 4, 2, 2, 2, 2))
+						binding.field59.setReadValues(splitStringByLength((it.oneDayMaximumUsage ?: "").padStart(4) + it.oneDayMaximumUsageDate, 4, 2, 2))
 						binding.field31.setReadValue(
 							if (it.registerFuseFlowRate1.isNullOrEmpty() || it.registerFuseFlowRate2.isNullOrEmpty()) {
 								""
@@ -231,7 +230,7 @@ class MeterAdvFragment : Fragment() {
 							}
 						)
 						binding.field50.setReadValue(it.pressureShutOffJudgmentValue ?: "")
-						binding.field51.setReadValue(it.pressureValue ?: "")
+						binding.field51.setReadValues(splitStringByLength(it.pressureValue ?: "", 4))
 					}
 				}
 			}
@@ -252,7 +251,7 @@ class MeterAdvFragment : Fragment() {
 		refresh()
 	}
 
-	private fun FragmentMeterAdvBinding.setCheckedChangeWithReadAndWrite(readCheckbox:CheckBox?, writeCheckbox:CheckBox?) {
+	private fun setCheckedChangeWithReadAndWrite(readCheckbox:CheckBox?, writeCheckbox:CheckBox?) {
 		readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked ->
 			if (!buttonView.isPressed) return@setOnCheckedChangeListener
 			writeCheckbox?.isChecked = false
@@ -263,6 +262,20 @@ class MeterAdvFragment : Fragment() {
 			readCheckbox?.isChecked = false
 			refresh()
 		}
+	}
+
+	// 分割字串by指定長度
+	private fun splitStringByLength(input:String, vararg lengths:Int):List<String> {
+		val result = mutableListOf<String>()
+		var startIndex = 0
+
+		for (length in lengths) {
+			val endIndex = startIndex + length.coerceAtMost(input.length - startIndex)
+			result.add(input.substring(startIndex, endIndex))
+			startIndex = endIndex
+		}
+
+		return result
 	}
 
 	// 防連點

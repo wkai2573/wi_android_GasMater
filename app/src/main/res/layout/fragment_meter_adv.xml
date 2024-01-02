@@ -14,16 +14,6 @@
   <!--    android:text="施工中..."-->
   <!--    android:textSize="30sp" />-->
 
-  <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-    android:id="@+id/sendFab"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_gravity="bottom|end"
-    android:layout_margin="16dp"
-    android:contentDescription="send"
-    android:text="通信"
-    app:icon="@drawable/ic_send_24" />
-
   <androidx.core.widget.NestedScrollView
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -61,24 +51,27 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:fieldAdv51Title="57. 時間使用量"
-        app:fieldAdv51Unit="L"
-        tools:fieldAdv51ReadValue="00011" />
+        app:fieldAdv51ReadHeaders="時間使用量(L)"
+        app:fieldAdv51ReadValues=""
+        tools:fieldAdv51ReadValues="000"/>
 
       <com.wavein.gasmeter.ui.component.FieldAdv51
         android:id="@+id/field_58"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:fieldAdv51Title="58. 最大使用量"
-        app:fieldAdv51Unit="L"
-        tools:fieldAdv51ReadValue="00011" />
+        app:fieldAdv51ReadHeaders="最大使用量(L),年,月,日,時"
+        app:fieldAdv51ReadValues=",,,,"
+        tools:fieldAdv51ReadValues="000,1,2,3,4"/>
 
       <com.wavein.gasmeter.ui.component.FieldAdv51
         android:id="@+id/field_59"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:fieldAdv51Title="59. 1日最大使用量"
-        app:fieldAdv51Unit="L"
-        tools:fieldAdv51ReadValue="00011" />
+        app:fieldAdv51ReadHeaders="時間使用量(L),月,日"
+        app:fieldAdv51ReadValues=",,"
+        tools:fieldAdv51ReadValues="000,1,2"/>
 
       <com.wavein.gasmeter.ui.component.FieldAdv31
         android:id="@+id/field_31"
@@ -98,8 +91,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:fieldAdv51Title="51. 現在壓力值"
-        app:fieldAdv51Unit="Pa"
-        tools:fieldAdv51ReadValue="00011" />
+        app:fieldAdv51ReadHeaders="現在壓力值(Pa)"
+        app:fieldAdv51ReadValues=""
+        tools:fieldAdv51ReadValues="000"/>
 
       <com.wavein.gasmeter.ui.component.FieldAdv41
         android:id="@+id/field_41"
@@ -108,6 +102,16 @@
         app:fieldAdv41Title="41. 中心遮斷" />
     </LinearLayout>
   </androidx.core.widget.NestedScrollView>
+
+  <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+    android:id="@+id/sendFab"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom|end"
+    android:layout_margin="16dp"
+    android:contentDescription="send"
+    android:text="通信"
+    app:icon="@drawable/ic_send_24" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
 
