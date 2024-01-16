@@ -1,8 +1,6 @@
 package com.wavein.gasmeter.ui.setting
 
 import android.annotation.SuppressLint
-import android.content.Context
-import android.net.Uri
 import android.os.Environment
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -11,6 +9,7 @@ import com.github.doyaaaaaken.kotlincsv.dsl.csvWriter
 import com.wavein.gasmeter.tools.Preference
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.TimeUtils
+import com.wavein.gasmeter.tools.rd64h.RD64H
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -18,7 +17,6 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.FileOutputStream
 import java.io.FileReader
-import java.io.InputStreamReader
 import java.util.UUID
 import javax.inject.Inject
 
@@ -57,9 +55,17 @@ class SettingViewModel @Inject constructor(
 		}
 	}
 
-	// 初始化SessionKey
-	private fun initSessionKey() {
-		sessionKeyFlow.value = Preference[Preference.SESSION_KEY, ""] ?: ""
+	// 初始化SessionKey, cryptKey, macKey
+	fun initSessionKey() {
+		val sessionKey = Preference[Preference.SESSION_KEY_FILE, ""] ?: ""
+		val (cryptKey, macKey) = RD64H.Auth.decryptKeyFile(sessionKey)
+		RD64H.Auth.cryptKey = cryptKey
+		RD64H.Auth.macKey = macKey
+		if (macKey.isNotEmpty()) {
+			sessionKeyFlow.value = sessionKey
+		} else {
+			sessionKeyFlow.value = ""
+		}
 	}
 
 	// 讀取UUID

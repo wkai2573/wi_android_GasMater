@@ -208,7 +208,6 @@ class MeterAdvFragment : Fragment() {
 				}
 				r50sheet.show(requireActivity().supportFragmentManager, "r50sheet")
 			}
-
 		}
 
 		// 訂閱選擇的meterRow

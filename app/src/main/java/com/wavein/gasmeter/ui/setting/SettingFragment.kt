@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -31,6 +32,9 @@ import com.wavein.gasmeter.tools.FileUtils
 import com.wavein.gasmeter.tools.NetworkInfo
 import com.wavein.gasmeter.tools.Preference
 import com.wavein.gasmeter.tools.SharedEvent
+import com.wavein.gasmeter.tools.rd64h.RD64H
+import com.wavein.gasmeter.tools.rd64h.hexToUBytes
+import com.wavein.gasmeter.tools.rd64h.toHex
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.bluetooth.BtDialogFragment
 import com.wavein.gasmeter.ui.bluetooth.ConnectEvent
@@ -81,11 +85,31 @@ class SettingFragment : Fragment() {
 	}
 
 	// 當所有權限皆允許
+	@OptIn(ExperimentalUnsignedTypes::class)
 	private fun onAllPermissionAllow() {
 		binding.permission.layout.visibility = View.GONE
 
 		// todo 測試用
 		binding.testBtn.setOnClickListener {
+
+			lifecycleScope.launch {
+				SharedEvent.catching {
+					// val ss = Preference[Preference.SESSION_KEY_FILE, ""]!!
+					// val (cryptKey, macKey) = RD64H.Auth.decryptKeyFile(ss)
+					val 電文前面87位 = "7140080041504c41444452494e495456414c303030303030303030303030303040454e31523136202020202020202020202020202020202020202020202020202020202020202020202020202020202020240104104518".hexToUBytes()
+					val mac = RD64H.Auth.calcMac(電文前面87位.toByteArray())
+					Log.i("@@@", mac.toHex())
+				}
+			}
+			// val bytes1 = byteArrayOf(0x61.toByte(), 0x62.toByte())
+			// val ubytes1 = ubyteArrayOf(0x61.toUByte(), 0x62.toUByte())
+			// val bytes2 = byteArrayOf(0x80.toByte(), 0x81.toByte())
+			// val ubytes2 = ubyteArrayOf(0x80.toUByte(), 0x81.toUByte())
+			// Log.i("@@@", bytes1.toHex().hexToString())
+			// Log.i("@@@", ubytes1.toHex().hexToString())
+			// Log.i("@@@", bytes2.toHex().hexToString())
+			// Log.i("@@@", ubytes2.toHex().hexToString())
+
 			// settingVM.createLogFile("表IDD", "C41", "舊值啦", "新值啦")
 			// ftpVM.uploadLog()
 		}
@@ -470,10 +494,14 @@ class SettingFragment : Fragment() {
 			runCatching {
 				val uri = result.data?.data!!
 				val sessionKey = FileUtils.readFileContent(requireContext(), uri, 1024, listOf(".key", ".txt"))
-				Preference[Preference.SESSION_KEY] = sessionKey
-				settingVM.sessionKeyFlow.value = sessionKey
-				lifecycleScope.launch {
-					SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("通信金鑰設定成功", SharedEvent.Color.Success))
+				Preference[Preference.SESSION_KEY_FILE] = sessionKey
+				settingVM.initSessionKey()
+				if (RD64H.Auth.macKey.isEmpty()) {
+					throw Exception("金鑰異常，無法分析出MacKey")
+				} else {
+					lifecycleScope.launch {
+						SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("通信金鑰設定成功", SharedEvent.Color.Success))
+					}
 				}
 			}.onFailure {
 				it.printStackTrace()

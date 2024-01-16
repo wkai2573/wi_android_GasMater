@@ -17,7 +17,7 @@ object Preference {
 	const val USER_DEP = "userDep"
 	const val USER_NAME = "userName"
 
-	const val SESSION_KEY = "sessionKey"
+	const val SESSION_KEY_FILE = "sessionKeyFile"
 
 	const val LAST_BT_DEVICE_MAC = "lastBtDeviceMac"
 

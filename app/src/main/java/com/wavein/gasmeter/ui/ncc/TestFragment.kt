@@ -31,7 +31,7 @@ import androidx.core.content.IntentCompat
 import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.databinding.FragmentTestBinding
 import com.wavein.gasmeter.tools.rd64h.RD64H
-import com.wavein.gasmeter.tools.rd64h.toHexString
+import com.wavein.gasmeter.tools.rd64h.toHex
 import com.wavein.gasmeter.tools.rd64h.toText
 import java.io.IOException
 import java.io.InputStream
@@ -313,7 +313,7 @@ class TestFragment : Fragment() {
 		sendReceive?.write(sendSP)
 
 
-		val msg = "傳送: $sendText [${sendSP.toHexString()}]"
+		val msg = "傳送: $sendText [${sendSP.toHex()}]"
 		Snackbar.make(requireContext(), binding.root, msg, Snackbar.LENGTH_SHORT).show()
 
 
@@ -372,7 +372,7 @@ class TestFragment : Fragment() {
 				val readSP = (msg.obj as ByteArray).copyOfRange(0, msg.arg1)
 				val read = RD64H.telegramConvert(readSP, "-s-p")
 				val readText = read.toText()
-				val readSPHex = readSP.toHexString()
+				val readSPHex = readSP.toHex()
 				binding.msgTv.text = "${binding.msgTv.text}\n$readText [$readSPHex]"
 			}
 		}

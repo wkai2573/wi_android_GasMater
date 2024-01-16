@@ -13,7 +13,6 @@ import android.text.Html
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -118,7 +117,7 @@ class NccFragment : Fragment() {
 							val sendSP = event.byteArray
 							val send = RD64H.telegramConvert(sendSP, "-s-p")
 							val sendText = send.toText()
-							val sendSPHex = sendSP.toHexString()
+							val sendSPHex = sendSP.toHex()
 							val showText = "$sendText [$sendSPHex]"
 							addMsg(showText, LogMsgType.Send)
 						}
@@ -127,7 +126,7 @@ class NccFragment : Fragment() {
 							val readSP = event.byteArray
 							val read = RD64H.telegramConvert(readSP, "-s-p")
 							val readText = read.toText()
-							val readSPHex = readSP.toHexString()
+							val readSPHex = readSP.toHex()
 							val showText = "$readText [$readSPHex]"
 							addMsg(showText, LogMsgType.Resp)
 						}
@@ -247,7 +246,7 @@ class NccFragment : Fragment() {
 				blVM.sendR87Telegram(
 					meterId, listOf(
 						R87Step(adr = meterId, op = "R19"), // 時刻
-						R87Step(adr = meterId, op = "R16", securityLevel = SecurityLevel.Authentication), // 表狀態
+						R87Step(adr = meterId, op = "R16", securityLevel = SecurityLevel.Auth), // 表狀態
 					)
 				)
 			}

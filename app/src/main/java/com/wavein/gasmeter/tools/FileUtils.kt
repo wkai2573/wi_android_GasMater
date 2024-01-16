@@ -56,7 +56,14 @@ object FileUtils {
 				stringBuilder.append(line)
 			}
 
-			val fileContent = stringBuilder.toString()
+			val fileContent = stringBuilder.toString().let {
+				// 移除BOM
+				if (it.startsWith("\uFEFF"))
+					it.substring(1)
+				else
+					it
+			}
+
 			fileContent
 		}
 	}

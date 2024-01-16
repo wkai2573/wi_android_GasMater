@@ -456,7 +456,7 @@ class BluetoothViewModel @Inject constructor(
 			is RTestStep -> {
 				val sendText = sendStep.text
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
-				commTextStateFlow.value = Tip("通信中: $sendText [${sendSP.toHexString()}]")
+				commTextStateFlow.value = Tip("通信中: $sendText [${sendSP.toHex()}]")
 				wt134()
 				transceiver?.write(sendSP)
 			}
@@ -521,7 +521,7 @@ class BluetoothViewModel @Inject constructor(
 					securityLevel = sendStep.securityLevel, time = d19Time,
 					cc = sendStep.cc, adr = sendStep.adr, op = sendStep.op, data = sendStep.data
 				)
-				val sendText = r87 + aLine.toByteArray().toText()
+				val sendText = r87 + aLine.toText()
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
 				wt2()
 				transceiver?.write(sendSP)

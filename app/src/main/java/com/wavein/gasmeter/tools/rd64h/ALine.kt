@@ -13,7 +13,7 @@ data class ALine(
 	 * 第8碼若不是0 -> 表示為接續part -> 接續part不含[dp]&[op],後段的資料(7+64位元)皆為[data]
 	 */
 	private var cc:String = ""
-	private val cch get() = cc.toByteArray().toHexString()
+	private val cch get() = cc.toByteArray().toHex()
 	val isFirstPart get() = cch[7] == '0'
 
 	var adr:String = ""  // ADR: 14字元, 瓦斯表ID
