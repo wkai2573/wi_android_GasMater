@@ -1,6 +1,7 @@
 package com.wavein.gasmeter.tools.rd64h.info
 
 import com.wavein.gasmeter.tools.rd64h.ALine
+import com.wavein.gasmeter.tools.rd64h.SecurityLevel
 
 data class D87D24Info(override val text:String) : BaseInfo(text) {
 	var data:String = ""
@@ -19,7 +20,7 @@ data class D87D24Info(override val text:String) : BaseInfo(text) {
 	init {
 		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常")
 		val (meterId, aLineRaw) = matchResult.destructured
-		val aLine = ALine(aLineRaw)
+		val aLine = ALine(aLineRaw, SecurityLevel.Auth)
 		data = aLine.data
 		if (data.length == 40) {
 			val alineMatchResult = Regex("^(.{8})(.{8})(.)(.{5})(.{3})(.{3})(.{2})(.)(.)(.{4})(.{4})$").find(data)

@@ -1,6 +1,7 @@
 package com.wavein.gasmeter.tools.rd64h.info
 
 import com.wavein.gasmeter.tools.rd64h.ALine
+import com.wavein.gasmeter.tools.rd64h.SecurityLevel
 
 data class D87D05Info(override val text:String) : BaseInfo(text) {
 	var data:String = "" //指針値(01-01) 9位 + アラーム情報1(03-01) 8位
@@ -9,7 +10,7 @@ data class D87D05Info(override val text:String) : BaseInfo(text) {
 	init {
 		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常")
 		val (meterId, aLineRaw) = matchResult.destructured
-		val aLine = ALine(aLineRaw)
+		val aLine = ALine(aLineRaw, SecurityLevel.Auth)
 		data = aLine.data
 		d05Info = D05Info.createByData(meterId, aLine.data)
 	}

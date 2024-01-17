@@ -1,6 +1,7 @@
 package com.wavein.gasmeter.tools.rd64h.info
 
 import com.wavein.gasmeter.tools.rd64h.ALine
+import com.wavein.gasmeter.tools.rd64h.SecurityLevel
 
 data class D87D23Info(override val text:String) : BaseInfo(text) {
 	var data:String = "" // 遮断 5 回分履歴 65位
@@ -14,7 +15,7 @@ data class D87D23Info(override val text:String) : BaseInfo(text) {
 	fun writePart(text:String) {
 		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常")
 		val (meterId, aLineRaw) = matchResult.destructured
-		val aLine = ALine(aLineRaw)
+		val aLine = ALine(aLineRaw, SecurityLevel.Auth)
 		data += aLine.data
 		if (data.length == 65) {
 			val shutdownHistoryList = data.chunked(13)

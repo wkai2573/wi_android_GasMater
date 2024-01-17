@@ -24,12 +24,8 @@ import kotlinx.coroutines.launch
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
-import kotlin.math.ceil
 
 
 @HiltViewModel
@@ -524,13 +520,12 @@ class BluetoothViewModel @Inject constructor(
 				val r87 = "ZD${sendStep.adr}R87"
 				// 加入時刻
 				val d19Time = if (commResult.containsKey("D87D19")) {
-					val time = (commResult["D87D19"] as D87D19Info).data
-					addSecondsToTimestamp(time, ceil(WT2.toDouble() / 1000).toInt())
+					(commResult["D87D19"] as D87D19Info).data
 				} else {
 					null
 				}
 				val aLine = RD64H.createR87Aline(
-					securityLevel = sendStep.securityLevel, time = d19Time,
+					securityLevel = sendStep.securityLevel, date = d19Time,
 					cc = sendStep.cc, adr = sendStep.adr, op = sendStep.op, data = sendStep.data
 				)
 				val sendText = r87 + aLine.toText()
@@ -558,18 +553,6 @@ class BluetoothViewModel @Inject constructor(
 
 	private suspend inline fun wt(delay: Long) {
 		delay(delay)
-	}
-
-	// yyMMddHHmmss 時間格式 +秒數
-	fun addSecondsToTimestamp(timestamp:String, second:Int):String {
-		val sdf = SimpleDateFormat("yyMMddHHmmss", Locale.getDefault())
-		val date = sdf.parse(timestamp)
-
-		val calendar = Calendar.getInstance()
-		calendar.time = date
-		calendar.add(Calendar.SECOND, second)
-
-		return sdf.format(calendar.time)
 	}
 
 	// 經過時間

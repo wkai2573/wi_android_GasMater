@@ -250,7 +250,7 @@ class NccFragment : Fragment() {
 			// 		)
 			// 	)
 			// }
-			// [R87_R16] // todo 失敗
+			// [R87_R16] 成功
 			 checkBluetoothOn {
 			 	blVM.sendR87Telegram(
 			 		meterId, listOf(

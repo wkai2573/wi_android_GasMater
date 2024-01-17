@@ -3,9 +3,9 @@ package com.wavein.gasmeter.tools.rd64h
 import android.util.Log
 
 // 分析接收電文的ALine資料
-// todo 要加安全性securityLevel
 data class ALine(
 	val aLineRaw:String, // 原始內容
+	val securityLevel:SecurityLevel = SecurityLevel.NoSecurity,
 ) {
 	/**
 	 * @param cc, 8位hex, 每2位為一組, 以下以CC1~CC4解釋
@@ -19,11 +19,13 @@ data class ALine(
 	private val cch get() = cc.toByteArray().toHex()
 	val isFirstPart get() = cch[7] == '0'
 
-	var adr:String = ""  // ADR: 14字元, 瓦斯表ID
-	private var dp:String = ""   // DP: 4字元, 事業體 (僅首part)
-	private var op:String = ""   // OP: 3字元, 回傳的操作代碼 (僅首part)
-	private var fullData:String = "" // DATA: 64字元, 回傳的資料, 自動移除後面空白
+	var adr:String = ""              // ADR: 瓦斯表ID, 14位
+	private var dp:String = ""       // DP: 事業體, 4位, 僅首part
+	private var op:String = ""       // OP: 回傳的操作代碼, 3位, 僅首part
+	private var fullData:String = "" // DATA: 回傳的資料, (安全性:通常)64位+, (安全性:認證)42位+
 	var data:String = ""             // 同上, 移除後面空白
+	private var dateH:String = ""   // DATE: 時刻, 6位=12位hex, (安全性:認證↑)
+	private var macH:String = ""    // MAC: 密文, 16位=32位hex, (安全性:認證↑)
 
 	init {
 		val uBusText = RD64H.textALineToUBus(aLineRaw)
@@ -40,11 +42,19 @@ data class ALine(
 				dp = ""
 				op = ""
 			}
+			if (securityLevel == SecurityLevel.Auth) {
+				val dataGroupValues = Regex("^(.*)(.{6})(.{16})$").find(fullData)!!.groupValues
+				fullData = dataGroupValues[1]
+				dateH = dataGroupValues[2].stringToHex()
+				macH = dataGroupValues[3].stringToHex()
+			}
 			data = fullData.trimEnd()
 
 			Log.i(
 				"@@@ Recv",
 				"CC:${cc.stringToHex()}h ADR:[$adr] DP:[$dp] OPC:[$op] DATA:[$fullData]" +
+						(if (dateH.isNotEmpty()) " DATE:${dateH}h" else "") +
+						(if (macH.isNotEmpty()) " MAC:${macH}h" else "") +
 						" BCC:${bcc.stringToHex()}h"
 			)
 		}

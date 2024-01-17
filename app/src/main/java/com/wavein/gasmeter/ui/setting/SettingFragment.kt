@@ -33,8 +33,10 @@ import com.wavein.gasmeter.tools.NetworkInfo
 import com.wavein.gasmeter.tools.Preference
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.rd64h.RD64H
+import com.wavein.gasmeter.tools.rd64h.hexToString
 import com.wavein.gasmeter.tools.rd64h.hexToUBytes
 import com.wavein.gasmeter.tools.rd64h.toHex
+import com.wavein.gasmeter.tools.rd64h.toUBytes
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.bluetooth.BtDialogFragment
 import com.wavein.gasmeter.ui.bluetooth.ConnectEvent
@@ -97,7 +99,19 @@ class SettingFragment : Fragment() {
 
 			lifecycleScope.launch {
 				SharedEvent.catching {
-					val 電文前面87位 = "7140080041504c41444452494e495456414c303030303030303030303030303040454e31523136202020202020202020202020202020202020202020202020202020202020202020202020202020202020240104104518".hexToUBytes()
+					val ccU = "\u0021\u0040\u0000\u0000".toUBytes()
+					val adrU = "00000002306003".toUBytes()
+					val dpU = "\u0040EN1".toUBytes()
+					val opU = "R16".toUBytes()
+					val data42 = "".padEnd(42, ' ')
+					val data42U = data42.toUBytes() // 認證: data僅42碼
+					val timeHex = "240117161429"
+					val timeU = timeHex.hexToUBytes()
+					val macU = RD64H.Auth.calcMac((ccU + adrU + adrU + dpU + opU + data42U + timeU).toByteArray()).toUByteArray()
+					Log.i("@@@", macU.toHex())
+
+
+					val 電文前面87位 = "214000003030303030303032333036303033303030303030303233303630303340454e31523136202020202020202020202020202020202020202020202020202020202020202020202020202020202020240117161429".hexToUBytes()
 					val mac = RD64H.Auth.calcMac(電文前面87位.toByteArray())
 					Log.i("@@@", mac.toHex())
 				}
