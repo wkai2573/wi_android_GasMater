@@ -3,7 +3,7 @@ package com.wavein.gasmeter.tools.rd64h.info
 import com.wavein.gasmeter.tools.rd64h.ALine
 
 data class D87D05Info(override val text:String) : BaseInfo(text) {
-	var data:String = ""
+	var data:String = "" //指針値(01-01) 9位 + アラーム情報1(03-01) 8位
 	var d05Info:D05Info? = null
 
 	init {

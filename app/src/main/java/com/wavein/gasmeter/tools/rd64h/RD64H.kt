@@ -156,11 +156,16 @@ object RD64H {
 	 * 	 Confidential:   CC(4) + SADR(14) + DADR(14) + DP(4) + OPC(1) + OPR(2) + DATA(32) + SP(2) + 乱数(8) + 日時(6) + MAC(16) + BCC
 	 * 	  packet >=1:    CC(4) + SADR(14) + DADR(14) +                           DATA(48) + SP(1)         + 日時(6) + MAC(16) + BCC
 	 * 	 Key:            缺少技術文件
-	 * @param cc   可選, 預設 "\u0021\u0040\u0000\u0000" 字串[!@\0\0] bytes[21400000]
+	 * @param cc   可選, 8位hex, 每2位為一組, 以下以CC1~CC4解釋
+	 *   CC1 電文傳送的類型, 21h=無線傳送 12h=無線接收, 71h=有線傳送 17h=有線接收
+	 *   CC2 連續電文的開始與結束, 40h=開始, 00h=中間, 20h=結束
+	 *   CC3 電文index, 連續電文的傳送&接收的index需要不同, 建議從00h往上加, 因為只管傳送, 每次加02h
+	 *   CC4 單電文多part使用, 00h=無分割, 10h=2分割_第1part, 11h=2分割_第2part
 	 * @param adr  必填, 瓦斯表ID
-	 * @param dp   可選, 事業體, 通常固定為 "\u0000EN1" 字串[00454>31]
+	 * @param dp   可選, 事業體, 通常固定為 00h[EN1]
 	 * @param op   必填, 瓦斯表的操作代碼
 	 * @param data 可選, 操作代碼附屬的資料, 會自動補空白到64位
+	 * @param time 可選(安全性:認證↑), 12位hex, "年月日時分秒"各2位hex
 	 * @returns R87_ALine字串
 	 */
 	fun createR87Aline(
@@ -176,41 +181,39 @@ object RD64H {
 			// todo 認證
 			SecurityLevel.Auth -> {
 				val ccU = cc.toUBytes()
-				val ccA = textUBusToALine(ccU)
 				val adrU = adr.toUBytes()
-				val adrA = textUBusToALine(adrU)
 				val dpU = dp.toUBytes()
-				val dpA = textUBusToALine(dpU)
 				val opU = op.toUBytes()
-				val opA = textUBusToALine(opU)
-				val data42U = data.padEnd(42, ' ').toUBytes() // 認證: data僅42碼
-				val data42A = textUBusToALine(data42U) // 長42*2=84
+				val data42 = data.padEnd(42, ' ')
+				val data42U = data42.toUBytes() // 認證: data僅42碼
 				val timeHex = time ?: getNowTimeString()
-				val timeU = timeHex.hexToString().toUBytes()
-				val timeA = textUBusToALine(timeU)
-				val macHex = "C53270755C1B0F55F44CA7BD3CF2CC2E"
-				val macU = macHex.hexToString().toUBytes()
-				val macA = textUBusToALine(macU)
+				val timeU = timeHex.hexToUBytes()
+				val macU = Auth.calcMac((ccU + adrU + adrU + dpU + opU + data42U + timeU).toByteArray()).toUByteArray()
 				val bcc = getBCC(ccU + adrU + adrU + dpU + opU + data42U + timeU + macU)
-				val bccA = textUBusToALine(ubyteArrayOf(bcc))
-				Log.i("@@@mac", time.toString())
-				return ccA + adrA + adrA + dpA + opA + data42A + timeA + macA + bccA
+				val fullTelegramU = ccU + adrU + adrU + dpU + opU + data42U + timeU + macU + ubyteArrayOf(bcc)
+				Log.i(
+					"@@@ Send",
+					"CC:${ccU.toHex()}h ADR:[$adr] DP:${dpU.toHex()}h=[$dp] OPC:[$op] DATA:[$data42]" +
+							" DATE:${timeHex}h MAC:${macU.toHex()}h BCC:${ubyteArrayOf(bcc).toHex()}h"
+				)
+				return textUBusToALine(fullTelegramU)
 			}
 			// 無認證
 			else -> {
 				val ccU = cc.toUBytes()
-				val ccA = textUBusToALine(ccU)
 				val adrU = adr.toUBytes()
-				val adrA = textUBusToALine(adrU)
 				val dpU = dp.toUBytes()
-				val dpA = textUBusToALine(dpU)
 				val opU = op.toUBytes()
-				val opA = textUBusToALine(opU)
-				val data64U = data.padEnd(64, ' ').toUBytes()
-				val data64A = textUBusToALine(data64U)  // 長64*2=128
+				val data64 = data.padEnd(64, ' ')
+				val data64U = data64.toUBytes()
 				val bcc = getBCC(ccU + adrU + adrU + dpU + opU + data64U)
-				val bccA = textUBusToALine(ubyteArrayOf(bcc))
-				return ccA + adrA + adrA + dpA + opA + data64A + bccA
+				val fullTelegramU = ccU + adrU + adrU + dpU + opU + data64U + ubyteArrayOf(bcc)
+				Log.i(
+					"@@@ Send",
+					"CC:${ccU.toHex()}h ADR:[$adr] DP:[$dp] OPC:[$op] DATA:[$data64]" +
+							" BCC:${ubyteArrayOf(bcc).toHex()}h"
+				)
+				return textUBusToALine(fullTelegramU)
 			}
 		}
 	}

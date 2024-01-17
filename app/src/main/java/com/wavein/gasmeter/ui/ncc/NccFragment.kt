@@ -222,9 +222,9 @@ class NccFragment : Fragment() {
 			onResume()
 			val meterId = binding.meterInput.editText?.text.toString()
 			Preference[Preference.NCC_METER_ID] = meterId //紀錄本次輸入
-			// [R80]
+			// [R80] 成功
 			// checkBluetoothOn { blVM.sendR80Telegram(listOf(meterId)) }
-			// [R87_R05+R23]
+			// [R87_R05+R23] 成功
 			// checkBluetoothOn {
 			// 	blVM.sendR87Telegram(
 			// 		meterId, listOf(
@@ -233,7 +233,16 @@ class NccFragment : Fragment() {
 			// 		)
 			// 	)
 			// }
-			// [R87_R19]
+			// [R23+R24] 成功
+			// checkBluetoothOn {
+			// 	blVM.sendR87Telegram(
+			// 		meterId, listOf(
+			// 			R87Step(adr = meterId, op = "R23"), // 五回遮斷履歷
+			// 			R87Step(adr = meterId, op = "R24"), // 讀數&狀態
+			// 		)
+			// 	)
+			// }
+			// [R87_R19] 成功
 			// checkBluetoothOn {
 			// 	blVM.sendR87Telegram(
 			// 		meterId, listOf(
@@ -241,15 +250,15 @@ class NccFragment : Fragment() {
 			// 		)
 			// 	)
 			// }
-			// [R87_R16]
-			checkBluetoothOn {
-				blVM.sendR87Telegram(
-					meterId, listOf(
-						R87Step(adr = meterId, op = "R19"), // 時刻
-						R87Step(adr = meterId, op = "R16", securityLevel = SecurityLevel.Auth), // 表狀態
-					)
-				)
-			}
+			// [R87_R16] // todo 失敗
+			 checkBluetoothOn {
+			 	blVM.sendR87Telegram(
+			 		meterId, listOf(
+			 			// R87Step(adr = meterId, op = "R19"), // 時刻
+			 			R87Step(adr = meterId, op = "R16", securityLevel = SecurityLevel.Auth), // 表狀態
+			 		)
+			 	)
+			 }
 		}
 		// UI: R80群組抄表按鈕
 		binding.action2Btn.setOnClickListener {

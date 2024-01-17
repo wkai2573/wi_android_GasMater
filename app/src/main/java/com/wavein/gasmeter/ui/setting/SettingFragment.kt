@@ -48,6 +48,9 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 @SuppressLint("MissingPermission")
 class SettingFragment : Fragment() {
@@ -94,13 +97,22 @@ class SettingFragment : Fragment() {
 
 			lifecycleScope.launch {
 				SharedEvent.catching {
-					// val ss = Preference[Preference.SESSION_KEY_FILE, ""]!!
-					// val (cryptKey, macKey) = RD64H.Auth.decryptKeyFile(ss)
 					val 電文前面87位 = "7140080041504c41444452494e495456414c303030303030303030303030303040454e31523136202020202020202020202020202020202020202020202020202020202020202020202020202020202020240104104518".hexToUBytes()
 					val mac = RD64H.Auth.calcMac(電文前面87位.toByteArray())
 					Log.i("@@@", mac.toHex())
 				}
 			}
+
+			// lifecycleScope.launch {
+			// 	SharedEvent.catching {
+			// 	  val ss = Preference[Preference.SESSION_KEY_FILE, ""]!!
+			// 		val (cryptKey, macKey) = RD64H.Auth.decryptKeyFile(ss)
+			// 		val 電文前面87位 = "7140080041504c41444452494e495456414c303030303030303030303030303040454e31523136202020202020202020202020202020202020202020202020202020202020202020202020202020202020240104104518".hexToUBytes()
+			// 		val mac = RD64H.Auth.calcMac(電文前面87位.toByteArray())
+			// 		Log.i("@@@", mac.toHex())
+			// 	}
+			// }
+
 			// val bytes1 = byteArrayOf(0x61.toByte(), 0x62.toByte())
 			// val ubytes1 = ubyteArrayOf(0x61.toUByte(), 0x62.toUByte())
 			// val bytes2 = byteArrayOf(0x80.toByte(), 0x81.toByte())

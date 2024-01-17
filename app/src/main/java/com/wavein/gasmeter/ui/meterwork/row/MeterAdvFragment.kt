@@ -16,6 +16,7 @@ import com.wavein.gasmeter.databinding.FragmentMeterAdvBinding
 import com.wavein.gasmeter.databinding.InputLayoutBinding
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.rd64h.R87Step
+import com.wavein.gasmeter.tools.rd64h.SecurityLevel
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.loading.Tip
 import com.wavein.gasmeter.ui.meterwork.MeterBaseFragment
@@ -316,25 +317,25 @@ class MeterAdvFragment : Fragment() {
 		if (binding.field03.binding?.readCheckbox?.isChecked == true || binding.field31.binding?.readCheckbox?.isChecked == true)
 			r87Steps.add(R87Step(adr = meterId, op = "R24"))
 		if (binding.field16.binding?.readCheckbox?.isChecked == true)
-			r87Steps.add(R87Step(adr = meterId, op = "R16"))
+			r87Steps.add(R87Step(securityLevel = SecurityLevel.Auth, adr = meterId, op = "R16"))
 		if (binding.field16.binding?.writeCheckbox?.isChecked == true)
-			r87Steps.add(R87Step(adr = meterId, op = "S16", data = binding.field16.writeValue))
+			r87Steps.add(R87Step(securityLevel = SecurityLevel.Auth, adr = meterId, op = "S16", data = binding.field16.writeValue))
 		if (binding.field57.binding?.readCheckbox?.isChecked == true)
-			r87Steps.add(R87Step(adr = meterId, op = "R57"))
+			r87Steps.add(R87Step(securityLevel = SecurityLevel.Auth, adr = meterId, op = "R57"))
 		if (binding.field58.binding?.readCheckbox?.isChecked == true)
-			r87Steps.add(R87Step(adr = meterId, op = "R58"))
+			r87Steps.add(R87Step(securityLevel = SecurityLevel.Auth, adr = meterId, op = "R58"))
 		if (binding.field59.binding?.readCheckbox?.isChecked == true)
-			r87Steps.add(R87Step(adr = meterId, op = "R59"))
+			r87Steps.add(R87Step(securityLevel = SecurityLevel.Auth, adr = meterId, op = "R59"))
 		if (binding.field31.binding?.writeCheckbox?.isChecked == true)
-			r87Steps.add(R87Step(adr = meterId, op = "S31", data = binding.field31.writeValue))
+			r87Steps.add(R87Step(securityLevel = SecurityLevel.Auth, adr = meterId, op = "S31", data = binding.field31.writeValue))
 		if (binding.field50.binding?.readCheckbox?.isChecked == true)
-			r87Steps.add(R87Step(adr = meterId, op = "R50"))
+			r87Steps.add(R87Step(securityLevel = SecurityLevel.Auth, adr = meterId, op = "R50"))
 		if (binding.field50.binding?.writeCheckbox?.isChecked == true)
-			r87Steps.add(R87Step(adr = meterId, op = "S50", data = binding.field50.writeValue))
+			r87Steps.add(R87Step(securityLevel = SecurityLevel.Auth, adr = meterId, op = "S50", data = binding.field50.writeValue))
 		if (binding.field51.binding?.readCheckbox?.isChecked == true)
-			r87Steps.add(R87Step(adr = meterId, op = "R51"))
+			r87Steps.add(R87Step(securityLevel = SecurityLevel.Auth, adr = meterId, op = "R51"))
 		if (binding.field41.binding?.writeCheckbox?.isChecked == true)
-			r87Steps.add(R87Step(adr = meterId, op = "C41"))
+			r87Steps.add(R87Step(securityLevel = SecurityLevel.Auth, adr = meterId, op = "C41"))
 	}
 
 	// 刷新耗時

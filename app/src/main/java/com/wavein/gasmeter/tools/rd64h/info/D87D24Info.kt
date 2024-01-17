@@ -4,17 +4,17 @@ import com.wavein.gasmeter.tools.rd64h.ALine
 
 data class D87D24Info(override val text:String) : BaseInfo(text) {
 	var data:String = ""
-	var alarmInfo1:String = ""
-	var alarmInfo2:String = ""
-	var stateValue:String = ""
-	var q0:String = ""
-	var q0ShutOffSettingTime:String = ""
-	var q0TimerTime:String = ""
-	var numberOfRetries:String = ""
-	var innerPipeLeakage:String = ""
-	var fuseFlowRegistration:String = ""
-	var registerFuseFlowRate1:String = ""
-	var registerFuseFlowRate2:String = ""
+	var alarmInfo1:String = ""            // アラーム情報1(03-01) 8位
+	var alarmInfo2:String = ""            // アラーム情報2(03-02) 8位
+	var stateValue:String = ""            // 状態値№(24-01) 1位
+	var q0:String = ""                    // Q0(03-03) 5位
+	var q0ShutOffSettingTime:String = ""  // Q0遮断設定時間(24-02) 3位
+	var q0TimerTime:String = ""           // Q0タイマ時間(24-03) 3位
+	var numberOfRetries:String = ""       // リトライ回数(24-04) 2位
+	var innerPipeLeakage:String = ""      // 内管漏洩有無(01-02) 1位
+	var fuseFlowRegistration:String = ""  // 口火流量登録有無(24-05) 1位
+	var registerFuseFlowRate1:String = "" // 登録口火流量1(24-06) 4位
+	var registerFuseFlowRate2:String = "" // 登録口火流量2(24-06) 4位
 
 	init {
 		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常")

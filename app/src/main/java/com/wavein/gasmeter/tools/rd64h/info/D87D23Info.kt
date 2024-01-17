@@ -3,7 +3,7 @@ package com.wavein.gasmeter.tools.rd64h.info
 import com.wavein.gasmeter.tools.rd64h.ALine
 
 data class D87D23Info(override val text:String) : BaseInfo(text) {
-	var data:String = ""
+	var data:String = "" // 遮断 5 回分履歴 65位
 	var shutdownHistory1:String = ""
 	var shutdownHistory2:String = ""
 	var shutdownHistory3:String = ""

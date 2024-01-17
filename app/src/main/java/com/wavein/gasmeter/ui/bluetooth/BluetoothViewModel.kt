@@ -24,8 +24,12 @@ import kotlinx.coroutines.launch
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.math.ceil
 
 
 @HiltViewModel
@@ -340,6 +344,9 @@ class BluetoothViewModel @Inject constructor(
 					}
 				}
 				if (errList.isNotEmpty()) {
+					val exceptionMsg = (commResult["error_msg"] as BaseInfo).text.let {
+						if (it.isNotEmpty()) "$it\n" else ""
+					}
 					val errorType = if (commResult.containsKey("error_D16")) {
 						"HHD用GW終端無回應(D16)"
 					} else if (commResult.containsKey("error_D36")) {
@@ -347,7 +354,7 @@ class BluetoothViewModel @Inject constructor(
 					} else {
 						"通信異常"
 					}
-					commResult["error"] = BaseInfo("$errorType，以下通信失敗：\n${errList.joinToString("\n")}")
+					commResult["error"] = BaseInfo("$exceptionMsg$errorType，以下通信失敗：\n${errList.joinToString("\n")}")
 				} else {
 					commResult["success"] = BaseInfo("讀取/設定成功")
 				}
@@ -415,11 +422,13 @@ class BluetoothViewModel @Inject constructor(
 			R89Step(meterId),
 			//如果需分割, 要在下方補n個 R70
 			*r87Steps.flatMapIndexed { index, step ->
+				val cc2 = if (index == 0) "\u0040" else "\u0000"
+				val cc3 = (index * 2).toChar()
 				when (step.op) {
 					// 2part
-					"R23" -> listOf(step.copy(cc = "\u0021\u0040${index.toChar()}\u0000"), R70Step(step.adr))
+					"R23" -> listOf(step.copy(cc = "\u0021$cc2$cc3\u0000"), R70Step(step.adr))
 					// 1part
-					else -> listOf(step.copy(cc = "\u0021\u0040${index.toChar()}\u0000"))
+					else -> listOf(step.copy(cc = "\u0021$cc2$cc3\u0000"))
 				}
 			}.toTypedArray(),
 			__AStep(),
@@ -435,6 +444,7 @@ class BluetoothViewModel @Inject constructor(
 					"R23" -> listOf(D87D23Step(), D87D23Step()) //R23有2part
 					"R24" -> listOf(D87D24Step())
 					"R16" -> listOf(D87D16Step())
+					"R57" -> listOf(D87D57Step())
 					// todo 其他R87項目...
 					else -> listOf()
 				}
@@ -457,14 +467,14 @@ class BluetoothViewModel @Inject constructor(
 				val sendText = sendStep.text
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
 				commTextStateFlow.value = Tip("通信中: $sendText [${sendSP.toHex()}]")
-				wt134()
+				wt(WT134)
 				transceiver?.write(sendSP)
 			}
 
 			is __5Step -> {
 				commTextStateFlow.value = Tip("正在與母機建立連結", "5↔D70", progressText)
 				val sendSP = RD64H.telegramConvert("5", "+s+p")
-				wt134()
+				wt(WT134)
 				transceiver?.write(sendSP)
 			}
 
@@ -473,13 +483,13 @@ class BluetoothViewModel @Inject constructor(
 				val btParentId = (commResult["D70"] as D70Info).btParentId
 				val sendText = RD64H.createR80Text(btParentId, sendStep.meterIds)
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
-				wt134()
+				wt(WT134)
 				transceiver?.write(sendSP)
 			}
 
 			is __AStep -> {
 				val sendSP = RD64H.telegramConvert("A", "+s+p")
-				wt2()
+				wt(WT2)
 				transceiver?.write(sendSP)
 				delay(1000L)
 				onCommEnd()
@@ -489,7 +499,7 @@ class BluetoothViewModel @Inject constructor(
 				commTextStateFlow.value = Tip("正在要求通信許可", "R89↔D36", progressText)
 				val sendText = "ZA${sendStep.meterId}R8966ZD${sendStep.meterId}R36"
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
-				wt134()
+				wt(WT134)
 				transceiver?.write(sendSP)
 			}
 
@@ -512,8 +522,10 @@ class BluetoothViewModel @Inject constructor(
 					"C41" -> commTextStateFlow.value = Tip("正在設定中心遮斷", "R87C41", progressText)
 				}
 				val r87 = "ZD${sendStep.adr}R87"
+				// 加入時刻
 				val d19Time = if (commResult.containsKey("D87D19")) {
-					(commResult["D87D19"] as D87D19Info).data
+					val time = (commResult["D87D19"] as D87D19Info).data
+					addSecondsToTimestamp(time, ceil(WT2.toDouble() / 1000).toInt())
 				} else {
 					null
 				}
@@ -523,7 +535,7 @@ class BluetoothViewModel @Inject constructor(
 				)
 				val sendText = r87 + aLine.toText()
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
-				wt2()
+				wt(WT2)
 				transceiver?.write(sendSP)
 			}
 
@@ -531,7 +543,7 @@ class BluetoothViewModel @Inject constructor(
 				commTextStateFlow.value = commTextStateFlow.value.copy(subtitle = "R70", progress = progressText)
 				val sendText = "ZD${sendStep.meterId}R70"
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
-				wt2()
+				wt(WT2)
 				transceiver?.write(sendSP)
 			}
 
@@ -541,12 +553,23 @@ class BluetoothViewModel @Inject constructor(
 		}
 	}
 
-	private suspend inline fun wt134() {
-		delay(1000L)
+	private val WT134 = 1000L // 1000L
+	private val WT2 = 3500L // 3500L
+
+	private suspend inline fun wt(delay: Long) {
+		delay(delay)
 	}
 
-	private suspend inline fun wt2() {
-		delay(3500L)
+	// yyMMddHHmmss 時間格式 +秒數
+	fun addSecondsToTimestamp(timestamp:String, second:Int):String {
+		val sdf = SimpleDateFormat("yyMMddHHmmss", Locale.getDefault())
+		val date = sdf.parse(timestamp)
+
+		val calendar = Calendar.getInstance()
+		calendar.time = date
+		calendar.add(Calendar.SECOND, second)
+
+		return sdf.format(calendar.time)
 	}
 
 	// 經過時間
@@ -650,12 +673,20 @@ class BluetoothViewModel @Inject constructor(
 					continueSend = true
 				}
 
+				is D87D57Step -> {
+					val info = BaseInfo.get(respText, D87D57Info::class.java) as D87D57Info
+					commResult["D87D57"] = info
+					receiveSteps.removeAt(0)
+					continueSend = true
+				}
+
 				// todo 其他R87項目...
 			}
 
 			if (continueSend) sendByStep()
 		} catch (error:Exception) {
 			error.printStackTrace()
+			commResult["error_msg"] = BaseInfo(error.message ?: "")
 			// 錯誤處理: 檢查是不是D16 或 D36
 			kotlin.runCatching {
 				val info = BaseInfo.get(respText, D16Info::class.java) as D16Info

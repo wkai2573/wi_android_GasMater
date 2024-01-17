@@ -4,11 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
-import android.provider.ContactsContract.Directory
 import android.provider.OpenableColumns
 import java.io.BufferedReader
-import java.io.File
-import java.io.FileOutputStream
 import java.io.InputStreamReader
 
 object FileUtils {
