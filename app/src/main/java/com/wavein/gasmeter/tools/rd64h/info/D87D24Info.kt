@@ -22,21 +22,21 @@ data class D87D24Info(override val text:String) : BaseInfo(text) {
 		val (meterId, aLineRaw) = matchResult.destructured
 		val aLine = ALine(aLineRaw, SecurityLevel.Auth)
 		data = aLine.data
-		if (data.length == 40) {
-			val alineMatchResult = Regex("^(.{8})(.{8})(.)(.{5})(.{3})(.{3})(.{2})(.)(.)(.{4})(.{4})$").find(data)
-			val groups = alineMatchResult!!.groupValues
-			this.alarmInfo1 = groups[1]
-			this.alarmInfo2 = groups[2]
-			this.stateValue = groups[3]
-			this.q0 = groups[4]
-			this.q0ShutOffSettingTime = groups[5]
-			this.q0TimerTime = groups[6]
-			this.numberOfRetries = groups[7]
-			this.innerPipeLeakage = groups[8]
-			this.fuseFlowRegistration = groups[9]
-			this.registerFuseFlowRate1 = groups[10]
-			this.registerFuseFlowRate2 = groups[11]
-		}
+		if (data.length != 40) throw Exception("D24結果 = \"$data\"")
+
+		val alineMatchResult = Regex("^(.{8})(.{8})(.)(.{5})(.{3})(.{3})(.{2})(.)(.)(.{4})(.{4})$").find(data)
+		val groups = alineMatchResult!!.groupValues
+		this.alarmInfo1 = groups[1]
+		this.alarmInfo2 = groups[2]
+		this.stateValue = groups[3]
+		this.q0 = groups[4]
+		this.q0ShutOffSettingTime = groups[5]
+		this.q0TimerTime = groups[6]
+		this.numberOfRetries = groups[7]
+		this.innerPipeLeakage = groups[8]
+		this.fuseFlowRegistration = groups[9]
+		this.registerFuseFlowRate1 = groups[10]
+		this.registerFuseFlowRate2 = groups[11]
 	}
 
 	override fun toString():String {

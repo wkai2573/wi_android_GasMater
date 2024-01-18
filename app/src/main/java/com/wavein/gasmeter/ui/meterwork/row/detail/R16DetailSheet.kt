@@ -23,22 +23,27 @@ class R16DetailSheet : BottomSheetDialogFragment() {
 
 	// 傳入值
 	private val type by lazy { arguments?.getString("type") ?: "read" }
-	private val valueBitsMap by lazy {
-		var value = arguments?.getString("value") ?: "@@@@@@@@@"
+	private val readBitsMap by lazy {
+		var value = arguments?.getString("read") ?: return@lazy null
 		if (value.length < 9) value = value.padEnd(9, '@')
 		MeterRow.data2BitsMap(value, "M")
 	}
-	private val maskBitsMap by lazy {
-		var mask = arguments?.getString("mask") ?: "@@@@@@@@@"
+	private val writeMaskBitsMap by lazy {
+		var mask = arguments?.getString("writeMask") ?: "@@@@@@@@@"
 		if (mask.length < 9) mask = mask.padEnd(9, '@')
 		MeterRow.data2BitsMap(mask, "M")
+	}
+	private val writeValueBitsMap by lazy {
+		var value = arguments?.getString("writeValue") ?: "@@@@@@@@@"
+		if (value.length < 9) value = value.padEnd(9, '@')
+		MeterRow.data2BitsMap(value, "M")
 	}
 
 	private val optionViews
 		get():Array<DetailOption> {
 			return binding.run {
 				arrayOf(
-					optionM9b4, optionM9b3, optionM9b2, optionM9b1,
+					optionM9b3, optionM9b2, optionM9b1,
 					optionM8b4, optionM8b3, optionM8b2, optionM8b1,
 					optionM7b4, optionM7b3, optionM7b2, optionM7b1,
 					optionM6b4, optionM6b3, optionM6b2, optionM6b1,
@@ -76,13 +81,15 @@ class R16DetailSheet : BottomSheetDialogFragment() {
 
 		binding.closeBtn.setOnClickListener { dismiss() }
 
+		if (type == "read") binding.writeTipTv.visibility = View.GONE
+
 		//根據傳入值，設定UI(維持按鈕顯示 & 各option的值)
 		when (type) {
 			"read" -> optionViews.forEach {
 				val tagSplit = it.tag.toString().split("|")
 				val charIndex = tagSplit[0]
 				val bitIndex = tagSplit[1]
-				val enabled = valueBitsMap[charIndex]!![bitIndex]!!
+				val enabled = readBitsMap!![charIndex]!![bitIndex]!!
 				it.setSelected(if (enabled) OptionEnum.Enable else OptionEnum.Disable)
 				it.setEditable(false)
 			}
@@ -91,22 +98,28 @@ class R16DetailSheet : BottomSheetDialogFragment() {
 				val tagSplit = it.tag.toString().split("|")
 				val charIndex = tagSplit[0]
 				val bitIndex = tagSplit[1]
-				val maskEnabled = maskBitsMap[charIndex]!![bitIndex]!!
+				val maskEnabled = writeMaskBitsMap[charIndex]!![bitIndex]!!
+				val valueEnabled = writeValueBitsMap[charIndex]!![bitIndex]!!
 				val optionEnum = if (!maskEnabled) {
 					OptionEnum.Keep
 				} else {
-					val valueEnabled = valueBitsMap[charIndex]!![bitIndex]!!
 					if (valueEnabled) OptionEnum.Enable else OptionEnum.Disable
 				}
 				it.setSelected(optionEnum)
+
+				// 瓦斯表目前的設定 設為粗體
+				if (readBitsMap != null) {
+					val readValue = readBitsMap!![charIndex]!![bitIndex]!!
+					it.setBold(if (readValue) OptionEnum.Enable else OptionEnum.Disable)
+				}
 			}
 		}
 	}
 
 	// 將設定值轉成bits字串
 	private fun getResult():String {
-		val muskBitsMap = this.maskBitsMap.mapValues { (_, value) -> value.toMutableMap() }.toMutableMap()
-		val valueBitsMap = this.valueBitsMap.mapValues { (_, value) -> value.toMutableMap() }.toMutableMap()
+		val muskBitsMap = this.writeMaskBitsMap.mapValues { (_, value) -> value.toMutableMap() }.toMutableMap()
+		val valueBitsMap = this.writeValueBitsMap.mapValues { (_, value) -> value.toMutableMap() }.toMutableMap()
 		optionViews.forEach {
 			val tagSplit = it.tag.toString().split("|")
 			val charIndex = tagSplit[0]

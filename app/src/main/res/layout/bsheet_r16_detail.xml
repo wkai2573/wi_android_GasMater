@@ -37,6 +37,16 @@
         android:layout_marginBottom="4dp"
         android:text="確定" />
 
+      <TextView
+        android:id="@+id/writeTipTv"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="8dp"
+        android:text="*粗斜體表示目前的設定值"
+        android:textAlignment="textEnd"
+        android:textColor="?attr/colorPrimary"
+        android:textStyle="italic" />
+
       <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -47,12 +57,13 @@
           android:orientation="vertical">
 
           <!-- todo 移除或隱藏"未使用" -->
-          <com.wavein.gasmeter.ui.component.DetailOption
+          <!--<com.wavein.gasmeter.ui.component.DetailOption
             android:id="@+id/optionM9b4"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:tag="M9|b4"
-            app:detailOptionTitle="安全延續時間表d" /> <!--安全継続時間表d-->
+            app:detailOptionEditable="false"
+            app:detailOptionTitle="-" />-->
 
           <com.wavein.gasmeter.ui.component.DetailOption
             android:id="@+id/optionM9b3"
@@ -101,7 +112,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:tag="M8|b1"
-            app:detailOptionTitle="-" />
+            app:detailOptionTitle="保安号数適用" /> <!--保安号数適用-->
 
           <com.wavein.gasmeter.ui.component.DetailOption
             android:id="@+id/optionM7b4"

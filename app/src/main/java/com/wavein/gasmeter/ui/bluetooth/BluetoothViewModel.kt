@@ -300,7 +300,7 @@ class BluetoothViewModel @Inject constructor(
 
 	// 溝通結束處理
 	private fun onCommEnd() = viewModelScope.launch {
-		Log.i("@@@耗時", "${elapsedTime()} 秒 (總耗時)")
+		// Log.i("@@@耗時", "${elapsedTime()} 秒 (總耗時)")
 		// 依組合決定通信結束後小吃文字
 		val metaInfo = commResult["meta"] as MetaInfo
 		when (metaInfo.op) {
@@ -340,9 +340,10 @@ class BluetoothViewModel @Inject constructor(
 					}
 				}
 				if (errList.isNotEmpty()) {
-					val exceptionMsg = (commResult["error_msg"] as BaseInfo).text.let {
-						if (it.isNotEmpty()) "$it\n" else ""
-					}
+					val exceptionMsg = if (commResult.containsKey("error_msg")) {
+						val msg = (commResult["error_msg"] as BaseInfo).text
+						if (msg.isNotEmpty()) "$msg\n" else ""
+					} else ""
 					val errorType = if (commResult.containsKey("error_D16")) {
 						"HHD用GW終端無回應(D16)"
 					} else if (commResult.containsKey("error_D36")) {
@@ -440,6 +441,7 @@ class BluetoothViewModel @Inject constructor(
 					"R23" -> listOf(D87D23Step(), D87D23Step()) //R23有2part
 					"R24" -> listOf(D87D24Step())
 					"R16" -> listOf(D87D16Step())
+					"S16" -> listOf(D87D16Step())
 					"R57" -> listOf(D87D57Step())
 					// todo 其他R87項目...
 					else -> listOf()
@@ -453,7 +455,7 @@ class BluetoothViewModel @Inject constructor(
 
 	// 依步驟發送電文 !!!電文處理中途
 	private suspend fun sendByStep() {
-		Log.i("@@@耗時", "${elapsedTime()} 秒")
+		// Log.i("@@@耗時", "${elapsedTime()} 秒")
 		if (sendSteps.isEmpty()) {
 			onCommEnd()
 			return
@@ -551,7 +553,7 @@ class BluetoothViewModel @Inject constructor(
 	private val WT134 = 1000L // 1000L
 	private val WT2 = 3500L // 3500L
 
-	private suspend inline fun wt(delay: Long) {
+	private suspend inline fun wt(delay:Long) {
 		delay(delay)
 	}
 

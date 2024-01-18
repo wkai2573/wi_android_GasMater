@@ -11,6 +11,7 @@ data class D87D57Info(override val text:String) : BaseInfo(text) {
 		val (meterId, aLineRaw) = matchResult.destructured
 		val aLine = ALine(aLineRaw, SecurityLevel.Auth)
 		data = aLine.data
+		if (data.length != 4) throw Exception("D57結果 = \"$data\"")
 	}
 
 	override fun toString():String {

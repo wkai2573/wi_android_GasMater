@@ -251,11 +251,18 @@ class NccFragment : Fragment() {
 			// 	)
 			// }
 			// [R87_R16] 成功
+			// checkBluetoothOn {
+			// 	blVM.sendR87Telegram(
+			// 		meterId, listOf(
+			// 			R87Step(adr = meterId, op = "R16", securityLevel = SecurityLevel.Auth), // 表狀態
+			// 		)
+			// 	)
+			// }
+			// [R87_S16] 成功
 			 checkBluetoothOn {
 			 	blVM.sendR87Telegram(
 			 		meterId, listOf(
-			 			// R87Step(adr = meterId, op = "R19"), // 時刻
-			 			R87Step(adr = meterId, op = "R16", securityLevel = SecurityLevel.Auth), // 表狀態
+			 			R87Step(adr = meterId, op = "S16", data = "B@@@@@@@@@C@IIB@D@", securityLevel = SecurityLevel.Auth), // 設定表狀態
 			 		)
 			 	)
 			 }

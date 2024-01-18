@@ -1,6 +1,7 @@
 package com.wavein.gasmeter.ui.meterwork.row
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +17,7 @@ import com.wavein.gasmeter.databinding.FragmentMeterAdvBinding
 import com.wavein.gasmeter.databinding.InputLayoutBinding
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.rd64h.R87Step
+import com.wavein.gasmeter.tools.rd64h.RD64H
 import com.wavein.gasmeter.tools.rd64h.SecurityLevel
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.loading.Tip
@@ -108,16 +110,64 @@ class MeterAdvFragment : Fragment() {
 
 		// checkbox
 		binding.apply {
-			field23.binding?.readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked -> refresh() }
-			field03.binding?.readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked -> refresh() }
-			setCheckedChangeWithReadAndWrite(field16.binding?.readCheckbox, field16.binding?.writeCheckbox)
-			field57.binding?.readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked -> refresh() }
-			field58.binding?.readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked -> refresh() }
-			field59.binding?.readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked -> refresh() }
-			setCheckedChangeWithReadAndWrite(field31.binding?.readCheckbox, field31.binding?.writeCheckbox)
-			setCheckedChangeWithReadAndWrite(field50.binding?.readCheckbox, field50.binding?.writeCheckbox)
-			field51.binding?.readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked -> refresh() }
-			field41.binding?.writeCheckbox?.setOnCheckedChangeListener { buttonView, isChecked -> refresh() }
+			field23.binding?.readCheckbox?.let { it.setOnCheckedChangeListener { _, _ -> refresh() } }
+			field03.binding?.readCheckbox?.let { it.setOnCheckedChangeListener { _, _ -> refresh() } }
+			field16.binding?.readCheckbox?.let {
+				it.setOnCheckedChangeListener { _, _ ->
+					if (!it.isPressed) return@setOnCheckedChangeListener
+					if (!hasMacKey(it)) return@setOnCheckedChangeListener
+					field16.binding?.writeCheckbox?.isChecked = false
+					refresh()
+				}
+			}
+			field16.binding?.writeCheckbox?.let {
+				it.setOnCheckedChangeListener { _, _ ->
+					if (!it.isPressed) return@setOnCheckedChangeListener
+					if (!hasMacKey(it)) return@setOnCheckedChangeListener
+					field16.binding?.readCheckbox?.isChecked = false
+					if (field16.writeValue.isEmpty()) {
+						field16.binding?.writeDetailBtn?.callOnClick()
+					}
+					refresh()
+				}
+			}
+			field57.binding?.readCheckbox?.let { it.setOnCheckedChangeListener { _, _ -> if (hasMacKey(it)) refresh() } }
+			field58.binding?.readCheckbox?.let { it.setOnCheckedChangeListener { _, _ -> if (hasMacKey(it)) refresh() } }
+			field59.binding?.readCheckbox?.let { it.setOnCheckedChangeListener { _, _ -> if (hasMacKey(it)) refresh() } }
+			field31.binding?.readCheckbox?.let {
+				it.setOnCheckedChangeListener { _, _ ->
+					if (!it.isPressed) return@setOnCheckedChangeListener
+					if (!hasMacKey(it)) return@setOnCheckedChangeListener
+					field31.binding?.writeCheckbox?.isChecked = false
+					refresh()
+				}
+			}
+			field31.binding?.writeCheckbox?.let {
+				it.setOnCheckedChangeListener { _, _ ->
+					if (!it.isPressed) return@setOnCheckedChangeListener
+					if (!hasMacKey(it)) return@setOnCheckedChangeListener
+					field31.binding?.readCheckbox?.isChecked = false
+					refresh()
+				}
+			}
+			field50.binding?.readCheckbox?.let {
+				it.setOnCheckedChangeListener { _, _ ->
+					if (!it.isPressed) return@setOnCheckedChangeListener
+					if (!hasMacKey(it)) return@setOnCheckedChangeListener
+					field50.binding?.writeCheckbox?.isChecked = false
+					refresh()
+				}
+			}
+			field50.binding?.writeCheckbox?.let {
+				it.setOnCheckedChangeListener { _, _ ->
+					if (!it.isPressed) return@setOnCheckedChangeListener
+					if (!hasMacKey(it)) return@setOnCheckedChangeListener
+					field50.binding?.readCheckbox?.isChecked = false
+					refresh()
+				}
+			}
+			field51.binding?.readCheckbox?.let { it.setOnCheckedChangeListener { _, _ -> if (hasMacKey(it)) refresh() } }
+			field41.binding?.writeCheckbox?.let { it.setOnCheckedChangeListener { _, _ -> if (hasMacKey(it)) refresh() } }
 		}
 
 		// 詳細按鈕
@@ -163,7 +213,7 @@ class MeterAdvFragment : Fragment() {
 					val r16sheet = R16DetailSheet()
 					r16sheet.arguments = Bundle().apply {
 						putString("type", "read")
-						putString("value", readValue)
+						putString("read", readValue)
 					}
 					r16sheet.show(requireActivity().supportFragmentManager, "r16sheet")
 				}
@@ -176,14 +226,13 @@ class MeterAdvFragment : Fragment() {
 					val r16sheet = R16DetailSheet()
 					r16sheet.arguments = Bundle().apply {
 						putString("type", "write")
+						putString("read", field16.readValue.ifEmpty { null })
 						if (field16.writeValue.length != 18) {
-							putString("mask", "@@@@@@@@@")
-							putString("value", field16.readValue)
-						} else {
-							val list = field16.writeValue.chunked(9)
-							putString("mask", list[0])
-							putString("value", list[1])
+							field16.setWriteValue("@@@@@@@@@" + field16.readValue.ifEmpty { "@@@@@@@@@" })
 						}
+						val list = field16.writeValue.chunked(9)
+						putString("writeMask", list[0])
+						putString("writeValue", list[1])
 					}
 					r16sheet.show(requireActivity().supportFragmentManager, "r16sheet")
 				}
@@ -219,6 +268,7 @@ class MeterAdvFragment : Fragment() {
 						binding.field23.setReadValue(it.shutdownHistory1 + it.shutdownHistory2 + it.shutdownHistory3 + it.shutdownHistory4 + it.shutdownHistory5)
 						binding.field03.setReadValue(it.alarmInfo1 + it.alarmInfo2)
 						binding.field16.setReadValue(it.meterStatus ?: "")
+						binding.field16.setWriteValue(if (it.meterStatus.isNullOrEmpty()) "" else "@@@@@@@@@${it.meterStatus}")
 						binding.field57.setReadValues(splitStringByLength(it.hourlyUsage ?: "", 4))
 						binding.field58.setReadValues(splitStringByLength((it.maximumUsage ?: "").padStart(4) + it.maximumUsageTime, 4, 2, 2, 2, 2))
 						binding.field59.setReadValues(splitStringByLength((it.oneDayMaximumUsage ?: "").padStart(4) + it.oneDayMaximumUsageDate, 4, 2, 2))
@@ -251,17 +301,17 @@ class MeterAdvFragment : Fragment() {
 		refresh()
 	}
 
-	private fun setCheckedChangeWithReadAndWrite(readCheckbox:CheckBox?, writeCheckbox:CheckBox?) {
-		readCheckbox?.setOnCheckedChangeListener { buttonView, isChecked ->
-			if (!buttonView.isPressed) return@setOnCheckedChangeListener
-			writeCheckbox?.isChecked = false
-			refresh()
-		}
-		writeCheckbox?.setOnCheckedChangeListener { buttonView, isChecked ->
-			if (!buttonView.isPressed) return@setOnCheckedChangeListener
-			readCheckbox?.isChecked = false
-			refresh()
-		}
+	// 需要認證通信的電文，勾選前檢查需有MacKey
+	private fun hasMacKey(it:CheckBox):Boolean {
+		return if (RD64H.Auth.macKey.isEmpty()) {
+			lifecycleScope.launch {
+				SharedEvent.eventFlow.emit(
+					SharedEvent.ShowSnackbar("未設定通信金鑰(Session Key)\n請先至\"連線\"頁面設定。", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE)
+				)
+			}
+			it.isChecked = false
+			false
+		} else true
 	}
 
 	// 分割字串by指定長度
@@ -340,7 +390,10 @@ class MeterAdvFragment : Fragment() {
 
 	// 刷新耗時
 	private fun refreshEstimatedTime() {
-		if (r87Steps.isEmpty()) return
+		if (r87Steps.isEmpty()) {
+			estimatedTime = 0
+			return
+		}
 
 		var totalPart = 0
 		r87Steps.forEach { step ->

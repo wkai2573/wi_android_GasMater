@@ -1,6 +1,8 @@
 package com.wavein.gasmeter.ui.component
 
 import android.content.Context
+import android.graphics.Color
+import android.graphics.Typeface
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.LinearLayout
@@ -27,6 +29,17 @@ class DetailOption : LinearLayout {
 			OptionEnum.Keep -> binding?.toggleGroup?.check(R.id.btn1)
 			OptionEnum.Enable -> binding?.toggleGroup?.check(R.id.btn2)
 			OptionEnum.Disable -> binding?.toggleGroup?.check(R.id.btn3)
+		}
+	}
+
+	fun setBold(selected:OptionEnum) {
+		binding?.btn1?.setTypeface(null, Typeface.NORMAL)
+		binding?.btn2?.setTypeface(null, Typeface.NORMAL)
+		binding?.btn3?.setTypeface(null, Typeface.NORMAL)
+		when (selected) {
+			OptionEnum.Keep -> binding?.btn1?.setTypeface(null, Typeface.BOLD_ITALIC)
+			OptionEnum.Enable -> binding?.btn2?.setTypeface(null, Typeface.BOLD_ITALIC)
+			OptionEnum.Disable -> binding?.btn3?.setTypeface(null, Typeface.BOLD_ITALIC)
 		}
 	}
 

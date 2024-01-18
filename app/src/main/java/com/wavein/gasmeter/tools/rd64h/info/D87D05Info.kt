@@ -12,6 +12,8 @@ data class D87D05Info(override val text:String) : BaseInfo(text) {
 		val (meterId, aLineRaw) = matchResult.destructured
 		val aLine = ALine(aLineRaw, SecurityLevel.Auth)
 		data = aLine.data
+		if (data.length != 17) throw Exception("D05結果 = \"$data\"")
+
 		d05Info = D05Info.createByData(meterId, aLine.data)
 	}
 
