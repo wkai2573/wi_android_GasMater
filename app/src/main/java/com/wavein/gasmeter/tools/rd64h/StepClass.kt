@@ -33,6 +33,10 @@ class D87D16Step : BaseStep()
 class D87D57Step : BaseStep()
 class D87D58Step : BaseStep()
 class D87D59Step : BaseStep()
+class D87D31Step : BaseStep()
+class D87D50Step : BaseStep()
+class D87D51Step : BaseStep()
+class D87D41Step : BaseStep()
 
 
 

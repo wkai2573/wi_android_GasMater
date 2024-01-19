@@ -28,6 +28,10 @@ import com.wavein.gasmeter.tools.rd64h.info.D05mInfo
 import com.wavein.gasmeter.tools.rd64h.info.D87D16Info
 import com.wavein.gasmeter.tools.rd64h.info.D87D23Info
 import com.wavein.gasmeter.tools.rd64h.info.D87D24Info
+import com.wavein.gasmeter.tools.rd64h.info.D87D31Info
+import com.wavein.gasmeter.tools.rd64h.info.D87D41Info
+import com.wavein.gasmeter.tools.rd64h.info.D87D50Info
+import com.wavein.gasmeter.tools.rd64h.info.D87D51Info
 import com.wavein.gasmeter.tools.rd64h.info.D87D57Info
 import com.wavein.gasmeter.tools.rd64h.info.D87D58Info
 import com.wavein.gasmeter.tools.rd64h.info.D87D59Info
@@ -373,12 +377,12 @@ class MeterBaseFragment : Fragment() {
 						// D87D16: 表狀態
 						if (commResult.containsKey("D87D16")) {
 							val info = commResult["D87D16"] as D87D16Info
-							newMeterRow = newMeterRow.copy(meterStatus = info.data)
+							newMeterRow = newMeterRow.copy(meterStatus = info.meterStatus)
 						}
 						// D87D57: 時間使用量
 						if (commResult.containsKey("D87D57")) {
 							val info = commResult["D87D57"] as D87D57Info
-							newMeterRow = newMeterRow.copy(hourlyUsage = info.data)
+							newMeterRow = newMeterRow.copy(hourlyUsage = info.hourlyUsage)
 						}
 						// D87D58: 最大使用量
 						if (commResult.containsKey("D87D58")) {
@@ -389,6 +393,26 @@ class MeterBaseFragment : Fragment() {
 						if (commResult.containsKey("D87D59")) {
 							val info = commResult["D87D59"] as D87D59Info
 							newMeterRow = newMeterRow.copy(oneDayMaximumUsage = info.oneDayMaximumUsage, oneDayMaximumUsageDate = info.oneDayMaximumUsageDate)
+						}
+						// D87D31: 登錄母火流量
+						if (commResult.containsKey("D87D31")) {
+							val info = commResult["D87D31"] as D87D31Info
+							newMeterRow = newMeterRow.copy(registerFuseFlowRate1 = info.registerFuseFlowRate1, registerFuseFlowRate2 = info.registerFuseFlowRate2)
+						}
+						// D87D50: 壓力遮斷判定值
+						if (commResult.containsKey("D87D50")) {
+							val info = commResult["D87D50"] as D87D50Info
+							newMeterRow = newMeterRow.copy(pressureShutOffJudgmentValue = info.pressureShutOffJudgmentValue)
+						}
+						// D87D51: 現在壓力值
+						if (commResult.containsKey("D87D51")) {
+							val info = commResult["D87D51"] as D87D51Info
+							newMeterRow = newMeterRow.copy(pressureValue = info.pressureValue)
+						}
+						// D87D41: 中心遮斷
+						if (commResult.containsKey("D87D41")) {
+							val info = commResult["D87D41"] as D87D41Info
+							newMeterRow = newMeterRow.copy(alarmInfo1 = info.alarmInfo1)
 						}
 						// todo 其他R87結果...
 

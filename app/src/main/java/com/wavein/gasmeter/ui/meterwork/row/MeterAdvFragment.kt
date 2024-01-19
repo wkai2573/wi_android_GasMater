@@ -64,8 +64,8 @@ class MeterAdvFragment : Fragment() {
 		// 更新小吃錨點
 		SharedEvent.snackbarDefaultAnchorView = binding.sendFab
 
-		// 傳送按鈕
-		binding.sendFab.setOnClickListener {
+		// 通信按鈕
+		binding.sendFab.setOnClickListener { btn ->
 			// todo 暫時
 			// var newCsvRows = meterVM.meterRowsStateFlow.value
 			// newCsvRows = newCsvRows.map { meterRow ->
@@ -83,7 +83,9 @@ class MeterAdvFragment : Fragment() {
 			// }
 			// csvVM.updateSaveCsv(newCsvRows, meterVM)
 
+			if (!btn.isPressed) return@setOnClickListener
 			if (r87Steps.isEmpty()) return@setOnClickListener
+			refresh()
 			// 視窗確認, 若steps含設定項-需要輸入密碼
 			if (r87Steps.any { it.op.startsWith('S') || it.op.startsWith('C') }) {
 				val inputLayoutBinding = InputLayoutBinding.inflate(LayoutInflater.from(requireContext()))
@@ -180,6 +182,9 @@ class MeterAdvFragment : Fragment() {
 					if (!it.isPressed) return@setOnCheckedChangeListener
 					if (!hasMacKey(it)) return@setOnCheckedChangeListener
 					field50.binding?.readCheckbox?.isChecked = false
+					if (field50.writeValue.isEmpty()) {
+						field50.binding?.writeDetailBtn?.callOnClick()
+					}
 					refresh()
 				}
 			}
@@ -291,8 +296,10 @@ class MeterAdvFragment : Fragment() {
 						binding.field59.setReadValues(splitStringByLength((it.oneDayMaximumUsage ?: "").padStart(6) + (it.oneDayMaximumUsageDate ?: ""), 6, 2, 2))
 						binding.field31.setReadValue((it.registerFuseFlowRate1 ?: "").padStart(4) + (it.registerFuseFlowRate2 ?: "").padStart(4))
 						binding.field50.setReadValue(it.pressureShutOffJudgmentValue ?: "")
+						binding.field50.setWriteValue(it.pressureShutOffJudgmentValue ?: "")
 						binding.field51.setReadValues(splitStringByLength(it.pressureValue ?: "", 4))
 					}
+					refresh()
 				}
 			}
 		}
@@ -305,6 +312,7 @@ class MeterAdvFragment : Fragment() {
 						is SheetResult.S16 -> binding.field16.setWriteValue(event.data)
 						is SheetResult.S50 -> binding.field50.setWriteValue(event.data)
 					}
+					refresh()
 				}
 			}
 		}

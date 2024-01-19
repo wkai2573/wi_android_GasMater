@@ -333,10 +333,11 @@ class BluetoothViewModel @Inject constructor(
 						"R57" -> if (!commResult.containsKey("D87D57")) errList.add("時間使用量")
 						"R58" -> if (!commResult.containsKey("D87D58")) errList.add("最大使用量")
 						"R59" -> if (!commResult.containsKey("D87D59")) errList.add("1日最大使用量")
-						"S31" -> if (!commResult.containsKey("D87D24")) errList.add("母火流量設定")
+						"S31" -> if (!commResult.containsKey("D87D31")) errList.add("母火流量設定")
 						"R50" -> if (!commResult.containsKey("D87D50")) errList.add("壓力遮斷判定值")
 						"S50" -> if (!commResult.containsKey("D87D50")) errList.add("壓力遮斷判定值設定")
 						"R51" -> if (!commResult.containsKey("D87D51")) errList.add("現在壓力值")
+						"C41" -> if (!commResult.containsKey("D87D41")) errList.add("中心遮斷制御")
 					}
 				}
 				if (errList.isNotEmpty()) {
@@ -344,7 +345,9 @@ class BluetoothViewModel @Inject constructor(
 						val msg = (commResult["error_msg"] as BaseInfo).text
 						if (msg.isNotEmpty()) "$msg\n" else ""
 					} else ""
-					val errorType = if (commResult.containsKey("error_D16")) {
+					val errorType = if (commResult.containsKey("error_DL9")) {
+						"通信忙線中，請稍後再試"
+					} else if (commResult.containsKey("error_D16")) {
 						"HHD用GW終端無回應(D16)"
 					} else if (commResult.containsKey("error_D36")) {
 						"對表U-bus通信異常(D36)"
@@ -446,6 +449,12 @@ class BluetoothViewModel @Inject constructor(
 					"R57" -> listOf(D87D57Step())
 					"R58" -> listOf(D87D58Step())
 					"R59" -> listOf(D87D59Step())
+					"R31" -> listOf(D87D31Step())
+					"S31" -> listOf(D87D31Step())
+					"R50" -> listOf(D87D50Step())
+					"S50" -> listOf(D87D50Step())
+					"R51" -> listOf(D87D51Step())
+					"C41" -> listOf(D87D41Step())
 					// todo 其他R87項目...
 					else -> listOf()
 				}
@@ -682,6 +691,34 @@ class BluetoothViewModel @Inject constructor(
 					continueSend = true
 				}
 
+				is D87D31Step -> {
+					val info = BaseInfo.get(respText, D87D31Info::class.java) as D87D31Info
+					commResult["D87D31"] = info
+					receiveSteps.removeAt(0)
+					continueSend = true
+				}
+
+				is D87D50Step -> {
+					val info = BaseInfo.get(respText, D87D50Info::class.java) as D87D50Info
+					commResult["D87D50"] = info
+					receiveSteps.removeAt(0)
+					continueSend = true
+				}
+
+				is D87D51Step -> {
+					val info = BaseInfo.get(respText, D87D51Info::class.java) as D87D51Info
+					commResult["D87D51"] = info
+					receiveSteps.removeAt(0)
+					continueSend = true
+				}
+
+				is D87D41Step -> {
+					val info = BaseInfo.get(respText, D87D41Info::class.java) as D87D41Info
+					commResult["D87D41"] = info
+					receiveSteps.removeAt(0)
+					continueSend = true
+				}
+
 				// todo 其他R87項目...
 			}
 
@@ -697,6 +734,10 @@ class BluetoothViewModel @Inject constructor(
 			kotlin.runCatching {
 				val info = BaseInfo.get(respText, D36Info::class.java) as D36Info
 				commResult["error_D36"] = info
+			}
+			kotlin.runCatching {
+				val info = BaseInfo.get(respText, D87DL9Info::class.java) as D87DL9Info
+				commResult["error_DL9"] = info
 			}
 			onCommEnd()
 		}
