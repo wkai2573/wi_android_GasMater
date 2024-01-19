@@ -28,6 +28,9 @@ import com.wavein.gasmeter.tools.rd64h.info.D05mInfo
 import com.wavein.gasmeter.tools.rd64h.info.D87D16Info
 import com.wavein.gasmeter.tools.rd64h.info.D87D23Info
 import com.wavein.gasmeter.tools.rd64h.info.D87D24Info
+import com.wavein.gasmeter.tools.rd64h.info.D87D57Info
+import com.wavein.gasmeter.tools.rd64h.info.D87D58Info
+import com.wavein.gasmeter.tools.rd64h.info.D87D59Info
 import com.wavein.gasmeter.tools.rd64h.info.MetaInfo
 import com.wavein.gasmeter.ui.NavViewModel
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
@@ -371,6 +374,21 @@ class MeterBaseFragment : Fragment() {
 						if (commResult.containsKey("D87D16")) {
 							val info = commResult["D87D16"] as D87D16Info
 							newMeterRow = newMeterRow.copy(meterStatus = info.data)
+						}
+						// D87D57: 時間使用量
+						if (commResult.containsKey("D87D57")) {
+							val info = commResult["D87D57"] as D87D57Info
+							newMeterRow = newMeterRow.copy(hourlyUsage = info.data)
+						}
+						// D87D58: 最大使用量
+						if (commResult.containsKey("D87D58")) {
+							val info = commResult["D87D58"] as D87D58Info
+							newMeterRow = newMeterRow.copy(maximumUsage = info.maximumUsage, maximumUsageTime = info.maximumUsageTime)
+						}
+						// D87D59: 1日最大使用量
+						if (commResult.containsKey("D87D59")) {
+							val info = commResult["D87D59"] as D87D59Info
+							newMeterRow = newMeterRow.copy(oneDayMaximumUsage = info.oneDayMaximumUsage, oneDayMaximumUsageDate = info.oneDayMaximumUsageDate)
 						}
 						// todo 其他R87結果...
 

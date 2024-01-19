@@ -50,7 +50,7 @@ class FieldAdv51 : LinearLayout {
 	private var readValues = emptyList<String>()
 	private var readMap = mapOf<String, String>()
 
-	fun setReadHeaders(readHeaders:List<String>, resetReadMap:Boolean = false) {
+	fun setReadHeaders(readHeaders:List<String>, resetReadMap:Boolean = true) {
 		this.readHeaders = readHeaders
 		if (resetReadMap) {
 			readMap = readHeaders.zip(readValues).toMap()
@@ -58,7 +58,7 @@ class FieldAdv51 : LinearLayout {
 		}
 	}
 
-	fun setReadValues(readValues:List<String>, resetReadMap:Boolean = false) {
+	fun setReadValues(readValues:List<String>, resetReadMap:Boolean = true) {
 		this.readValues = readValues
 		if (resetReadMap) {
 			readMap = readHeaders.zip(readValues).toMap()

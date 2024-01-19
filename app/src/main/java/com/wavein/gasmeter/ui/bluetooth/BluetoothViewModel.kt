@@ -420,7 +420,8 @@ class BluetoothViewModel @Inject constructor(
 			//如果需分割, 要在下方補n個 R70
 			*r87Steps.flatMapIndexed { index, step ->
 				val cc2 = if (index == 0) "\u0040" else "\u0000"
-				val cc3 = (index * 2).toChar()
+				val cc3 = (appTelegramInc).toChar()
+				appTelegramInc += 2
 				when (step.op) {
 					// 2part
 					"R23" -> listOf(step.copy(cc = "\u0021$cc2$cc3\u0000"), R70Step(step.adr))
@@ -443,6 +444,8 @@ class BluetoothViewModel @Inject constructor(
 					"R16" -> listOf(D87D16Step())
 					"S16" -> listOf(D87D16Step())
 					"R57" -> listOf(D87D57Step())
+					"R58" -> listOf(D87D58Step())
+					"R59" -> listOf(D87D59Step())
 					// todo 其他R87項目...
 					else -> listOf()
 				}
@@ -665,6 +668,20 @@ class BluetoothViewModel @Inject constructor(
 					continueSend = true
 				}
 
+				is D87D58Step -> {
+					val info = BaseInfo.get(respText, D87D58Info::class.java) as D87D58Info
+					commResult["D87D58"] = info
+					receiveSteps.removeAt(0)
+					continueSend = true
+				}
+
+				is D87D59Step -> {
+					val info = BaseInfo.get(respText, D87D59Info::class.java) as D87D59Info
+					commResult["D87D59"] = info
+					receiveSteps.removeAt(0)
+					continueSend = true
+				}
+
 				// todo 其他R87項目...
 			}
 
@@ -693,6 +710,10 @@ class BluetoothViewModel @Inject constructor(
 		}
 
 	//endregion
+
+	companion object {
+		var appTelegramInc = 0 // 電文Index遞增用
+	}
 }
 
 // 掃描狀態

@@ -35,26 +35,26 @@ data class MeterRow(
 	val dash:String? = null,                     // -
 
 	// 進階欄位
-	val alarmInfo1:String? = null,                   // *告警1 (アラーム情報1 03-01)
-	val alarmInfo2:String? = null,                   // *告警2 (アラーム情報2 03-02) (讀取時用R24)
+	val alarmInfo1:String? = null,                   // *告警1 (アラーム情報1 03-01 {8})
+	val alarmInfo2:String? = null,                   // *告警2 (アラーム情報2 03-02 {8}) (讀取時用R24)
 	val batteryVoltageDropAlarm:Boolean? = null,     // *電池電壓警報
 	val innerPipeLeakageAlarm:Boolean? = null,       // *洩漏警報
 	val shutoff:Boolean? = null,                     // *遮斷
-	val pressureValue:String? = null,                // *壓力值 (現在圧力値 51-01)
-	val shutdownHistory1:String? = null,             // *遮斷履歷1 (遮断5回分履歴 23-01)
+	val pressureValue:String? = null,                // *壓力值 (現在圧力値 51-01 {4})
+	val shutdownHistory1:String? = null,             // *遮斷履歷1 (遮断5回分履歴 23-01 {13*5})
 	val shutdownHistory2:String? = null,             // *遮斷履歷2
 	val shutdownHistory3:String? = null,             // *遮斷履歷3
 	val shutdownHistory4:String? = null,             // *遮斷履歷4
 	val shutdownHistory5:String? = null,             // *遮斷履歷5
-	val meterStatus:String? = null,                  // 表狀態 (メーター状態 16-02)
-	val hourlyUsage:String? = null,                  // 每小時使用量 (時間使用量 57-01)
-	val maximumUsage:String? = null,                 // 最大使用量 (最大使用量 58-01)
-	val maximumUsageTime:String? = null,             // 最大使用量時間 (最大使用量日時 58-01)
-	val oneDayMaximumUsage:String? = null,           // 1日最大使用量 (1日最大使用量 59-01)
-	val oneDayMaximumUsageDate:String? = null,       // 1日最大使用量日期 (1日最大使用量月日 59-01)
-	val registerFuseFlowRate1:String? = null,        // 登錄母火流量1 (登録口火流量1 24-06) (設定時用S31)
+	val meterStatus:String? = null,                  // 表狀態 (メーター状態 16-02 {9})
+	val hourlyUsage:String? = null,                  // 每小時使用量 (時間使用量 57-01 {4})
+	val maximumUsage:String? = null,                 // 最大使用量 (最大使用量 58-01 {4})
+	val maximumUsageTime:String? = null,             // 最大使用量時間 (最大使用量日時 58-02 {8})
+	val oneDayMaximumUsage:String? = null,           // 1日最大使用量 (1日最大使用量 59-01 {6})
+	val oneDayMaximumUsageDate:String? = null,       // 1日最大使用量日期 (1日最大使用量月日 59-02 {4})
+	val registerFuseFlowRate1:String? = null,        // 登錄母火流量1 (登録口火流量1 24-06 {4*2}) (設定時用S31)
 	val registerFuseFlowRate2:String? = null,        // 登錄母火流量2
-	/** 壓力遮斷判定值 (圧力遮断判定値 50-01~50-05)
+	/** 壓力遮斷判定值 (圧力遮断判定値 50-01~50-05 {13})
 	 * 3bit (圧力低下判定値 50-01)
 	 * 3bit (低下復圧状態判定値 50-02)
 	 * 3bit (上昇復圧状態判定値 50-03)

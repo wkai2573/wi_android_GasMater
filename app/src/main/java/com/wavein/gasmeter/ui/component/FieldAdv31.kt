@@ -33,8 +33,8 @@ class FieldAdv31 : LinearLayout {
 
 	fun setReadValue(data:String) {
 		if (data.length != 8) return
-		val list = data.chunked(8).map {
-			val value = it.toFloat()
+		val list = data.chunked(4).map {
+			val value = runCatching { it.toFloat() }.getOrElse { return@map "" }
 			return@map if (value == 0f) 0 else value / 100
 		}
 		binding?.readLowerLimitInput?.editText?.setText(list[0].toString())

@@ -66,6 +66,23 @@ class MeterAdvFragment : Fragment() {
 
 		// 傳送按鈕
 		binding.sendFab.setOnClickListener {
+			// todo 暫時
+			// var newCsvRows = meterVM.meterRowsStateFlow.value
+			// newCsvRows = newCsvRows.map { meterRow ->
+			// 	var newMeterRow = meterRow
+			// 	if (meterRow.meterId == "00000002306003") {
+			// 		newMeterRow = newMeterRow.copy(meterStatus = "@@@@@@@@@")
+			// 		newMeterRow = newMeterRow.copy(hourlyUsage = "1234")
+			// 		newMeterRow = newMeterRow.copy(maximumUsage = "1234", maximumUsageTime = "12345678")
+			// 		newMeterRow = newMeterRow.copy(oneDayMaximumUsage = "123456", oneDayMaximumUsageDate = "1234")
+			// 		newMeterRow = newMeterRow.copy(registerFuseFlowRate1 = "1234", registerFuseFlowRate2 = "1234")
+			// 		newMeterRow = newMeterRow.copy(pressureShutOffJudgmentValue = "1231231231239")
+			// 		newMeterRow = newMeterRow.copy(pressureValue = "1234")
+			// 	}
+			// 	newMeterRow
+			// }
+			// csvVM.updateSaveCsv(newCsvRows, meterVM)
+
 			if (r87Steps.isEmpty()) return@setOnClickListener
 			// 視窗確認, 若steps含設定項-需要輸入密碼
 			if (r87Steps.any { it.op.startsWith('S') || it.op.startsWith('C') }) {
@@ -270,15 +287,9 @@ class MeterAdvFragment : Fragment() {
 						binding.field16.setReadValue(it.meterStatus ?: "")
 						binding.field16.setWriteValue(if (it.meterStatus.isNullOrEmpty()) "" else "@@@@@@@@@${it.meterStatus}")
 						binding.field57.setReadValues(splitStringByLength(it.hourlyUsage ?: "", 4))
-						binding.field58.setReadValues(splitStringByLength((it.maximumUsage ?: "").padStart(4) + it.maximumUsageTime, 4, 2, 2, 2, 2))
-						binding.field59.setReadValues(splitStringByLength((it.oneDayMaximumUsage ?: "").padStart(4) + it.oneDayMaximumUsageDate, 4, 2, 2))
-						binding.field31.setReadValue(
-							if (it.registerFuseFlowRate1.isNullOrEmpty() || it.registerFuseFlowRate2.isNullOrEmpty()) {
-								""
-							} else {
-								"下限 ${it.registerFuseFlowRate1} ~ 上限${it.registerFuseFlowRate2} L/h"
-							}
-						)
+						binding.field58.setReadValues(splitStringByLength((it.maximumUsage ?: "").padStart(4) + (it.maximumUsageTime ?: ""), 4, 2, 2, 2, 2))
+						binding.field59.setReadValues(splitStringByLength((it.oneDayMaximumUsage ?: "").padStart(6) + (it.oneDayMaximumUsageDate ?: ""), 6, 2, 2))
+						binding.field31.setReadValue((it.registerFuseFlowRate1 ?: "").padStart(4) + (it.registerFuseFlowRate2 ?: "").padStart(4))
 						binding.field50.setReadValue(it.pressureShutOffJudgmentValue ?: "")
 						binding.field51.setReadValues(splitStringByLength(it.pressureValue ?: "", 4))
 					}
