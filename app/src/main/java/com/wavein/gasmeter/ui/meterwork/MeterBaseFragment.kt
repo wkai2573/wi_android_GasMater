@@ -42,17 +42,20 @@ import com.wavein.gasmeter.ui.bluetooth.BtDialogFragment
 import com.wavein.gasmeter.ui.bluetooth.CommEndEvent
 import com.wavein.gasmeter.ui.bluetooth.CommState
 import com.wavein.gasmeter.ui.bluetooth.ConnectEvent
+import com.wavein.gasmeter.ui.ftp.FtpViewModel
 import com.wavein.gasmeter.ui.loading.Tip
 import com.wavein.gasmeter.ui.meterwork.groups.MeterGroupsFragment
 import com.wavein.gasmeter.ui.meterwork.list.MeterListFragment
 import com.wavein.gasmeter.ui.meterwork.row.MeterRowFragment
 import com.wavein.gasmeter.ui.setting.CsvViewModel
+import com.wavein.gasmeter.ui.setting.SetOpMeaningMap
+import com.wavein.gasmeter.ui.setting.SettingViewModel
+import com.wavein.gasmeter.ui.setting.SettingViewModel.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-
 
 class MeterBaseFragment : Fragment() {
 
@@ -63,6 +66,8 @@ class MeterBaseFragment : Fragment() {
 	private val blVM by activityViewModels<BluetoothViewModel>()
 	private val meterVM by activityViewModels<MeterViewModel>()
 	private val csvVM by activityViewModels<CsvViewModel>()
+	private val settingVM by activityViewModels<SettingViewModel>()
+	private val ftpVM by activityViewModels<FtpViewModel>()
 
 	override fun onDestroyView() {
 		super.onDestroyView()
@@ -349,6 +354,7 @@ class MeterBaseFragment : Fragment() {
 				}
 
 				"R87" -> {
+					val logRows = mutableListOf<LogRow>()
 					val meterId = metaInfo.meterIds[0]
 					newCsvRows = newCsvRows.map { meterRow ->
 						var newMeterRow = meterRow
@@ -378,6 +384,9 @@ class MeterBaseFragment : Fragment() {
 						if (commResult.containsKey("D87D16")) {
 							val info = commResult["D87D16"] as D87D16Info
 							newMeterRow = newMeterRow.copy(meterStatus = info.meterStatus)
+							if (metaInfo.r87Steps?.any { it.op == "S16" } == true) {
+								logRows.add(LogRow(meterId = meterId, op = "S16", oldValue = meterRow.meterStatus ?: "未查詢", newValue = newMeterRow.meterStatus ?: ""))
+							}
 						}
 						// D87D57: 時間使用量
 						if (commResult.containsKey("D87D57")) {
@@ -398,11 +407,18 @@ class MeterBaseFragment : Fragment() {
 						if (commResult.containsKey("D87D31")) {
 							val info = commResult["D87D31"] as D87D31Info
 							newMeterRow = newMeterRow.copy(registerFuseFlowRate1 = info.registerFuseFlowRate1, registerFuseFlowRate2 = info.registerFuseFlowRate2)
+							if (metaInfo.r87Steps?.any { it.op == "S31" } == true) {
+								logRows.add(LogRow(meterId = meterId, op = "S31", oldValue = meterRow.registerFuseFlowRate1 ?: "未查詢", newValue = newMeterRow.registerFuseFlowRate1 ?: ""))
+								logRows.add(LogRow(meterId = meterId, op = "S31", oldValue = meterRow.registerFuseFlowRate2 ?: "未查詢", newValue = newMeterRow.registerFuseFlowRate2 ?: ""))
+							}
 						}
 						// D87D50: 壓力遮斷判定值
 						if (commResult.containsKey("D87D50")) {
 							val info = commResult["D87D50"] as D87D50Info
 							newMeterRow = newMeterRow.copy(pressureShutOffJudgmentValue = info.pressureShutOffJudgmentValue)
+							if (metaInfo.r87Steps?.any { it.op == "S50" } == true) {
+								logRows.add(LogRow(meterId = meterId, op = "S50", oldValue = meterRow.pressureShutOffJudgmentValue ?: "未查詢", newValue = newMeterRow.pressureShutOffJudgmentValue ?: ""))
+							}
 						}
 						// D87D51: 現在壓力值
 						if (commResult.containsKey("D87D51")) {
@@ -413,16 +429,22 @@ class MeterBaseFragment : Fragment() {
 						if (commResult.containsKey("D87D41")) {
 							val info = commResult["D87D41"] as D87D41Info
 							newMeterRow = newMeterRow.copy(alarmInfo1 = info.alarmInfo1)
+							if (metaInfo.r87Steps?.any { it.op == "C41" } == true) {
+								logRows.add(LogRow(meterId = meterId, op = "C41", oldValue = meterRow.alarmInfo1 ?: "未查詢", newValue = newMeterRow.alarmInfo1 ?: ""))
+							}
 						}
 						// todo 其他R87結果...
 
 						newMeterRow
 					}
+
+					// Ftp Log 紀錄有更新瓦斯表的功能(Sxx,Cxx)
+					if (logRows.isNotEmpty()) {
+						settingVM.createLogFile(logRows)
+					}
+					ftpVM.uploadLog()
 				}
 			}
-
-			// todo ftp log 紀錄有更新瓦斯表的功能
-			// ...
 
 			// 更新ui並儲存csv
 			csvVM.updateSaveCsv(newCsvRows, meterVM)

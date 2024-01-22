@@ -97,31 +97,19 @@ class SettingFragment : Fragment() {
 		// todo 測試用
 		binding.testBtn.setOnClickListener {
 
-			lifecycleScope.launch {
-				SharedEvent.catching {
-					val ccU = "\u0021\u0040\u0000\u0000".toUBytes()
-					val adrU = "00000002306003".toUBytes()
-					val dpU = "\u0040EN1".toUBytes()
-					val opU = "R16".toUBytes()
-					val data42 = "".padEnd(42, ' ')
-					val data42U = data42.toUBytes() // 認證: data僅42碼
-					val timeHex = "240117161429"
-					val timeU = timeHex.hexToUBytes()
-					val macU = RD64H.Auth.calcMac((ccU + adrU + adrU + dpU + opU + data42U + timeU).toByteArray()).toUByteArray()
-					Log.i("@@@", macU.toHex())
-
-
-					val 電文前面87位 = "214000003030303030303032333036303033303030303030303233303630303340454e31523136202020202020202020202020202020202020202020202020202020202020202020202020202020202020240117161429".hexToUBytes()
-					val mac = RD64H.Auth.calcMac(電文前面87位.toByteArray())
-					Log.i("@@@", mac.toHex())
-				}
-			}
-
 			// lifecycleScope.launch {
 			// 	SharedEvent.catching {
-			// 	  val ss = Preference[Preference.SESSION_KEY_FILE, ""]!!
-			// 		val (cryptKey, macKey) = RD64H.Auth.decryptKeyFile(ss)
-			// 		val 電文前面87位 = "7140080041504c41444452494e495456414c303030303030303030303030303040454e31523136202020202020202020202020202020202020202020202020202020202020202020202020202020202020240104104518".hexToUBytes()
+			// 		val ccU = "\u0021\u0040\u0000\u0000".toUBytes()
+			// 		val adrU = "00000002306003".toUBytes()
+			// 		val dpU = "\u0040EN1".toUBytes()
+			// 		val opU = "R16".toUBytes()
+			// 		val data42 = "".padEnd(42, ' ')
+			// 		val data42U = data42.toUBytes() // 認證: data僅42碼
+			// 		val timeHex = "240117161429"
+			// 		val timeU = timeHex.hexToUBytes()
+			// 		val macU = RD64H.Auth.calcMac((ccU + adrU + adrU + dpU + opU + data42U + timeU).toByteArray()).toUByteArray()
+			// 		Log.i("@@@", macU.toHex())
+			// 		val 電文前面87位 = "214000003030303030303032333036303033303030303030303233303630303340454e31523136202020202020202020202020202020202020202020202020202020202020202020202020202020202020240117161429".hexToUBytes()
 			// 		val mac = RD64H.Auth.calcMac(電文前面87位.toByteArray())
 			// 		Log.i("@@@", mac.toHex())
 			// 	}
@@ -487,6 +475,10 @@ class SettingFragment : Fragment() {
 			}
 		}
 
+		// 其他初始化__________
+
+		// 每次開啟時上傳log
+		ftpVM.uploadLog()
 	}
 
 

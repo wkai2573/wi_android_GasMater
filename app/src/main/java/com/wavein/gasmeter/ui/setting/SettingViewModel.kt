@@ -22,13 +22,13 @@ import javax.inject.Inject
 
 private const val uuidFilename = ".wavein.gasmeter.uuid"
 
-private val bom = byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte())
+private val BOM = byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte())
 
-private val opMeaningMap = mapOf(
+val SetOpMeaningMap = mapOf(
 	"S16" to "表狀態",
 	"S31" to "登錄母火流量",
 	"S50" to "壓力遮斷判定值",
-	"C41" to "中心遮斷",
+	"C41" to "中心遮斷制御",
 )
 
 @HiltViewModel
@@ -122,12 +122,17 @@ class SettingViewModel @Inject constructor(
 	/** 建立log檔案 (儲存到本機/documents/log/)
 	 * 上傳log參考: FtpViewModel.uploadLog()
 	 */
-	fun createLogFile(meterId:String, op:String, oldValue:String = "", newValue:String = "") {
+	fun createLogFile(logRows:List<LogRow>) {
+		if (logRows.isEmpty()) return
+		val meterId = logRows[0].meterId
 		// log內容
 		val filename = "${meterId}_${TimeUtils.getCurrentTime("yyyyMMdd_HHmmss")}.log"
+		val currentTime = TimeUtils.getCurrentTime()
 		val rows:List<List<String>> = listOf(
 			listOf("通信ID(表ID)", "時間", "操作", "操作碼", "原值", "新值"),
-			listOf(meterId, TimeUtils.getCurrentTime(), opMeaningMap[op] ?: "", op, oldValue, newValue),
+			*logRows.map {
+				listOf(it.meterId, currentTime, SetOpMeaningMap[it.op] ?: "", it.op, it.oldValue, it.newValue)
+			}.toTypedArray(),
 		)
 		val csvContent = csvWriter().writeAllAsString(rows)
 
@@ -141,12 +146,14 @@ class SettingViewModel @Inject constructor(
 				logFolder.mkdirs()
 				val file = File(logFolder, filename)
 				val outputStream = FileOutputStream(file)
-				outputStream.write(bom + csvContent.toByteArray())
+				outputStream.write(BOM + csvContent.toByteArray())
 			}
 		}.onFailure {
 			it.printStackTrace()
 		}
 	}
+
+	data class LogRow(val meterId:String, val op:String, val oldValue:String = "", val newValue:String = "")
 
 }
 
