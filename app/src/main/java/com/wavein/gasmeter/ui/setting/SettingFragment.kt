@@ -94,40 +94,6 @@ class SettingFragment : Fragment() {
 	private fun onAllPermissionAllow() {
 		binding.permission.layout.visibility = View.GONE
 
-		// todo 測試用
-		binding.testBtn.setOnClickListener {
-
-			// lifecycleScope.launch {
-			// 	SharedEvent.catching {
-			// 		val ccU = "\u0021\u0040\u0000\u0000".toUBytes()
-			// 		val adrU = "00000002306003".toUBytes()
-			// 		val dpU = "\u0040EN1".toUBytes()
-			// 		val opU = "R16".toUBytes()
-			// 		val data42 = "".padEnd(42, ' ')
-			// 		val data42U = data42.toUBytes() // 認證: data僅42碼
-			// 		val timeHex = "240117161429"
-			// 		val timeU = timeHex.hexToUBytes()
-			// 		val macU = RD64H.Auth.calcMac((ccU + adrU + adrU + dpU + opU + data42U + timeU).toByteArray()).toUByteArray()
-			// 		Log.i("@@@", macU.toHex())
-			// 		val 電文前面87位 = "214000003030303030303032333036303033303030303030303233303630303340454e31523136202020202020202020202020202020202020202020202020202020202020202020202020202020202020240117161429".hexToUBytes()
-			// 		val mac = RD64H.Auth.calcMac(電文前面87位.toByteArray())
-			// 		Log.i("@@@", mac.toHex())
-			// 	}
-			// }
-
-			// val bytes1 = byteArrayOf(0x61.toByte(), 0x62.toByte())
-			// val ubytes1 = ubyteArrayOf(0x61.toUByte(), 0x62.toUByte())
-			// val bytes2 = byteArrayOf(0x80.toByte(), 0x81.toByte())
-			// val ubytes2 = ubyteArrayOf(0x80.toUByte(), 0x81.toUByte())
-			// Log.i("@@@", bytes1.toHex().hexToString())
-			// Log.i("@@@", ubytes1.toHex().hexToString())
-			// Log.i("@@@", bytes2.toHex().hexToString())
-			// Log.i("@@@", ubytes2.toHex().hexToString())
-
-			// settingVM.createLogFile("表IDD", "C41", "舊值啦", "新值啦")
-			// ftpVM.uploadLog()
-		}
-
 		// 藍牙設備__________
 
 		// APP開啟時 首次選擇上次設備

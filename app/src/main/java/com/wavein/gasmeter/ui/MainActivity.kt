@@ -123,7 +123,6 @@ class MainActivity : AppCompatActivity() {
 				R.id.nav_settingFragment,
 				R.id.nav_meterBaseFragment,
 				R.id.nav_meterSearchFragment,
-				// R.id.nav_testFragment,
 				R.id.nav_nccFragment,
 			)
 		)

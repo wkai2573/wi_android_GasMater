@@ -39,12 +39,6 @@
         android:paddingBottom="64dp">
 
         <!-- 藍牙裝置 -->
-        <Button
-          android:id="@+id/testBtn"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:text="TEST" />
-
         <LinearLayout
           android:id="@+id/btArea"
           android:layout_width="match_parent"

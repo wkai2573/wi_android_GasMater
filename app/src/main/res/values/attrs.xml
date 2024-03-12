@@ -31,7 +31,6 @@
     <attr name="fieldAdv51ReadValues" format="string" />
   </declare-styleable>
 
-  <!-- todo 待改成FieldAdv31 -->
   <declare-styleable name="FieldAdv31">
     <attr name="fieldAdv31Title" format="string" />
     <attr name="fieldAdv31ReadChecked" format="boolean" />
