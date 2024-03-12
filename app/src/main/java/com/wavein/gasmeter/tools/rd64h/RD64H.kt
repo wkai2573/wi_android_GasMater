@@ -203,7 +203,10 @@ object RD64H {
 			else -> {
 				val ccU = cc.toUBytes()
 				val adrU = adr.toUBytes()
-				val dp = "\u0000EN1"
+				val dp = when (op) {
+					"C02" -> "\u0000*00"
+					else -> "\u0000EN1"
+				}
 				val dpU = dp.toUBytes()
 				val opU = op.toUBytes()
 				val data64 = data.padEnd(64, ' ')
@@ -257,8 +260,9 @@ object RD64H {
 	object Auth {
 
 		// 最終macKey, 初始化在 SettingViewModel.initSessionKey()
-		var cryptKey:ByteArray = byteArrayOf()
-		var macKey:ByteArray = byteArrayOf()
+		// *現在改成固定為 "0000000000000000"
+		var cryptKey:ByteArray = "0000000000000000".toByteArray()
+		var macKey:ByteArray = "0000000000000000".toByteArray()
 
 		private fun String.substringLength(startIndex:Int, length:Int):String {
 			return this.substring(startIndex, min(startIndex + length, this.length))

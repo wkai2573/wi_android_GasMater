@@ -7,7 +7,7 @@ import android.widget.LinearLayout
 import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.CustFieldAdv41Binding
 
-// 自訂View元件: 進階欄位_制御(C41)
+// 自訂View元件: 進階欄位_制御(C41 C02)
 class FieldAdv41 : LinearLayout {
 	var binding:CustFieldAdv41Binding? = null
 

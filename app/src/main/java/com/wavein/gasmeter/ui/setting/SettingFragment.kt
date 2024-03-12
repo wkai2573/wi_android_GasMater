@@ -311,31 +311,6 @@ class SettingFragment : Fragment() {
 				onSaveCallback = { ftpVM.saveFtpInfo(it) })
 		}
 
-		// 通信設定__________
-
-		// 註冊UUID
-		viewLifecycleOwner.lifecycleScope.launch {
-			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-				settingVM.sessionKeyFlow.asStateFlow().collectLatest { sessionKey ->
-					if (sessionKey.isEmpty()) {
-						binding.sessionKeyInput.editText?.setText("未設定通信金鑰 (點擊設定)")
-						binding.sessionKeyInput.editText?.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.md_theme_light_error))
-					} else {
-						binding.sessionKeyInput.editText?.setText("已設定通信金鑰 (點擊重新設定)")
-						binding.sessionKeyInput.editText?.setTextColor(ContextCompat.getColorStateList(requireContext(), R.color.md_theme_light_tertiary))
-					}
-				}
-			}
-		}
-
-		binding.sessionKeyInput.editText?.setOnClickListener {
-			val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-				addCategory(Intent.CATEGORY_OPENABLE)
-				type = "*/*"
-			}
-			sessionKeyFilePickerLauncher.launch(intent)
-		}
-
 		// 產品註冊__________
 
 		// ui
@@ -398,7 +373,6 @@ class SettingFragment : Fragment() {
 							binding.appActivateBtn.visibility = View.VISIBLE
 							binding.btArea.visibility = View.GONE
 							binding.fileArea.visibility = View.GONE
-							binding.commArea.visibility = View.GONE
 							if (Preference[Preference.APP_ACTIVATED, false]!!) {
 								binding.appActivateBtn.callOnClick()
 							}
@@ -416,7 +390,6 @@ class SettingFragment : Fragment() {
 							binding.appActivateBtn.visibility = View.VISIBLE
 							binding.btArea.visibility = View.GONE
 							binding.fileArea.visibility = View.GONE
-							binding.commArea.visibility = View.GONE
 						}
 
 						AppState.Activated -> {
@@ -432,7 +405,6 @@ class SettingFragment : Fragment() {
 							binding.appActivateBtn.visibility = View.GONE
 							binding.btArea.visibility = View.VISIBLE
 							binding.fileArea.visibility = View.VISIBLE
-							binding.commArea.visibility = View.VISIBLE
 						}
 					}
 				}
@@ -504,30 +476,6 @@ class SettingFragment : Fragment() {
 	// csv檔案PickerLauncher
 	private val csvFilePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
 		csvVM.readCsvByPicker(requireContext(), result, meterVM)
-	}
-
-	// 通信keyPickerLauncher
-	private val sessionKeyFilePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-		if (result.resultCode == Activity.RESULT_OK) {
-			runCatching {
-				val uri = result.data?.data!!
-				val sessionKey = FileUtils.readFileContent(requireContext(), uri, 1024, listOf(".key", ".txt"))
-				Preference[Preference.SESSION_KEY_FILE] = sessionKey
-				settingVM.initSessionKey()
-				if (RD64H.Auth.macKey.isEmpty()) {
-					throw Exception("金鑰異常，無法分析出MacKey")
-				} else {
-					lifecycleScope.launch {
-						SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("通信金鑰設定成功", SharedEvent.Color.Success))
-					}
-				}
-			}.onFailure {
-				it.printStackTrace()
-				lifecycleScope.launch {
-					SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(it.message ?: "檔案讀取失敗", SharedEvent.Color.Error))
-				}
-			}
-		}
 	}
 
 	//region __________權限方法__________

@@ -25,6 +25,7 @@ import com.wavein.gasmeter.databinding.FragmentMeterBaseBinding
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.TimeUtils
 import com.wavein.gasmeter.tools.rd64h.info.D05mInfo
+import com.wavein.gasmeter.tools.rd64h.info.D87D02Info
 import com.wavein.gasmeter.tools.rd64h.info.D87D16Info
 import com.wavein.gasmeter.tools.rd64h.info.D87D23Info
 import com.wavein.gasmeter.tools.rd64h.info.D87D24Info
@@ -431,6 +432,13 @@ class MeterBaseFragment : Fragment() {
 							newMeterRow = newMeterRow.copy(alarmInfo1 = info.alarmInfo1)
 							if (metaInfo.r87Steps?.any { it.op == "C41" } == true) {
 								logRows.add(LogRow(meterId = meterId, op = "C41", oldValue = meterRow.alarmInfo1 ?: "未查詢", newValue = newMeterRow.alarmInfo1 ?: ""))
+							}
+						}
+						// D87D02: 強制Session中斷
+						if (commResult.containsKey("D87D02")) {
+							val info = commResult["D87D02"] as D87D02Info
+							if (metaInfo.r87Steps?.any { it.op == "C02" } == true) {
+								logRows.add(LogRow(meterId = meterId, op = "C02", oldValue = "", newValue = ""))
 							}
 						}
 						// todo 其他R87結果...

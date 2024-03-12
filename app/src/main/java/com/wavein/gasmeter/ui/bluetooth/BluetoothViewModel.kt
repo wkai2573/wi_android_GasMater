@@ -338,6 +338,7 @@ class BluetoothViewModel @Inject constructor(
 						"S50" -> if (!commResult.containsKey("D87D50")) errList.add("壓力遮斷判定值設定")
 						"R51" -> if (!commResult.containsKey("D87D51")) errList.add("現在壓力值")
 						"C41" -> if (!commResult.containsKey("D87D41")) errList.add("中心遮斷制御")
+						"C02" -> if (!commResult.containsKey("D87D02")) errList.add("強制Session中斷")
 					}
 				}
 				if (errList.isNotEmpty()) {
@@ -455,6 +456,7 @@ class BluetoothViewModel @Inject constructor(
 					"S50" -> listOf(D87D50Step())
 					"R51" -> listOf(D87D51Step())
 					"C41" -> listOf(D87D41Step())
+					"C02" -> listOf(D87D02Step())
 					// todo 其他R87項目...
 					else -> listOf()
 				}
@@ -482,14 +484,14 @@ class BluetoothViewModel @Inject constructor(
 			}
 
 			is __5Step -> {
-				commTextStateFlow.value = Tip("正在與母機建立連結", "5↔D70", progressText)
+				commTextStateFlow.value = Tip("正在與母機建立連結", "", progressText) // 5↔D70
 				val sendSP = RD64H.telegramConvert("5", "+s+p")
 				wt(WT134)
 				transceiver?.write(sendSP)
 			}
 
 			is R80Step -> {
-				commTextStateFlow.value = Tip("抄表中", "R80↔D05", progressText)
+				commTextStateFlow.value = Tip("抄表中", "", progressText) // R80↔D05
 				val btParentId = (commResult["D70"] as D70Info).btParentId
 				val sendText = RD64H.createR80Text(btParentId, sendStep.meterIds)
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
@@ -506,7 +508,7 @@ class BluetoothViewModel @Inject constructor(
 			}
 
 			is R89Step -> {
-				commTextStateFlow.value = Tip("正在要求通信許可", "R89↔D36", progressText)
+				commTextStateFlow.value = Tip("正在要求通信許可", "", progressText) // R89↔D36
 				val sendText = "ZA${sendStep.meterId}R8966ZD${sendStep.meterId}R36"
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
 				wt(WT134)
@@ -515,21 +517,22 @@ class BluetoothViewModel @Inject constructor(
 
 			is R87Step -> {
 				when (sendStep.op) {
-					"R01" -> commTextStateFlow.value = Tip("正在讀取讀數", "R87R01", progressText)
-					"R05" -> commTextStateFlow.value = Tip("正在讀取讀數", "R87R05", progressText)
-					"R19" -> commTextStateFlow.value = Tip("正在讀取時刻", "R87R19", progressText)
-					"R23" -> commTextStateFlow.value = Tip("正在讀取五回遮斷履歷", "R87R23", progressText)
-					"R24" -> commTextStateFlow.value = Tip("正在讀取表內部資料", "R87R24", progressText)
-					"R16" -> commTextStateFlow.value = Tip("正在讀取表狀態", "R87R16", progressText)
-					"S16" -> commTextStateFlow.value = Tip("正在設定表狀態", "R87S16", progressText)
-					"R57" -> commTextStateFlow.value = Tip("正在讀取時間使用量", "R87R57", progressText)
-					"R58" -> commTextStateFlow.value = Tip("正在讀取最大使用量", "R87R58", progressText)
-					"R59" -> commTextStateFlow.value = Tip("正在讀取1日最大使用量", "R87R59", progressText)
-					"S31" -> commTextStateFlow.value = Tip("正在設定登錄母火流量", "R87S31", progressText)
-					"R50" -> commTextStateFlow.value = Tip("正在讀取壓力遮斷判定值", "R87R50", progressText)
-					"S50" -> commTextStateFlow.value = Tip("正在設定壓力遮斷判定值", "R87S50", progressText)
-					"R51" -> commTextStateFlow.value = Tip("正在讀取壓力值", "R87R51", progressText)
-					"C41" -> commTextStateFlow.value = Tip("正在設定中心遮斷", "R87C41", progressText)
+					"R01" -> commTextStateFlow.value = Tip("正在讀取讀數", "", progressText) // R87R01
+					"R05" -> commTextStateFlow.value = Tip("正在讀取讀數", "", progressText) // R87R05
+					"R19" -> commTextStateFlow.value = Tip("正在讀取時刻", "", progressText) // R87R19
+					"R23" -> commTextStateFlow.value = Tip("正在讀取五回遮斷履歷", "", progressText) // R87R23
+					"R24" -> commTextStateFlow.value = Tip("正在讀取表內部資料", "", progressText) // R87R24
+					"R16" -> commTextStateFlow.value = Tip("正在讀取表狀態", "", progressText) // R87R16
+					"S16" -> commTextStateFlow.value = Tip("正在設定表狀態", "", progressText) // R87S16
+					"R57" -> commTextStateFlow.value = Tip("正在讀取時間使用量", "", progressText) // R87R57
+					"R58" -> commTextStateFlow.value = Tip("正在讀取最大使用量", "", progressText) // R87R58
+					"R59" -> commTextStateFlow.value = Tip("正在讀取1日最大使用量", "", progressText) // R87R59
+					"S31" -> commTextStateFlow.value = Tip("正在設定登錄母火流量", "", progressText) // R87S31
+					"R50" -> commTextStateFlow.value = Tip("正在讀取壓力遮斷判定值", "", progressText) // R87R50
+					"S50" -> commTextStateFlow.value = Tip("正在設定壓力遮斷判定值", "", progressText) // R87S50
+					"R51" -> commTextStateFlow.value = Tip("正在讀取壓力值", "", progressText) // R87R51
+					"C41" -> commTextStateFlow.value = Tip("正在設定中心遮斷", "", progressText) // R87C41
+					"C02" -> commTextStateFlow.value = Tip("正在中斷Session", "", progressText) // R87C02
 				}
 				val r87 = "ZD${sendStep.adr}R87"
 				// 加入時刻
@@ -715,6 +718,13 @@ class BluetoothViewModel @Inject constructor(
 				is D87D41Step -> {
 					val info = BaseInfo.get(respText, D87D41Info::class.java) as D87D41Info
 					commResult["D87D41"] = info
+					receiveSteps.removeAt(0)
+					continueSend = true
+				}
+
+				is D87D02Step -> {
+					val info = BaseInfo.get(respText, D87D02Info::class.java) as D87D02Info
+					commResult["D87D02"] = info
 					receiveSteps.removeAt(0)
 					continueSend = true
 				}

@@ -29,6 +29,7 @@ val SetOpMeaningMap = mapOf(
 	"S31" to "登錄母火流量",
 	"S50" to "壓力遮斷判定值",
 	"C41" to "中心遮斷制御",
+	"C02" to "強制Session中斷",
 )
 
 @HiltViewModel
@@ -38,11 +39,9 @@ class SettingViewModel @Inject constructor(
 ) : ViewModel() {
 
 	val uuidStateFlow = MutableStateFlow("")
-	val sessionKeyFlow = MutableStateFlow("")
 
 	init {
 		initUuid()
-		initSessionKey()
 	}
 
 	// 初始化UUID
@@ -52,19 +51,6 @@ class SettingViewModel @Inject constructor(
 			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("無法生成UUID", SharedEvent.Color.Error))
 		} else {
 			uuidStateFlow.value = uuid
-		}
-	}
-
-	// 初始化SessionKey, cryptKey, macKey
-	fun initSessionKey() {
-		val sessionKey = Preference[Preference.SESSION_KEY_FILE, ""] ?: ""
-		val (cryptKey, macKey) = RD64H.Auth.decryptKeyFile(sessionKey)
-		RD64H.Auth.cryptKey = cryptKey
-		RD64H.Auth.macKey = macKey
-		if (macKey.isNotEmpty()) {
-			sessionKeyFlow.value = sessionKey
-		} else {
-			sessionKeyFlow.value = ""
 		}
 	}
 

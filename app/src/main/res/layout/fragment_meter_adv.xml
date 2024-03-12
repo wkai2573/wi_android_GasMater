@@ -100,6 +100,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:fieldAdv41Title="41. 中心遮斷" />
+
+      <com.wavein.gasmeter.ui.component.FieldAdv41
+        android:id="@+id/field_02"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:fieldAdv41Title="02. 強制Session中斷" />
     </LinearLayout>
   </androidx.core.widget.NestedScrollView>
 

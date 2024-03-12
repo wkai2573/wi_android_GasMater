@@ -66,23 +66,6 @@ class MeterAdvFragment : Fragment() {
 
 		// 通信按鈕
 		binding.sendFab.setOnClickListener { btn ->
-			// todo 暫時
-			// var newCsvRows = meterVM.meterRowsStateFlow.value
-			// newCsvRows = newCsvRows.map { meterRow ->
-			// 	var newMeterRow = meterRow
-			// 	if (meterRow.meterId == "00000002306003") {
-			// 		newMeterRow = newMeterRow.copy(meterStatus = "@@@@@@@@@")
-			// 		newMeterRow = newMeterRow.copy(hourlyUsage = "1234")
-			// 		newMeterRow = newMeterRow.copy(maximumUsage = "1234", maximumUsageTime = "12345678")
-			// 		newMeterRow = newMeterRow.copy(oneDayMaximumUsage = "123456", oneDayMaximumUsageDate = "1234")
-			// 		newMeterRow = newMeterRow.copy(registerFuseFlowRate1 = "1234", registerFuseFlowRate2 = "1234")
-			// 		newMeterRow = newMeterRow.copy(pressureShutOffJudgmentValue = "1231231231239")
-			// 		newMeterRow = newMeterRow.copy(pressureValue = "1234")
-			// 	}
-			// 	newMeterRow
-			// }
-			// csvVM.updateSaveCsv(newCsvRows, meterVM)
-
 			if (!btn.isPressed) return@setOnClickListener
 			if (r87Steps.isEmpty()) return@setOnClickListener
 			refresh()
@@ -190,6 +173,7 @@ class MeterAdvFragment : Fragment() {
 			}
 			field51.binding?.readCheckbox?.let { it.setOnCheckedChangeListener { _, _ -> if (hasMacKey(it)) refresh() } }
 			field41.binding?.writeCheckbox?.let { it.setOnCheckedChangeListener { _, _ -> if (hasMacKey(it)) refresh() } }
+			field02.binding?.writeCheckbox?.let { it.setOnCheckedChangeListener { _, _ -> if (hasMacKey(it)) refresh() } }
 		}
 
 		// 詳細按鈕
@@ -405,6 +389,8 @@ class MeterAdvFragment : Fragment() {
 			r87Steps.add(R87Step(securityLevel = SecurityLevel.Auth, adr = meterId, op = "R51"))
 		if (binding.field41.binding?.writeCheckbox?.isChecked == true)
 			r87Steps.add(R87Step(securityLevel = SecurityLevel.Auth, adr = meterId, op = "C41"))
+		if (binding.field02.binding?.writeCheckbox?.isChecked == true)
+			r87Steps.add(R87Step(adr = meterId, op = "C02"))
 	}
 
 	// 刷新耗時
