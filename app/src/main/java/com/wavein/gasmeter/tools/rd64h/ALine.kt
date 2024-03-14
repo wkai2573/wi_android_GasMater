@@ -5,7 +5,7 @@ import android.util.Log
 // 分析接收電文的ALine資料
 data class ALine(
 	val aLineRaw:String, // 原始內容
-	val securityLevel:SecurityLevel = SecurityLevel.NoSecurity,
+	var securityLevel:SecurityLevel? = null,
 ) {
 	/**
 	 * @param cc, 8位hex, 每2位為一組, 以下以CC1~CC4解釋
@@ -14,6 +14,8 @@ data class ALine(
 	 *   CC3 電文index, 連續電文的傳送&接收的index需要不同, 建議從00h往上加, 因為只管傳送, 每次加02h
 	 *   CC4 多part使用, 00h=無分割, 10h=2分割_第1part, 11h=2分割_第2part
 	 *       第8碼若不是0 -> 表示為接續part -> 接續part不含[dp]&[op],後段的資料(7+64位元)皆為[data]
+	 *
+	 * @param securityLevel, 由dp1轉二進位後的前2位元決定, 00b_無認證, 01b_認證, 10b_秘匿, 11b_鍵更新
 	 */
 	private var cc:String = ""
 	private val cch get() = cc.toByteArray().toHex()
@@ -42,6 +44,7 @@ data class ALine(
 				dp = ""
 				op = ""
 			}
+			if (securityLevel == null) securityLevel = SecurityLevel.getSecurityLevel(dp)
 			if (securityLevel == SecurityLevel.Auth) {
 				val dataGroupValues = Regex("^(.*)(.{6})(.{16})$").find(fullData)!!.groupValues
 				fullData = dataGroupValues[1]

@@ -13,9 +13,9 @@ data class D87D23Info(override val text:String) : BaseInfo(text) {
 
 	// 寫入接續part
 	fun writePart(text:String) {
-		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常")
+		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常:D87D23Info")
 		val (meterId, aLineRaw) = matchResult.destructured
-		val aLine = ALine(aLineRaw, SecurityLevel.Auth)
+		val aLine = ALine(aLineRaw, SecurityLevel.NoSecurity)
 		data += aLine.data
 		if (data.length == 65) {
 			val shutdownHistoryList = data.chunked(13)

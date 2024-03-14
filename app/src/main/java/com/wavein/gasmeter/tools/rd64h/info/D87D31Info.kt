@@ -9,7 +9,7 @@ data class D87D31Info(override val text:String) : BaseInfo(text) {
 	var registerFuseFlowRate2:String = "" // 登録口火流量2(24-06) 4位
 
 	init {
-		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常")
+		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常:D87D31Info")
 		val (meterId, aLineRaw) = matchResult.destructured
 		val aLine = ALine(aLineRaw, SecurityLevel.Auth)
 		data = aLine.data

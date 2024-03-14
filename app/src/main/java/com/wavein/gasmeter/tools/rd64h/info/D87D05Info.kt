@@ -8,9 +8,9 @@ data class D87D05Info(override val text:String) : BaseInfo(text) {
 	var d05Info:D05Info? = null
 
 	init {
-		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常")
+		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常:D87D05Info")
 		val (meterId, aLineRaw) = matchResult.destructured
-		val aLine = ALine(aLineRaw, SecurityLevel.Auth)
+		val aLine = ALine(aLineRaw, SecurityLevel.NoSecurity)
 		data = aLine.data
 		if (data.length != 17) throw Exception("D05結果 = \"$data\"")
 

@@ -8,7 +8,7 @@ data class D36Info(override val text:String) : BaseInfo(text) {
 
 	init {
 		val regex = Regex("^([0-9][01])ZD(.{14})D36(..)\$")
-		val matchResult = regex.find(text) ?: throw Exception("異常")
+		val matchResult = regex.find(text) ?: throw Exception("異常:D36Info")
 		val (btParentAlarmRaw, meterId, alarmRaw) = matchResult.destructured
 		this.btParentAlarmRaw = btParentAlarmRaw
 		this.meterId = meterId

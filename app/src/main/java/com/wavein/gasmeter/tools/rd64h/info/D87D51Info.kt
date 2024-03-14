@@ -8,7 +8,7 @@ data class D87D51Info(override val text:String) : BaseInfo(text) {
 	var pressureValue:String = "" // 現在圧力値(51-01) 4位
 
 	init {
-		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常")
+		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常:D87D51Info")
 		val (meterId, aLineRaw) = matchResult.destructured
 		val aLine = ALine(aLineRaw, SecurityLevel.Auth)
 		data = aLine.data

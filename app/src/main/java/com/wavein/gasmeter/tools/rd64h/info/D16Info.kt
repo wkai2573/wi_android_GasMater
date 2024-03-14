@@ -9,7 +9,7 @@ data class D16Info(override val text:String) : BaseInfo(text) {
 
 	init {
 		val regex = Regex("^(ZA)(.{14})(D16)(.)(.)$")
-		val matchResult = regex.find(text) ?: throw Exception("異常")
+		val matchResult = regex.find(text) ?: throw Exception("異常:D16Info")
 		val (ZA, btParentId, D16, alarm1, alarm2) = matchResult.destructured
 		val alarmValue = alarm1[0].code
 		this.isBatteryVoltageLow = alarmValue and 0b00000111 == 0

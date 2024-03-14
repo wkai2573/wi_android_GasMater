@@ -26,6 +26,13 @@ fun String.stringToHex():String {
 	return bytes.joinToString("") { "%02X".format(it.toInt()) }
 }
 
+// text(String) 轉 bin(String)
+@OptIn(ExperimentalUnsignedTypes::class)
+fun String.stringToBin():String {
+	val bytes = this.toUBytes()
+	return bytes.joinToString("") { "%8s".format(Integer.toBinaryString(it.toInt())).replace(' ', '0') }
+}
+
 // hex(String) 轉 UBytes
 @OptIn(ExperimentalUnsignedTypes::class)
 fun String.hexToUBytes():UByteArray {
@@ -64,7 +71,23 @@ fun ByteArray.toText():String {
 
 // 電文安全等級__________________________________________________
 
-enum class SecurityLevel { NoSecurity, Auth, Confidential, Key }
+enum class SecurityLevel {
+	NoSecurity, Auth, Confidential, Key;
+	// セキュリティ無し, 認証, 秘匿, 鍵更新
+
+	companion object {
+		fun getSecurityLevel(dp:String):SecurityLevel {
+			val dpBin = dp.stringToBin()
+			return when (dpBin.substring(0..2)) {
+				"00" -> SecurityLevel.NoSecurity
+				"01" -> SecurityLevel.Auth
+				"10" -> SecurityLevel.Confidential
+				"11" -> SecurityLevel.Key
+				else -> SecurityLevel.NoSecurity
+			}
+		}
+	}
+}
 
 // RD64H 電文傳輸轉換方法__________________________________________________
 @OptIn(ExperimentalUnsignedTypes::class)

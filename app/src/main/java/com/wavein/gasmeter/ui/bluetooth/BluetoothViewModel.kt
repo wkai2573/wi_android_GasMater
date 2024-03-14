@@ -326,7 +326,7 @@ class BluetoothViewModel @Inject constructor(
 				metaInfo.r87Steps!!.forEach { step ->
 					when (step.op) {
 						"R19" -> if (!commResult.containsKey("D87D19")) errList.add("時刻要求")
-						"R23" -> if (!commResult.containsKey("D87D23")) errList.add("五回遮斷履歷")
+						"R23" -> if (!commResult.containsKey("D87D23") || (commResult["D87D23"] as D87D23Info).data.length != 65) errList.add("五回遮斷履歷")
 						"R24" -> if (!commResult.containsKey("D87D24")) errList.add("告警情報or母火流量")
 						"R16" -> if (!commResult.containsKey("D87D16")) errList.add("表狀態")
 						"S16" -> if (!commResult.containsKey("D87D16")) errList.add("表狀態設定")
@@ -552,7 +552,7 @@ class BluetoothViewModel @Inject constructor(
 			}
 
 			is R70Step -> {
-				commTextStateFlow.value = commTextStateFlow.value.copy(subtitle = "R70", progress = progressText)
+				commTextStateFlow.value = commTextStateFlow.value.copy(subtitle = "", progress = progressText)
 				val sendText = "ZD${sendStep.meterId}R70"
 				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
 				wt(WT2)

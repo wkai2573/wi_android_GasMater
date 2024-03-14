@@ -9,7 +9,7 @@ data class D87D59Info(override val text:String) : BaseInfo(text) {
 	var oneDayMaximumUsageDate:String = "" // 1日最大使用量月日(59-02) 4位
 
 	init {
-		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常")
+		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常:D87D59Info")
 		val (meterId, aLineRaw) = matchResult.destructured
 		val aLine = ALine(aLineRaw, SecurityLevel.Auth)
 		data = aLine.data

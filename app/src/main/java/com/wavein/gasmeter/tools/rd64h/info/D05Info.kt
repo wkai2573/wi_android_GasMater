@@ -15,7 +15,7 @@ data class D05Info(override val text:String) : BaseInfo(text) {
 	init {
 		if (text.isNotEmpty()) {
 			val regex = Regex("^(.)(.)(.{2})(.{14})(D05)(\\d{9}.{8})\\s*$")
-			val matchResult = regex.find(text) ?: throw Exception("異常")
+			val matchResult = regex.find(text) ?: throw Exception("異常:D05Info")
 			val (electricFieldStrength, btParentLowBattery, entityCodeLast2, meterId, OP, data) = matchResult.destructured
 			this.electricFieldStrength = electricFieldStrength
 			this.btParentLowBattery = btParentLowBattery

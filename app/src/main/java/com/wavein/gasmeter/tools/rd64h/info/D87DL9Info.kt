@@ -7,9 +7,9 @@ data class D87DL9Info(override val text:String) : BaseInfo(text) {
 	var data:String = ""
 
 	init {
-		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常")
+		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常:D87DL9Info")
 		val (meterId, aLineRaw) = matchResult.destructured
-		val aLine = ALine(aLineRaw)
+		val aLine = ALine(aLineRaw, SecurityLevel.NoSecurity)
 		data = aLine.data
 	}
 
