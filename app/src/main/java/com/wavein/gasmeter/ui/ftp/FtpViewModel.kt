@@ -275,31 +275,31 @@ class FtpViewModel @Inject constructor(
 	 *  建立log參考: SettingViewModel.createLogFile()
 	 */
 	fun uploadLog() {
-//		val documentsFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-//		documentsFolder.mkdirs()
-//		val logFolder = File(documentsFolder, "log")
-//		logFolder.mkdirs()
-//		val logUploadedFolder = File(documentsFolder, "log_uploaded_${TimeUtils.getCurrentTime("yyyy")}")
-//		logUploadedFolder.mkdirs()
-//		val files = logFolder.listFiles() ?: return
+		val documentsFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+		documentsFolder.mkdirs()
+		val logFolder = File(documentsFolder, "log")
+		logFolder.mkdirs()
+		val logUploadedFolder = File(documentsFolder, "log_uploaded_${TimeUtils.getCurrentTime("yyyy")}")
+		logUploadedFolder.mkdirs()
+		val files = logFolder.listFiles() ?: return
 
 		ftpProcess(systemFtpInfo, "log") { ftpClient ->
-//			files.forEach { file ->
-//				// 上傳ftp
-//				val inputStream = FileInputStream(file)
-//				val uploadSuccess = kotlin.runCatching { ftpClient.storeFile(encode(file.name), inputStream) }.getOrElse { false }
-//				// 移動檔案 (log > log_uploaded_yyyy)
-//				if (uploadSuccess) {
-//					val destinationFile = File(logUploadedFolder, file.name)
-//					file.renameTo(destinationFile)
-//				}
-//			}
+			files.forEach { file ->
+				// 上傳ftp
+				val inputStream = FileInputStream(file)
+				val uploadSuccess = kotlin.runCatching { ftpClient.storeFile(encode(file.name), inputStream) }.getOrElse { false }
+				// 移動檔案 (log > log_uploaded_yyyy)
+				if (uploadSuccess) {
+					val destinationFile = File(logUploadedFolder, file.name)
+					file.renameTo(destinationFile)
+				}
+			}
 		}
 
 		// 移除3年前的 log_uploaded_yyyy
-//		val threeYearsAgo = LocalDate.now().minusYears(3).format(DateTimeFormatter.ofPattern("yyyy"))
-//		val log3yearsAgoFolder = File(documentsFolder, "log_uploaded_$threeYearsAgo")
-//		log3yearsAgoFolder.deleteRecursively()
+		val threeYearsAgo = LocalDate.now().minusYears(3).format(DateTimeFormatter.ofPattern("yyyy"))
+		val log3yearsAgoFolder = File(documentsFolder, "log_uploaded_$threeYearsAgo")
+		log3yearsAgoFolder.deleteRecursively()
 	}
 
 	// ==DOWNLOAD==
