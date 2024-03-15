@@ -9,6 +9,7 @@ import android.database.Cursor
 import android.net.Uri
 import android.os.Environment
 import android.provider.OpenableColumns
+import android.view.View
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.lifecycle.SavedStateHandle
@@ -92,6 +93,7 @@ class CsvViewModel @Inject constructor(
 	// 檢查CSV資料合法
 	//  1. 抄錶順路 & 客戶編號 & 表ID 不可重複
 	//  2. 單群最多45台瓦斯表
+	//  3. 沒找到任何row
 	private fun checkRowsLegal(meterRows:List<MeterRow>):String {
 		val duplicateQueue = meterRows.groupingBy { it.queue }.eachCount().filter { it.value > 1 }.keys
 		if (duplicateQueue.isNotEmpty())
@@ -108,6 +110,8 @@ class CsvViewModel @Inject constructor(
 		val exceed45Groups = meterRows.groupBy { it.group }.filter { it.value.size > 45 }.keys
 		if (exceed45Groups.isNotEmpty())
 			return "超過45台瓦斯表群組: ${exceed45Groups.joinToString()}"
+
+		if (meterRows.isEmpty()) return "未找到任何資料，請確認格式正確。"
 
 		return "ok"
 	}
