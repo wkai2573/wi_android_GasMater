@@ -52,19 +52,19 @@ class FtpViewModel @Inject constructor(
 	//todo 前三個要改回""
 	var downloadFtpInfo:FtpInfo = FtpInfo(
 		FtpEnum.Download,
-		Preference[Preference.FTP_DOWNLOAD_HOST, ""]!!, // "118.163.191.31"
-		Preference[Preference.FTP_DOWNLOAD_USERNAME, ""]!!,  // "aktwset01"
-		Preference[Preference.FTP_DOWNLOAD_PASSWORD, ""]!!,  // "NSsetup09"
-		Preference[Preference.FTP_DOWNLOAD_ROOT, "data/download"]!! // "WaveIn/download"
+		Preference[Preference.FTP_DOWNLOAD_HOST, "118.163.191.31"]!!, // "118.163.191.31"
+		Preference[Preference.FTP_DOWNLOAD_USERNAME, "aktwset01"]!!,  // "aktwset01"
+		Preference[Preference.FTP_DOWNLOAD_PASSWORD, "NSsetup09"]!!,  // "NSsetup09"
+		Preference[Preference.FTP_DOWNLOAD_ROOT, "WaveIn/download"]!! // "WaveIn/download"
 	)
 
 	//todo 前三個要改回""
 	var uploadFtpInfo:FtpInfo = FtpInfo(
 		FtpEnum.Upload,
-		Preference[Preference.FTP_UPLOAD_HOST, ""]!!, // "118.163.191.31"
-		Preference[Preference.FTP_UPLOAD_USERNAME, ""]!!,  // "aktwset01"
-		Preference[Preference.FTP_UPLOAD_PASSWORD, ""]!!,  // "NSsetup09"
-		Preference[Preference.FTP_UPLOAD_ROOT, "data/upload"]!!   // "WaveIn/upload"
+		Preference[Preference.FTP_UPLOAD_HOST, "118.163.191.31"]!!, // "118.163.191.31"
+		Preference[Preference.FTP_UPLOAD_USERNAME, "aktwset01"]!!,  // "aktwset01"
+		Preference[Preference.FTP_UPLOAD_PASSWORD, "NSsetup09"]!!,  // "NSsetup09"
+		Preference[Preference.FTP_UPLOAD_ROOT, "WaveIn/upload"]!!   // "WaveIn/upload"
 	)
 
 	fun saveFtpInfo(ftpInfo:FtpInfo) {
