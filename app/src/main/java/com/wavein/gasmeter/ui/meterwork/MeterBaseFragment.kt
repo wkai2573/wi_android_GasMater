@@ -49,7 +49,6 @@ import com.wavein.gasmeter.ui.meterwork.groups.MeterGroupsFragment
 import com.wavein.gasmeter.ui.meterwork.list.MeterListFragment
 import com.wavein.gasmeter.ui.meterwork.row.MeterRowFragment
 import com.wavein.gasmeter.ui.setting.CsvViewModel
-import com.wavein.gasmeter.ui.setting.SetOpMeaningMap
 import com.wavein.gasmeter.ui.setting.SettingViewModel
 import com.wavein.gasmeter.ui.setting.SettingViewModel.*
 import kotlinx.coroutines.delay
@@ -241,30 +240,32 @@ class MeterBaseFragment : Fragment() {
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.commEndSharedEvent.asSharedFlow().collectLatest { event ->
-					when (event) {
-						is CommEndEvent.Success -> {
-							val message = if (event.commResult.containsKey("success")) {
-								event.commResult["success"].toString()
-							} else {
-								"通信成功"
+					SharedEvent.catching {
+						when (event) {
+							is CommEndEvent.Success -> {
+								val message = if (event.commResult.containsKey("success")) {
+									event.commResult["success"].toString()
+								} else {
+									"通信成功"
+								}
+								SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(message, SharedEvent.Color.Success, Snackbar.LENGTH_INDEFINITE))
+								SharedEvent.eventFlow.emit(SharedEvent.PlayEffect())
+								updateCsvRowsByCommResult(event.commResult) // 依據結果更新csvRows
 							}
-							SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(message, SharedEvent.Color.Success, Snackbar.LENGTH_INDEFINITE))
-							SharedEvent.eventFlow.emit(SharedEvent.PlayEffect())
-							updateCsvRowsByCommResult(event.commResult) // 依據結果更新csvRows
-						}
 
-						is CommEndEvent.Error -> {
-							val message = if (event.commResult.containsKey("error")) {
-								event.commResult["error"].toString()
-							} else {
-								event.commResult.toString()
+							is CommEndEvent.Error -> {
+								val message = if (event.commResult.containsKey("error")) {
+									event.commResult["error"].toString()
+								} else {
+									event.commResult.toString()
+								}
+								SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(message, SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
+								SharedEvent.eventFlow.emit(SharedEvent.PlayEffect())
+								updateCsvRowsByCommResult(event.commResult) // 依據結果更新csvRows
 							}
-							SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(message, SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
-							SharedEvent.eventFlow.emit(SharedEvent.PlayEffect())
-							updateCsvRowsByCommResult(event.commResult) // 依據結果更新csvRows
-						}
 
-						else -> {}
+							else -> {}
+						}
 					}
 				}
 			}
@@ -386,7 +387,9 @@ class MeterBaseFragment : Fragment() {
 							val info = commResult["D87D16"] as D87D16Info
 							newMeterRow = newMeterRow.copy(meterStatus = info.meterStatus)
 							if (metaInfo.r87Steps?.any { it.op == "S16" } == true) {
-								logRows.add(LogRow(meterId = meterId, op = "S16", oldValue = meterRow.meterStatus ?: "未查詢", newValue = newMeterRow.meterStatus ?: ""))
+								logRows.add(
+									LogRow(meterId = meterId, op = "S16", oldValue = meterRow.meterStatus ?: "未查詢", newValue = newMeterRow.meterStatus ?: "")
+								)
 							}
 						}
 						// D87D57: 時間使用量
@@ -409,8 +412,18 @@ class MeterBaseFragment : Fragment() {
 							val info = commResult["D87D31"] as D87D31Info
 							newMeterRow = newMeterRow.copy(registerFuseFlowRate1 = info.registerFuseFlowRate1, registerFuseFlowRate2 = info.registerFuseFlowRate2)
 							if (metaInfo.r87Steps?.any { it.op == "S31" } == true) {
-								logRows.add(LogRow(meterId = meterId, op = "S31", oldValue = meterRow.registerFuseFlowRate1 ?: "未查詢", newValue = newMeterRow.registerFuseFlowRate1 ?: ""))
-								logRows.add(LogRow(meterId = meterId, op = "S31", oldValue = meterRow.registerFuseFlowRate2 ?: "未查詢", newValue = newMeterRow.registerFuseFlowRate2 ?: ""))
+								logRows.add(
+									LogRow(
+										meterId = meterId, op = "S31", oldValue = meterRow.registerFuseFlowRate1 ?: "未查詢",
+										newValue = newMeterRow.registerFuseFlowRate1 ?: ""
+									)
+								)
+								logRows.add(
+									LogRow(
+										meterId = meterId, op = "S31", oldValue = meterRow.registerFuseFlowRate2 ?: "未查詢",
+										newValue = newMeterRow.registerFuseFlowRate2 ?: ""
+									)
+								)
 							}
 						}
 						// D87D50: 壓力遮斷判定值
@@ -418,7 +431,12 @@ class MeterBaseFragment : Fragment() {
 							val info = commResult["D87D50"] as D87D50Info
 							newMeterRow = newMeterRow.copy(pressureShutOffJudgmentValue = info.pressureShutOffJudgmentValue)
 							if (metaInfo.r87Steps?.any { it.op == "S50" } == true) {
-								logRows.add(LogRow(meterId = meterId, op = "S50", oldValue = meterRow.pressureShutOffJudgmentValue ?: "未查詢", newValue = newMeterRow.pressureShutOffJudgmentValue ?: ""))
+								logRows.add(
+									LogRow(
+										meterId = meterId, op = "S50", oldValue = meterRow.pressureShutOffJudgmentValue ?: "未查詢",
+										newValue = newMeterRow.pressureShutOffJudgmentValue ?: ""
+									)
+								)
 							}
 						}
 						// D87D51: 現在壓力值
@@ -431,7 +449,9 @@ class MeterBaseFragment : Fragment() {
 							val info = commResult["D87D41"] as D87D41Info
 							newMeterRow = newMeterRow.copy(alarmInfo1 = info.alarmInfo1)
 							if (metaInfo.r87Steps?.any { it.op == "C41" } == true) {
-								logRows.add(LogRow(meterId = meterId, op = "C41", oldValue = meterRow.alarmInfo1 ?: "未查詢", newValue = newMeterRow.alarmInfo1 ?: ""))
+								logRows.add(
+									LogRow(meterId = meterId, op = "C41", oldValue = meterRow.alarmInfo1 ?: "未查詢", newValue = newMeterRow.alarmInfo1 ?: "")
+								)
 							}
 						}
 						// D87D02: 強制Session中斷

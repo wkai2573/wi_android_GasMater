@@ -13,8 +13,8 @@ android {
         applicationId "com.wavein.gasmeter"
         minSdk 29
         targetSdk 33
-        versionCode 1
-        versionName "1.00"
+        versionCode 101
+        versionName "1.01"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

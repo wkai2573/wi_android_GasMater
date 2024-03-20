@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.content.Intent
-import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -63,12 +62,14 @@ class BluetoothViewModel @Inject constructor(
 
 	// 檢查藍牙並請求開啟
 	fun checkBluetoothOn(bluetoothRequestLauncher:ActivityResultLauncher<Intent>) = viewModelScope.launch {
-		if (bluetoothAdapter == null) {
-			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("此裝置不支援藍牙", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
-			return@launch
-		}
-		if (!bluetoothAdapter.isEnabled) {
-			requestBluetooth(bluetoothRequestLauncher)
+		SharedEvent.catching {
+			if (bluetoothAdapter == null) {
+				SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("此裝置不支援藍牙", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
+				return@catching
+			}
+			if (!bluetoothAdapter.isEnabled) {
+				requestBluetooth(bluetoothRequestLauncher)
+			}
 		}
 	}
 
@@ -101,15 +102,17 @@ class BluetoothViewModel @Inject constructor(
 
 	// 開始掃描
 	fun toggleDiscovery() = viewModelScope.launch {
-		if (!isBluetoothOn()) {
-			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("請開啟藍牙", SharedEvent.Color.Error))
-			return@launch
-		}
-		if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) return@launch
-		if (bluetoothAdapter.isDiscovering) {
-			stopDiscovery()
-		} else {
-			scanStateFlow.value = if (bluetoothAdapter.startDiscovery()) ScanState.Scanning else ScanState.Error
+		SharedEvent.catching {
+			if (!isBluetoothOn()) {
+				SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("請開啟藍牙", SharedEvent.Color.Error))
+				return@catching
+			}
+			if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) return@catching
+			if (bluetoothAdapter.isDiscovering) {
+				stopDiscovery()
+			} else {
+				scanStateFlow.value = if (bluetoothAdapter.startDiscovery()) ScanState.Scanning else ScanState.Error
+			}
 		}
 	}
 
@@ -125,12 +128,14 @@ class BluetoothViewModel @Inject constructor(
 
 	// 連接藍牙設備
 	fun connectDevice(device:BluetoothDevice? = autoConnectDeviceStateFlow.value) = viewModelScope.launch {
-		if (bluetoothOffTip()) return@launch
-		if (device == null) return@launch
-		Preference[Preference.LAST_BT_DEVICE_MAC] = device.address
-		setAutoConnectBluetoothDevice(device)
-		parentDeviceClient = ParentDeviceClient(device)
-		parentDeviceClient?.start()
+		SharedEvent.catching {
+			if (bluetoothOffTip()) return@catching
+			if (device == null) return@catching
+			Preference[Preference.LAST_BT_DEVICE_MAC] = device.address
+			setAutoConnectBluetoothDevice(device)
+			parentDeviceClient = ParentDeviceClient(device)
+			parentDeviceClient?.start()
+		}
 	}
 
 	// 中斷連線
@@ -157,43 +162,45 @@ class BluetoothViewModel @Inject constructor(
 
 	// 藍牙連線事件
 	fun onConnectEvent(event:ConnectEvent) = viewModelScope.launch {
-		when (event) {
-			ConnectEvent.Connecting -> {
-				connectEventFlow.emit(ConnectEvent.Connecting)
-				commStateFlow.value = CommState.Connecting
-				commTextStateFlow.value = Tip("設備連結中")
-			}
+		SharedEvent.catching {
+			when (event) {
+				ConnectEvent.Connecting -> {
+					connectEventFlow.emit(ConnectEvent.Connecting)
+					commStateFlow.value = CommState.Connecting
+					commTextStateFlow.value = Tip("設備連結中")
+				}
 
-			ConnectEvent.ConnectionFailed -> {
-				connectEventFlow.emit(ConnectEvent.ConnectionFailed)
-				disconnectDevice()
-			}
+				ConnectEvent.ConnectionFailed -> {
+					connectEventFlow.emit(ConnectEvent.ConnectionFailed)
+					disconnectDevice()
+				}
 
-			ConnectEvent.ConnectionLost -> {
-				// 如果是通信中途發生中斷, 要處理結果
-				if (commStateFlow.value == CommState.Communicating) onCommEnd()
-				connectEventFlow.emit(ConnectEvent.ConnectionLost)
-				disconnectDevice()
-			}
+				ConnectEvent.ConnectionLost -> {
+					// 如果是通信中途發生中斷, 要處理結果
+					if (commStateFlow.value == CommState.Communicating) onCommEnd()
+					connectEventFlow.emit(ConnectEvent.ConnectionLost)
+					disconnectDevice()
+				}
 
-			ConnectEvent.Connected -> {
-				connectEventFlow.emit(ConnectEvent.Connected)
-				commStateFlow.value = CommState.ReadyCommunicate
-				commTextStateFlow.value = Tip("設備已連結")
-			}
+				ConnectEvent.Connected -> {
+					connectEventFlow.emit(ConnectEvent.Connected)
+					commStateFlow.value = CommState.ReadyCommunicate
+					commTextStateFlow.value = Tip("設備已連結")
+				}
 
-			ConnectEvent.Listening -> {
-				connectEventFlow.emit(ConnectEvent.Listening)
-			}
+				ConnectEvent.Listening -> {
+					connectEventFlow.emit(ConnectEvent.Listening)
+				}
 
-			is ConnectEvent.BytesSent -> connectEventFlow.emit(event)
-			is ConnectEvent.BytesReceived -> {
-				connectEventFlow.emit(event)
-				val readSP = event.byteArray
-				onReceiveByStep(readSP)
-			}
+				is ConnectEvent.BytesSent -> connectEventFlow.emit(event)
+				is ConnectEvent.BytesReceived -> {
+					connectEventFlow.emit(event)
+					val readSP = event.byteArray
+					onReceiveByStep(readSP)
+				}
 
-			else -> {}
+				else -> {}
+			}
 		}
 	}
 
@@ -300,171 +307,179 @@ class BluetoothViewModel @Inject constructor(
 
 	// 溝通結束處理
 	private fun onCommEnd() = viewModelScope.launch {
-		// Log.i("@@@耗時", "${elapsedTime()} 秒 (總耗時)")
-		// 依組合決定通信結束後小吃文字
-		val metaInfo = commResult["meta"] as MetaInfo
-		when (metaInfo.op) {
-			// R80 異常訊息
-			"R80" -> {
-				val d05mList = if (commResult.containsKey("D05m")) {
-					(commResult["D05m"] as D05mInfo).list
-				} else {
-					emptyList()
-				}
-				val notReadNumber = metaInfo.meterIds.size - d05mList.size
-				if (notReadNumber > 0) {
-					commResult["error"] = BaseInfo("${d05mList.size}台抄表成功，${notReadNumber}台無回應\n請檢查未抄表瓦斯表")
-				} else {
-					commResult["success"] = BaseInfo("${d05mList.size}台抄表成功")
-				}
-			}
-
-			// R87 異常訊息
-			// 檢查開始時R87傳了什麼steps，如果結果沒有對應的結果op，顯示對應錯誤
-			"R87" -> {
-				val errList = mutableListOf<String>()
-				metaInfo.r87Steps!!.forEach { step ->
-					when (step.op) {
-						"R19" -> if (!commResult.containsKey("D87D19")) errList.add("時刻要求")
-						"R23" -> if (!commResult.containsKey("D87D23") || (commResult["D87D23"] as D87D23Info).data.length != 65) errList.add("五回遮斷履歷")
-						"R24" -> if (!commResult.containsKey("D87D24")) errList.add("告警情報or母火流量")
-						"R16" -> if (!commResult.containsKey("D87D16")) errList.add("表狀態")
-						"S16" -> if (!commResult.containsKey("D87D16")) errList.add("表狀態設定")
-						"R57" -> if (!commResult.containsKey("D87D57")) errList.add("時間使用量")
-						"R58" -> if (!commResult.containsKey("D87D58")) errList.add("最大使用量")
-						"R59" -> if (!commResult.containsKey("D87D59")) errList.add("1日最大使用量")
-						"S31" -> if (!commResult.containsKey("D87D31")) errList.add("母火流量設定")
-						"R50" -> if (!commResult.containsKey("D87D50")) errList.add("壓力遮斷判定值")
-						"S50" -> if (!commResult.containsKey("D87D50")) errList.add("壓力遮斷判定值設定")
-						"R51" -> if (!commResult.containsKey("D87D51")) errList.add("現在壓力值")
-						"C41" -> if (!commResult.containsKey("D87D41")) errList.add("中心遮斷制御")
-						"C02" -> if (!commResult.containsKey("D87D02")) errList.add("強制Session中斷")
-					}
-				}
-				if (errList.isNotEmpty()) {
-					val exceptionMsg = if (commResult.containsKey("error_msg")) {
-						val msg = (commResult["error_msg"] as BaseInfo).text
-						if (msg.isNotEmpty()) "$msg\n" else ""
-					} else ""
-					val errorType = if (commResult.containsKey("error_DL9")) {
-						"通信忙線中，請稍後再試"
-					} else if (commResult.containsKey("error_D16")) {
-						"HHD用GW終端無回應(D16)"
-					} else if (commResult.containsKey("error_D36")) {
-						"對表U-bus通信異常(D36)"
+		SharedEvent.catching {
+			// Log.i("@@@耗時", "${elapsedTime()} 秒 (總耗時)")
+			// 依組合決定通信結束後小吃文字
+			val metaInfo = commResult["meta"] as MetaInfo
+			when (metaInfo.op) {
+				// R80 異常訊息
+				"R80" -> {
+					val d05mList = if (commResult.containsKey("D05m")) {
+						(commResult["D05m"] as D05mInfo).list
 					} else {
-						"通信異常"
+						emptyList()
 					}
-					commResult["error"] = BaseInfo("$exceptionMsg$errorType，以下通信失敗：\n${errList.joinToString("\n")}")
-				} else {
-					commResult["success"] = BaseInfo("讀取/設定成功")
+					val notReadNumber = metaInfo.meterIds.size - d05mList.size
+					if (notReadNumber > 0) {
+						commResult["error"] = BaseInfo("${d05mList.size}台抄表成功，${notReadNumber}台無回應\n請檢查未抄表瓦斯表")
+					} else {
+						commResult["success"] = BaseInfo("${d05mList.size}台抄表成功")
+					}
+				}
+
+				// R87 異常訊息
+				// 檢查開始時R87傳了什麼steps，如果結果沒有對應的結果op，顯示對應錯誤
+				"R87" -> {
+					val errList = mutableListOf<String>()
+					metaInfo.r87Steps!!.forEach { step ->
+						when (step.op) {
+							"R19" -> if (!commResult.containsKey("D87D19")) errList.add("時刻要求")
+							"R23" -> if (!commResult.containsKey("D87D23") || (commResult["D87D23"] as D87D23Info).data.length != 65) errList.add("五回遮斷履歷")
+							"R24" -> if (!commResult.containsKey("D87D24")) errList.add("告警情報or母火流量")
+							"R16" -> if (!commResult.containsKey("D87D16")) errList.add("表狀態")
+							"S16" -> if (!commResult.containsKey("D87D16")) errList.add("表狀態設定")
+							"R57" -> if (!commResult.containsKey("D87D57")) errList.add("時間使用量")
+							"R58" -> if (!commResult.containsKey("D87D58")) errList.add("最大使用量")
+							"R59" -> if (!commResult.containsKey("D87D59")) errList.add("1日最大使用量")
+							"S31" -> if (!commResult.containsKey("D87D31")) errList.add("母火流量設定")
+							"R50" -> if (!commResult.containsKey("D87D50")) errList.add("壓力遮斷判定值")
+							"S50" -> if (!commResult.containsKey("D87D50")) errList.add("壓力遮斷判定值設定")
+							"R51" -> if (!commResult.containsKey("D87D51")) errList.add("現在壓力值")
+							"C41" -> if (!commResult.containsKey("D87D41")) errList.add("中心遮斷制御")
+							"C02" -> if (!commResult.containsKey("D87D02")) errList.add("強制Session中斷")
+						}
+					}
+					if (errList.isNotEmpty()) {
+						val exceptionMsg = if (commResult.containsKey("error_msg")) {
+							val msg = (commResult["error_msg"] as BaseInfo).text
+							if (msg.isNotEmpty()) "$msg\n" else ""
+						} else ""
+						val errorType = if (commResult.containsKey("error_DL9")) {
+							"通信忙線中，請稍後再試"
+						} else if (commResult.containsKey("error_D16")) {
+							"HHD用GW終端無回應(D16)"
+						} else if (commResult.containsKey("error_D36")) {
+							"對表U-bus通信異常(D36)"
+						} else {
+							"通信異常"
+						}
+						commResult["error"] = BaseInfo("$exceptionMsg$errorType，以下通信失敗：\n${errList.joinToString("\n")}")
+					} else {
+						commResult["success"] = BaseInfo("讀取/設定成功")
+					}
 				}
 			}
+			// 結果處理
+			if (commResult.containsKey("error")) {
+				commEndSharedEvent.emit(CommEndEvent.Error(commResult))
+			} else {
+				commEndSharedEvent.emit(CommEndEvent.Success(commResult))
+			}
+			commStateFlow.value = CommState.ReadyCommunicate
+			commTextStateFlow.value = Tip("通信完畢")
 		}
-		// 結果處理
-		if (commResult.containsKey("error")) {
-			commEndSharedEvent.emit(CommEndEvent.Error(commResult))
-		} else {
-			commEndSharedEvent.emit(CommEndEvent.Success(commResult))
-		}
-		commStateFlow.value = CommState.ReadyCommunicate
-		commTextStateFlow.value = Tip("通信完畢")
 	}
 
 	// 發送自訂電文組合
 	fun sendSingleTelegram(toSendText:String) = viewModelScope.launch {
-		if (commStateFlow.value != CommState.ReadyCommunicate) return@launch
-		commStateFlow.value = CommState.Communicating
-		commResult = mutableMapOf()
+		SharedEvent.catching {
+			if (commStateFlow.value != CommState.ReadyCommunicate) return@catching
+			commStateFlow.value = CommState.Communicating
+			commResult = mutableMapOf()
 
-		sendSteps = mutableListOf(
-			RTestStep(toSendText),
-			__AStep()
-		)
-		receiveSteps = mutableListOf(
-			DTestStep()
-		)
-		totalReceiveCount = 1
-		receivedCount = 0
-		sendByStep()
+			sendSteps = mutableListOf(
+				RTestStep(toSendText),
+				__AStep()
+			)
+			receiveSteps = mutableListOf(
+				DTestStep()
+			)
+			totalReceiveCount = 1
+			receivedCount = 0
+			sendByStep()
+		}
 	}
 
 	// 發送R80電文組合
 	fun sendR80Telegram(meterIds:List<String>) = viewModelScope.launch {
-		if (commStateFlow.value != CommState.ReadyCommunicate) return@launch
-		startTime = System.currentTimeMillis()
-		commStateFlow.value = CommState.Communicating
-		commResult = mutableMapOf("meta" to MetaInfo("", "R80", meterIds))
+		SharedEvent.catching {
+			if (commStateFlow.value != CommState.ReadyCommunicate) return@catching
+			startTime = System.currentTimeMillis()
+			commStateFlow.value = CommState.Communicating
+			commResult = mutableMapOf("meta" to MetaInfo("", "R80", meterIds))
 
-		sendSteps = mutableListOf(
-			__5Step(),
-			R80Step(meterIds),
-			__AStep(),
-		)
-		receiveSteps = mutableListOf(
-			D70Step(),
-			D05Step(meterIds.size),
-		)
-		totalReceiveCount = 1 + meterIds.size
-		receivedCount = 0
-		sendByStep()
+			sendSteps = mutableListOf(
+				__5Step(),
+				R80Step(meterIds),
+				__AStep(),
+			)
+			receiveSteps = mutableListOf(
+				D70Step(),
+				D05Step(meterIds.size),
+			)
+			totalReceiveCount = 1 + meterIds.size
+			receivedCount = 0
+			sendByStep()
+		}
 	}
 
 	// 發送R87電文組合
 	fun sendR87Telegram(meterId:String, r87Steps:List<R87Step>) = viewModelScope.launch {
-		if (commStateFlow.value != CommState.ReadyCommunicate) return@launch
-		startTime = System.currentTimeMillis()
+		SharedEvent.catching {
+			if (commStateFlow.value != CommState.ReadyCommunicate) return@catching
+			startTime = System.currentTimeMillis()
 
-		commStateFlow.value = CommState.Communicating
-		commResult = mutableMapOf("meta" to MetaInfo("", "R87", listOf(meterId), r87Steps))
+			commStateFlow.value = CommState.Communicating
+			commResult = mutableMapOf("meta" to MetaInfo("", "R87", listOf(meterId), r87Steps))
 
-		sendSteps = mutableListOf(
-			__5Step(),
-			R89Step(meterId),
-			//如果需分割, 要在下方補n個 R70
-			*r87Steps.flatMapIndexed { index, step ->
-				val cc2 = if (index == 0) "\u0040" else "\u0000"
-				val cc3 = (appTelegramInc).toChar()
-				appTelegramInc += 2
-				when (step.op) {
-					// 2part
-					"R23" -> listOf(step.copy(cc = "\u0021$cc2$cc3\u0000"), R70Step(step.adr))
-					// 1part
-					else -> listOf(step.copy(cc = "\u0021$cc2$cc3\u0000"))
-				}
-			}.toTypedArray(),
-			__AStep(),
-		)
-		receiveSteps = mutableListOf(
-			D70Step(),
-			D36Step(),
-			*r87Steps.flatMapIndexed { index, step ->
-				when (step.op) {
-					"R01" -> listOf(D87D01Step())
-					"R05" -> listOf(D87D05Step())
-					"R19" -> listOf(D87D19Step())
-					"R23" -> listOf(D87D23Step(), D87D23Step()) //R23有2part
-					"R24" -> listOf(D87D24Step())
-					"R16" -> listOf(D87D16Step())
-					"S16" -> listOf(D87D16Step())
-					"R57" -> listOf(D87D57Step())
-					"R58" -> listOf(D87D58Step())
-					"R59" -> listOf(D87D59Step())
-					"R31" -> listOf(D87D31Step())
-					"S31" -> listOf(D87D31Step())
-					"R50" -> listOf(D87D50Step())
-					"S50" -> listOf(D87D50Step())
-					"R51" -> listOf(D87D51Step())
-					"C41" -> listOf(D87D41Step())
-					"C02" -> listOf(D87D02Step())
-					// todo 其他R87項目...
-					else -> listOf()
-				}
-			}.toTypedArray()
-		)
-		totalReceiveCount = receiveSteps.size
-		receivedCount = 0
-		sendByStep()
+			sendSteps = mutableListOf(
+				__5Step(),
+				R89Step(meterId),
+				//如果需分割, 要在下方補n個 R70
+				*r87Steps.flatMapIndexed { index, step ->
+					val cc2 = if (index == 0) "\u0040" else "\u0000"
+					val cc3 = (appTelegramInc).toChar()
+					appTelegramInc += 2
+					when (step.op) {
+						// 2part
+						"R23" -> listOf(step.copy(cc = "\u0021$cc2$cc3\u0000"), R70Step(step.adr))
+						// 1part
+						else -> listOf(step.copy(cc = "\u0021$cc2$cc3\u0000"))
+					}
+				}.toTypedArray(),
+				__AStep(),
+			)
+			receiveSteps = mutableListOf(
+				D70Step(),
+				D36Step(),
+				*r87Steps.flatMapIndexed { index, step ->
+					when (step.op) {
+						"R01" -> listOf(D87D01Step())
+						"R05" -> listOf(D87D05Step())
+						"R19" -> listOf(D87D19Step())
+						"R23" -> listOf(D87D23Step(), D87D23Step()) //R23有2part
+						"R24" -> listOf(D87D24Step())
+						"R16" -> listOf(D87D16Step())
+						"S16" -> listOf(D87D16Step())
+						"R57" -> listOf(D87D57Step())
+						"R58" -> listOf(D87D58Step())
+						"R59" -> listOf(D87D59Step())
+						"R31" -> listOf(D87D31Step())
+						"S31" -> listOf(D87D31Step())
+						"R50" -> listOf(D87D50Step())
+						"S50" -> listOf(D87D50Step())
+						"R51" -> listOf(D87D51Step())
+						"C41" -> listOf(D87D41Step())
+						"C02" -> listOf(D87D02Step())
+						// todo 其他R87項目...
+						else -> listOf()
+					}
+				}.toTypedArray()
+			)
+			totalReceiveCount = receiveSteps.size
+			receivedCount = 0
+			sendByStep()
+		}
 	}
 
 	// 依步驟發送電文 !!!電文處理中途
@@ -582,174 +597,176 @@ class BluetoothViewModel @Inject constructor(
 
 	// 依步驟接收電文 !!!電文處理中途
 	private fun onReceiveByStep(readSP:ByteArray) = viewModelScope.launch {
-		receivedCount++
-		if (receiveSteps.isEmpty()) {
-			onCommEnd()
-			return@launch
-		}
-		var continueSend = false
-		val receiveStep = receiveSteps[0]
-		val read = RD64H.telegramConvert(readSP, "-s-p")
-		val respText = read.toText()
+		SharedEvent.catching {
+			receivedCount++
+			if (receiveSteps.isEmpty()) {
+				onCommEnd()
+				return@catching
+			}
+			var continueSend = false
+			val receiveStep = receiveSteps[0]
+			val read = RD64H.telegramConvert(readSP, "-s-p")
+			val respText = read.toText()
 
-		try {
-			when (receiveStep) {
-				is DTestStep -> {
-					commResult["single"] = BaseInfo(respText)
-					receiveSteps.removeAt(0)
-					continueSend = true
-				}
-
-				is D70Step -> {
-					val info = BaseInfo.get(respText, D70Info::class.java) as D70Info
-					commResult["D70"] = info
-					receiveSteps.removeAt(0)
-					continueSend = true
-				}
-
-				is D05Step -> {
-					commTextStateFlow.value = commTextStateFlow.value.copy(progress = progressText)
-					val info = BaseInfo.get(respText, D05Info::class.java) as D05Info
-					commResult["D05"] = info
-					if (!commResult.containsKey("D05m")) commResult["D05m"] = D05mInfo()
-					val d05InfoList = (commResult["D05m"] as D05mInfo).list
-					d05InfoList.add(info)
-					if (d05InfoList.size == receiveStep.count) {
+			try {
+				when (receiveStep) {
+					is DTestStep -> {
+						commResult["single"] = BaseInfo(respText)
 						receiveSteps.removeAt(0)
 						continueSend = true
 					}
+
+					is D70Step -> {
+						val info = BaseInfo.get(respText, D70Info::class.java) as D70Info
+						commResult["D70"] = info
+						receiveSteps.removeAt(0)
+						continueSend = true
+					}
+
+					is D05Step -> {
+						commTextStateFlow.value = commTextStateFlow.value.copy(progress = progressText)
+						val info = BaseInfo.get(respText, D05Info::class.java) as D05Info
+						commResult["D05"] = info
+						if (!commResult.containsKey("D05m")) commResult["D05m"] = D05mInfo()
+						val d05InfoList = (commResult["D05m"] as D05mInfo).list
+						d05InfoList.add(info)
+						if (d05InfoList.size == receiveStep.count) {
+							receiveSteps.removeAt(0)
+							continueSend = true
+						}
+					}
+
+					is D36Step -> {
+						val info = BaseInfo.get(respText, D36Info::class.java) as D36Info
+						commResult["D36"] = info
+						receiveSteps.removeAt(0)
+						continueSend = true
+					}
+
+					is D87D01Step -> {
+						val info = BaseInfo.get(respText, D87D01Info::class.java) as D87D01Info
+						commResult["D87D01"] = info
+						receiveSteps.removeAt(0)
+						continueSend = true
+					}
+
+					is D87D05Step -> {
+						val info = BaseInfo.get(respText, D87D05Info::class.java) as D87D05Info
+						commResult["D87D05"] = info
+						receiveSteps.removeAt(0)
+						continueSend = true
+					}
+
+					is D87D19Step -> {
+						val info = BaseInfo.get(respText, D87D19Info::class.java) as D87D19Info
+						commResult["D87D19"] = info
+						receiveSteps.removeAt(0)
+						continueSend = true
+					}
+
+					is D87D23Step -> {
+						val info = (
+								if (commResult.containsKey("D87D23")) commResult["D87D23"]
+								else BaseInfo.get(respText, D87D23Info::class.java)
+								) as D87D23Info
+						info.writePart(respText)
+						commResult["D87D23"] = info
+						receiveSteps.removeAt(0)
+						continueSend = true
+					}
+
+					is D87D24Step -> {
+						val info = BaseInfo.get(respText, D87D24Info::class.java) as D87D24Info
+						commResult["D87D24"] = info
+						receiveSteps.removeAt(0)
+						continueSend = true
+					}
+
+					is D87D16Step -> {
+						val info = BaseInfo.get(respText, D87D16Info::class.java) as D87D16Info
+						commResult["D87D16"] = info
+						receiveSteps.removeAt(0)
+						continueSend = true
+					}
+
+					is D87D57Step -> {
+						val info = BaseInfo.get(respText, D87D57Info::class.java) as D87D57Info
+						commResult["D87D57"] = info
+						receiveSteps.removeAt(0)
+						continueSend = true
+					}
+
+					is D87D58Step -> {
+						val info = BaseInfo.get(respText, D87D58Info::class.java) as D87D58Info
+						commResult["D87D58"] = info
+						receiveSteps.removeAt(0)
+						continueSend = true
+					}
+
+					is D87D59Step -> {
+						val info = BaseInfo.get(respText, D87D59Info::class.java) as D87D59Info
+						commResult["D87D59"] = info
+						receiveSteps.removeAt(0)
+						continueSend = true
+					}
+
+					is D87D31Step -> {
+						val info = BaseInfo.get(respText, D87D31Info::class.java) as D87D31Info
+						commResult["D87D31"] = info
+						receiveSteps.removeAt(0)
+						continueSend = true
+					}
+
+					is D87D50Step -> {
+						val info = BaseInfo.get(respText, D87D50Info::class.java) as D87D50Info
+						commResult["D87D50"] = info
+						receiveSteps.removeAt(0)
+						continueSend = true
+					}
+
+					is D87D51Step -> {
+						val info = BaseInfo.get(respText, D87D51Info::class.java) as D87D51Info
+						commResult["D87D51"] = info
+						receiveSteps.removeAt(0)
+						continueSend = true
+					}
+
+					is D87D41Step -> {
+						val info = BaseInfo.get(respText, D87D41Info::class.java) as D87D41Info
+						commResult["D87D41"] = info
+						receiveSteps.removeAt(0)
+						continueSend = true
+					}
+
+					is D87D02Step -> {
+						val info = BaseInfo.get(respText, D87D02Info::class.java) as D87D02Info
+						commResult["D87D02"] = info
+						receiveSteps.removeAt(0)
+						continueSend = true
+					}
+
+					// todo 其他R87項目...
 				}
 
-				is D36Step -> {
+				if (continueSend) sendByStep()
+			} catch (error:Exception) {
+				error.printStackTrace()
+				commResult["error_msg"] = BaseInfo(error.message ?: "")
+				// 錯誤處理: 檢查是不是D16 或 D36
+				kotlin.runCatching {
+					val info = BaseInfo.get(respText, D16Info::class.java) as D16Info
+					commResult["error_D16"] = info
+				}
+				kotlin.runCatching {
 					val info = BaseInfo.get(respText, D36Info::class.java) as D36Info
-					commResult["D36"] = info
-					receiveSteps.removeAt(0)
-					continueSend = true
+					commResult["error_D36"] = info
 				}
-
-				is D87D01Step -> {
-					val info = BaseInfo.get(respText, D87D01Info::class.java) as D87D01Info
-					commResult["D87D01"] = info
-					receiveSteps.removeAt(0)
-					continueSend = true
+				kotlin.runCatching {
+					val info = BaseInfo.get(respText, D87DL9Info::class.java) as D87DL9Info
+					commResult["error_DL9"] = info
 				}
-
-				is D87D05Step -> {
-					val info = BaseInfo.get(respText, D87D05Info::class.java) as D87D05Info
-					commResult["D87D05"] = info
-					receiveSteps.removeAt(0)
-					continueSend = true
-				}
-
-				is D87D19Step -> {
-					val info = BaseInfo.get(respText, D87D19Info::class.java) as D87D19Info
-					commResult["D87D19"] = info
-					receiveSteps.removeAt(0)
-					continueSend = true
-				}
-
-				is D87D23Step -> {
-					val info = (
-							if (commResult.containsKey("D87D23")) commResult["D87D23"]
-							else BaseInfo.get(respText, D87D23Info::class.java)
-							) as D87D23Info
-					info.writePart(respText)
-					commResult["D87D23"] = info
-					receiveSteps.removeAt(0)
-					continueSend = true
-				}
-
-				is D87D24Step -> {
-					val info = BaseInfo.get(respText, D87D24Info::class.java) as D87D24Info
-					commResult["D87D24"] = info
-					receiveSteps.removeAt(0)
-					continueSend = true
-				}
-
-				is D87D16Step -> {
-					val info = BaseInfo.get(respText, D87D16Info::class.java) as D87D16Info
-					commResult["D87D16"] = info
-					receiveSteps.removeAt(0)
-					continueSend = true
-				}
-
-				is D87D57Step -> {
-					val info = BaseInfo.get(respText, D87D57Info::class.java) as D87D57Info
-					commResult["D87D57"] = info
-					receiveSteps.removeAt(0)
-					continueSend = true
-				}
-
-				is D87D58Step -> {
-					val info = BaseInfo.get(respText, D87D58Info::class.java) as D87D58Info
-					commResult["D87D58"] = info
-					receiveSteps.removeAt(0)
-					continueSend = true
-				}
-
-				is D87D59Step -> {
-					val info = BaseInfo.get(respText, D87D59Info::class.java) as D87D59Info
-					commResult["D87D59"] = info
-					receiveSteps.removeAt(0)
-					continueSend = true
-				}
-
-				is D87D31Step -> {
-					val info = BaseInfo.get(respText, D87D31Info::class.java) as D87D31Info
-					commResult["D87D31"] = info
-					receiveSteps.removeAt(0)
-					continueSend = true
-				}
-
-				is D87D50Step -> {
-					val info = BaseInfo.get(respText, D87D50Info::class.java) as D87D50Info
-					commResult["D87D50"] = info
-					receiveSteps.removeAt(0)
-					continueSend = true
-				}
-
-				is D87D51Step -> {
-					val info = BaseInfo.get(respText, D87D51Info::class.java) as D87D51Info
-					commResult["D87D51"] = info
-					receiveSteps.removeAt(0)
-					continueSend = true
-				}
-
-				is D87D41Step -> {
-					val info = BaseInfo.get(respText, D87D41Info::class.java) as D87D41Info
-					commResult["D87D41"] = info
-					receiveSteps.removeAt(0)
-					continueSend = true
-				}
-
-				is D87D02Step -> {
-					val info = BaseInfo.get(respText, D87D02Info::class.java) as D87D02Info
-					commResult["D87D02"] = info
-					receiveSteps.removeAt(0)
-					continueSend = true
-				}
-
-				// todo 其他R87項目...
+				onCommEnd()
 			}
-
-			if (continueSend) sendByStep()
-		} catch (error:Exception) {
-			error.printStackTrace()
-			commResult["error_msg"] = BaseInfo(error.message ?: "")
-			// 錯誤處理: 檢查是不是D16 或 D36
-			kotlin.runCatching {
-				val info = BaseInfo.get(respText, D16Info::class.java) as D16Info
-				commResult["error_D16"] = info
-			}
-			kotlin.runCatching {
-				val info = BaseInfo.get(respText, D36Info::class.java) as D36Info
-				commResult["error_D36"] = info
-			}
-			kotlin.runCatching {
-				val info = BaseInfo.get(respText, D87DL9Info::class.java) as D87DL9Info
-				commResult["error_DL9"] = info
-			}
-			onCommEnd()
 		}
 	}
 
@@ -765,6 +782,7 @@ class BluetoothViewModel @Inject constructor(
 	companion object {
 		var appTelegramInc = 0 // 電文Index遞增用
 	}
+
 }
 
 // 掃描狀態

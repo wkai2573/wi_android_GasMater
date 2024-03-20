@@ -4,14 +4,9 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ContentResolver
 import android.content.Context
-import android.content.Intent
-import android.database.Cursor
 import android.net.Uri
 import android.os.Environment
-import android.provider.OpenableColumns
-import android.view.View
 import androidx.activity.result.ActivityResult
-import androidx.activity.result.ActivityResultLauncher
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -30,13 +25,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.BufferedReader
 import java.io.File
 import java.io.FileDescriptor
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.io.FileReader
-import java.io.IOException
 import javax.inject.Inject
 
 private val bom = byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte())
@@ -53,39 +45,43 @@ class CsvViewModel @Inject constructor(
 
 	// 讀取csv檔案 by picker
 	fun readCsvByPicker(context:Context, result:ActivityResult, meterVM:MeterViewModel) = viewModelScope.launch {
-		readFileStateFlow.value = ReadFileState(ReadFileState.Type.Reading)
-		if (result.resultCode == Activity.RESULT_OK) {
-			kotlin.runCatching {
-				val uri = result.data?.data!!
-				readCsv(context, uri, meterVM)
-			}.onFailure {
-				it.printStackTrace()
-				readFileStateFlow.value = ReadFileState(ReadFileState.Type.ReadFailed, it.message)
-				SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(it.message ?: "", SharedEvent.Color.Error))
+		SharedEvent.catching {
+			readFileStateFlow.value = ReadFileState(ReadFileState.Type.Reading)
+			if (result.resultCode == Activity.RESULT_OK) {
+				kotlin.runCatching {
+					val uri = result.data?.data!!
+					readCsv(context, uri, meterVM)
+				}.onFailure {
+					it.printStackTrace()
+					readFileStateFlow.value = ReadFileState(ReadFileState.Type.ReadFailed, it.message)
+					SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(it.message ?: "", SharedEvent.Color.Error))
+				}
+			} else {
+				readFileStateFlow.value = ReadFileState(ReadFileState.Type.ReadFailed, result.resultCode.toString())
 			}
-		} else {
-			readFileStateFlow.value = ReadFileState(ReadFileState.Type.ReadFailed, result.resultCode.toString())
 		}
 	}
 
 	// 讀取csv檔案
-	fun readCsv(context:Context, uri:Uri, meterVM:MeterViewModel, specifiedFilename:String = "") {
-		val parcelFileDescriptor = context.contentResolver.openFileDescriptor(uri, "r")
-		val inputStream = FileInputStream(parcelFileDescriptor!!.fileDescriptor)
-		val csvRows:List<Map<String, String>> = csvReader().readAllWithHeader(inputStream)
-		parcelFileDescriptor.close()
-		readFileStateFlow.value = ReadFileState(ReadFileState.Type.Idle)
-		// 檢查CSV資料合法
-		val meterRows = csvRows.toMeterRows()
-		var message = checkRowsLegal(meterRows)
-		if (message == "ok") {
-			meterVM.meterRowsStateFlow.value = csvRows.toMeterRows()
-			meterVM.setSelectedMeterGroup(null)
-			setFileState(context, uri, specifiedFilename)
-		} else {
-			message += "\n請確認CSV檔案資料"
-			viewModelScope.launch {
-				SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(message, SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
+	fun readCsv(context:Context, uri:Uri, meterVM:MeterViewModel, specifiedFilename:String = "") = viewModelScope.launch {
+		SharedEvent.catching {
+			val parcelFileDescriptor = context.contentResolver.openFileDescriptor(uri, "r")
+			val inputStream = FileInputStream(parcelFileDescriptor!!.fileDescriptor)
+			val csvRows:List<Map<String, String>> = csvReader().readAllWithHeader(inputStream)
+			parcelFileDescriptor.close()
+			readFileStateFlow.value = ReadFileState(ReadFileState.Type.Idle)
+			// 檢查CSV資料合法
+			val meterRows = csvRows.toMeterRows()
+			var message = checkRowsLegal(meterRows)
+			if (message == "ok") {
+				meterVM.meterRowsStateFlow.value = csvRows.toMeterRows()
+				meterVM.setSelectedMeterGroup(null)
+				setFileState(context, uri, specifiedFilename)
+			} else {
+				message += "\n請確認CSV檔案資料"
+				viewModelScope.launch {
+					SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(message, SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
+				}
 			}
 		}
 	}
@@ -118,56 +114,62 @@ class CsvViewModel @Inject constructor(
 
 	// 設為選擇的檔案
 	@SuppressLint("Range")
-	private fun setFileState(context:Context, uri:Uri, specifiedFilename:String = "") {
-		val contentResolver:ContentResolver = context.contentResolver
-		val filepath = uri.path ?: ""
-		var filename = specifiedFilename
-		if (filename.isEmpty()) {
-			filename = FileUtils.getFilename(context, uri) ?: ""
+	private fun setFileState(context:Context, uri:Uri, specifiedFilename:String = "") = viewModelScope.launch {
+		SharedEvent.catching {
+			val contentResolver:ContentResolver = context.contentResolver
+			val filepath = uri.path ?: ""
+			var filename = specifiedFilename
+			if (filename.isEmpty()) {
+				filename = FileUtils.getFilename(context, uri) ?: ""
+			}
+			val fileState = FileState(uri = uri, path = filepath, name = filename)
+			selectedFileStateFlow.value = fileState
 		}
-		val fileState = FileState(uri = uri, path = filepath, name = filename)
-		selectedFileStateFlow.value = fileState
 	}
 
 	// 更新ui並儲存csv
-	fun updateSaveCsv(newCsvRows:List<MeterRow>, meterVM:MeterViewModel) {
-		// 更新stateFlow
-		val nowMeterGroup = meterVM.selectedMeterGroupStateFlow.value
-		val nowMeterRow = meterVM.selectedMeterRowFlow.value
-		meterVM.meterRowsStateFlow.value = newCsvRows
-		meterVM.setSelectedMeterGroup(
-			newCsvRows.toMeterGroups()
-				.find { it.group == nowMeterGroup?.group })
-		meterVM.selectedMeterRowFlow.value = meterVM.selectedMeterGroupStateFlow.value?.meterRows
-			?.find { it.queue == nowMeterRow?.queue }
-		// 儲存本地csv檔案
-		saveCsv(meterVM)
+	fun updateSaveCsv(newCsvRows:List<MeterRow>, meterVM:MeterViewModel) = viewModelScope.launch {
+		SharedEvent.catching {
+			// 更新stateFlow
+			val nowMeterGroup = meterVM.selectedMeterGroupStateFlow.value
+			val nowMeterRow = meterVM.selectedMeterRowFlow.value
+			meterVM.meterRowsStateFlow.value = newCsvRows
+			meterVM.setSelectedMeterGroup(
+				newCsvRows.toMeterGroups()
+					.find { it.group == nowMeterGroup?.group })
+			meterVM.selectedMeterRowFlow.value = meterVM.selectedMeterGroupStateFlow.value?.meterRows
+				?.find { it.queue == nowMeterRow?.queue }
+			// 儲存本地csv檔案
+			saveCsv(meterVM)
+		}
 	}
 
 	// 儲存csv
-	private fun saveCsv(meterVM:MeterViewModel) {
-		val fileState = selectedFileStateFlow.value
-		val csvRows = meterVM.meterRowsStateFlow.value.toCsvRows()
+	private fun saveCsv(meterVM:MeterViewModel) = viewModelScope.launch {
+		SharedEvent.catching {
+			val fileState = selectedFileStateFlow.value
+			val csvRows = meterVM.meterRowsStateFlow.value.toCsvRows()
 
-		// 轉成沒有key的csvRows:List<Map<string, string>>
-		val header = csvRows.firstOrNull()?.keys?.toList() ?: return
-		val rowsWithoutKey = listOf(header) + csvRows.map { row -> row.values.toList() }
-		val csvContent = csvWriter().writeAllAsString(rowsWithoutKey)
-		writeFile(fileState.relativePath, csvContent)
+			// 轉成沒有key的csvRows:List<Map<string, string>>
+			val header = csvRows.firstOrNull()?.keys?.toList() ?: return@catching
+			val rowsWithoutKey = listOf(header) + csvRows.map { row -> row.values.toList() }
+			val csvContent = csvWriter().writeAllAsString(rowsWithoutKey)
+			writeFile(fileState.relativePath, csvContent)
+		}
 	}
 
 	// 寫入檔案
 	private fun writeFile(relativePath:String, content:String) = viewModelScope.launch {
-		// 分解路徑 -> dirs & filename
-		val relativeFile = File(relativePath)
-		val dirs = relativeFile.parent?.split(File.separator) ?: emptyList()
-		val filename = relativeFile.name
-		if (filename.isEmpty()) {
-			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("缺少檔名", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
-		}
-		// 進入該目錄 & 寫入檔案
-		withContext(Dispatchers.IO) {
-			SharedEvent.catching {
+		SharedEvent.catching {
+			// 分解路徑 -> dirs & filename
+			val relativeFile = File(relativePath)
+			val dirs = relativeFile.parent?.split(File.separator) ?: emptyList()
+			val filename = relativeFile.name
+			if (filename.isEmpty()) {
+				SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("缺少檔名", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
+			}
+			// 進入該目錄 & 寫入檔案
+			withContext(Dispatchers.IO) {
 				val externalStorageState = Environment.getExternalStorageState()
 				if (Environment.MEDIA_MOUNTED == externalStorageState) {
 					val rootDirectory = Environment.getExternalStorageDirectory()

@@ -55,7 +55,7 @@ sealed class SharedEvent {
 		}
 
 		// 若處理中有發生錯誤, 顯示錯誤dialog
-		suspend fun catching(handle:() -> Unit) {
+		suspend fun catching(handle:suspend () -> Unit) {
 			try {
 				handle()
 			} catch (e:Exception) {
