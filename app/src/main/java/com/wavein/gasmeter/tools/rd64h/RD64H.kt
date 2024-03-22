@@ -94,13 +94,21 @@ enum class SecurityLevel {
 object RD64H {
 	private const val STX:Char = '\u0002'
 	private const val ETX:Char = '\u0003'
-	private const val STXByte:UByte = 0x2u
-	private const val ETXByte:UByte = 0x3u
+	const val STXByte:UByte = 0x2u
+	const val ETXByte:UByte = 0x3u
 
 	private fun getBCC(bytes:UByteArray):UByte {
 		var bcc:UByte = 0u
 		bytes.forEach { byte -> bcc = bcc xor byte }
 		return bcc
+	}
+
+	fun checkBCC(bytes:UByteArray):Boolean {
+		if (bytes.size < 3) return false
+		if (bytes[0] != STXByte) return false
+		if (bytes[bytes.size - 2] != ETXByte) return false
+		val bcc = bytes[bytes.size - 1]
+		return getBCC(bytes.copyOfRange(1, bytes.size - 1)) == bcc
 	}
 
 	private fun addEvenParityChar(byte:UByte):UByte {
@@ -163,7 +171,7 @@ object RD64H {
 			output = output.map { removeEvenParityChar(it) }.toUByteArray()
 		}
 		if (flag.contains("-s")) {
-			if (output[0] == STXByte && output[output.size - 2] == ETXByte) {
+			if (checkBCC(output)) {
 				output = output.copyOfRange(1, output.size - 2)
 			}
 		}

@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.content.Intent
+import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -274,6 +275,7 @@ class BluetoothViewModel @Inject constructor(
 			try {
 				outputStream!!.write(bytes)
 				onConnectEvent(ConnectEvent.BytesSent(bytes))
+				// Log.i("@@@傳送電文", RD64H.telegramConvert(bytes, "-p").toText())
 			} catch (e:IOException) {
 				e.printStackTrace()
 			}
@@ -300,10 +302,11 @@ class BluetoothViewModel @Inject constructor(
 	var commResult:MutableMap<String, BaseInfo> = mutableMapOf()
 
 	// 溝通中處理變數
-	var sendSteps = mutableListOf<BaseStep>()
-	var receiveSteps = mutableListOf<BaseStep>()
-	var totalReceiveCount = 0
-	var receivedCount = 0
+	private var sendSteps = mutableListOf<BaseStep>()
+	private var receiveSteps = mutableListOf<BaseStep>()
+	private var totalReceiveCount = 0
+	private var receivedCount = 0
+	private var fullResp:UByteArray = UByteArray(0)
 
 	// 溝通結束處理
 	private fun onCommEnd() = viewModelScope.launch {
@@ -594,30 +597,44 @@ class BluetoothViewModel @Inject constructor(
 		return String.format("%.1f", diffSecond)
 	}
 
-
 	// 依步驟接收電文 !!!電文處理中途
 	private fun onReceiveByStep(readSP:ByteArray) = viewModelScope.launch {
 		SharedEvent.catching {
-			receivedCount++
 			if (receiveSteps.isEmpty()) {
 				onCommEnd()
 				return@catching
 			}
+
+			// 檢查是否完整電文(前後有STX,ETX,BCC), 若不完整則等下個電文再串接
+			val readS = RD64H.telegramConvert(readSP, "-p").toUByteArray()
+			// Log.i("@@@接收電文", """text:${readS.toText()} origHex:${readSP.toHex()}""")
+			if (readS[0] == RD64H.STXByte) {
+				fullResp = readS.copyOf()
+			} else {
+				fullResp += readS
+			}
+			if (RD64H.checkBCC(fullResp)) {
+				fullResp = fullResp.copyOfRange(1, fullResp.size - 2)
+			} else {
+				return@catching
+			}
+			val fullRespText = fullResp.toText()
+
+			// 確定接收完整電文，執行電文接收處理
+			receivedCount++
 			var continueSend = false
 			val receiveStep = receiveSteps[0]
-			val read = RD64H.telegramConvert(readSP, "-s-p")
-			val respText = read.toText()
 
 			try {
 				when (receiveStep) {
 					is DTestStep -> {
-						commResult["single"] = BaseInfo(respText)
+						commResult["single"] = BaseInfo(fullRespText)
 						receiveSteps.removeAt(0)
 						continueSend = true
 					}
 
 					is D70Step -> {
-						val info = BaseInfo.get(respText, D70Info::class.java) as D70Info
+						val info = BaseInfo.get(fullRespText, D70Info::class.java) as D70Info
 						commResult["D70"] = info
 						receiveSteps.removeAt(0)
 						continueSend = true
@@ -625,7 +642,7 @@ class BluetoothViewModel @Inject constructor(
 
 					is D05Step -> {
 						commTextStateFlow.value = commTextStateFlow.value.copy(progress = progressText)
-						val info = BaseInfo.get(respText, D05Info::class.java) as D05Info
+						val info = BaseInfo.get(fullRespText, D05Info::class.java) as D05Info
 						commResult["D05"] = info
 						if (!commResult.containsKey("D05m")) commResult["D05m"] = D05mInfo()
 						val d05InfoList = (commResult["D05m"] as D05mInfo).list
@@ -637,28 +654,28 @@ class BluetoothViewModel @Inject constructor(
 					}
 
 					is D36Step -> {
-						val info = BaseInfo.get(respText, D36Info::class.java) as D36Info
+						val info = BaseInfo.get(fullRespText, D36Info::class.java) as D36Info
 						commResult["D36"] = info
 						receiveSteps.removeAt(0)
 						continueSend = true
 					}
 
 					is D87D01Step -> {
-						val info = BaseInfo.get(respText, D87D01Info::class.java) as D87D01Info
+						val info = BaseInfo.get(fullRespText, D87D01Info::class.java) as D87D01Info
 						commResult["D87D01"] = info
 						receiveSteps.removeAt(0)
 						continueSend = true
 					}
 
 					is D87D05Step -> {
-						val info = BaseInfo.get(respText, D87D05Info::class.java) as D87D05Info
+						val info = BaseInfo.get(fullRespText, D87D05Info::class.java) as D87D05Info
 						commResult["D87D05"] = info
 						receiveSteps.removeAt(0)
 						continueSend = true
 					}
 
 					is D87D19Step -> {
-						val info = BaseInfo.get(respText, D87D19Info::class.java) as D87D19Info
+						val info = BaseInfo.get(fullRespText, D87D19Info::class.java) as D87D19Info
 						commResult["D87D19"] = info
 						receiveSteps.removeAt(0)
 						continueSend = true
@@ -667,79 +684,79 @@ class BluetoothViewModel @Inject constructor(
 					is D87D23Step -> {
 						val info = (
 								if (commResult.containsKey("D87D23")) commResult["D87D23"]
-								else BaseInfo.get(respText, D87D23Info::class.java)
+								else BaseInfo.get(fullRespText, D87D23Info::class.java)
 								) as D87D23Info
-						info.writePart(respText)
+						info.writePart(fullRespText)
 						commResult["D87D23"] = info
 						receiveSteps.removeAt(0)
 						continueSend = true
 					}
 
 					is D87D24Step -> {
-						val info = BaseInfo.get(respText, D87D24Info::class.java) as D87D24Info
+						val info = BaseInfo.get(fullRespText, D87D24Info::class.java) as D87D24Info
 						commResult["D87D24"] = info
 						receiveSteps.removeAt(0)
 						continueSend = true
 					}
 
 					is D87D16Step -> {
-						val info = BaseInfo.get(respText, D87D16Info::class.java) as D87D16Info
+						val info = BaseInfo.get(fullRespText, D87D16Info::class.java) as D87D16Info
 						commResult["D87D16"] = info
 						receiveSteps.removeAt(0)
 						continueSend = true
 					}
 
 					is D87D57Step -> {
-						val info = BaseInfo.get(respText, D87D57Info::class.java) as D87D57Info
+						val info = BaseInfo.get(fullRespText, D87D57Info::class.java) as D87D57Info
 						commResult["D87D57"] = info
 						receiveSteps.removeAt(0)
 						continueSend = true
 					}
 
 					is D87D58Step -> {
-						val info = BaseInfo.get(respText, D87D58Info::class.java) as D87D58Info
+						val info = BaseInfo.get(fullRespText, D87D58Info::class.java) as D87D58Info
 						commResult["D87D58"] = info
 						receiveSteps.removeAt(0)
 						continueSend = true
 					}
 
 					is D87D59Step -> {
-						val info = BaseInfo.get(respText, D87D59Info::class.java) as D87D59Info
+						val info = BaseInfo.get(fullRespText, D87D59Info::class.java) as D87D59Info
 						commResult["D87D59"] = info
 						receiveSteps.removeAt(0)
 						continueSend = true
 					}
 
 					is D87D31Step -> {
-						val info = BaseInfo.get(respText, D87D31Info::class.java) as D87D31Info
+						val info = BaseInfo.get(fullRespText, D87D31Info::class.java) as D87D31Info
 						commResult["D87D31"] = info
 						receiveSteps.removeAt(0)
 						continueSend = true
 					}
 
 					is D87D50Step -> {
-						val info = BaseInfo.get(respText, D87D50Info::class.java) as D87D50Info
+						val info = BaseInfo.get(fullRespText, D87D50Info::class.java) as D87D50Info
 						commResult["D87D50"] = info
 						receiveSteps.removeAt(0)
 						continueSend = true
 					}
 
 					is D87D51Step -> {
-						val info = BaseInfo.get(respText, D87D51Info::class.java) as D87D51Info
+						val info = BaseInfo.get(fullRespText, D87D51Info::class.java) as D87D51Info
 						commResult["D87D51"] = info
 						receiveSteps.removeAt(0)
 						continueSend = true
 					}
 
 					is D87D41Step -> {
-						val info = BaseInfo.get(respText, D87D41Info::class.java) as D87D41Info
+						val info = BaseInfo.get(fullRespText, D87D41Info::class.java) as D87D41Info
 						commResult["D87D41"] = info
 						receiveSteps.removeAt(0)
 						continueSend = true
 					}
 
 					is D87D02Step -> {
-						val info = BaseInfo.get(respText, D87D02Info::class.java) as D87D02Info
+						val info = BaseInfo.get(fullRespText, D87D02Info::class.java) as D87D02Info
 						commResult["D87D02"] = info
 						receiveSteps.removeAt(0)
 						continueSend = true
@@ -754,15 +771,15 @@ class BluetoothViewModel @Inject constructor(
 				commResult["error_msg"] = BaseInfo(error.message ?: "")
 				// 錯誤處理: 檢查是不是D16 或 D36
 				kotlin.runCatching {
-					val info = BaseInfo.get(respText, D16Info::class.java) as D16Info
+					val info = BaseInfo.get(fullRespText, D16Info::class.java) as D16Info
 					commResult["error_D16"] = info
 				}
 				kotlin.runCatching {
-					val info = BaseInfo.get(respText, D36Info::class.java) as D36Info
+					val info = BaseInfo.get(fullRespText, D36Info::class.java) as D36Info
 					commResult["error_D36"] = info
 				}
 				kotlin.runCatching {
-					val info = BaseInfo.get(respText, D87DL9Info::class.java) as D87DL9Info
+					val info = BaseInfo.get(fullRespText, D87DL9Info::class.java) as D87DL9Info
 					commResult["error_DL9"] = info
 				}
 				onCommEnd()

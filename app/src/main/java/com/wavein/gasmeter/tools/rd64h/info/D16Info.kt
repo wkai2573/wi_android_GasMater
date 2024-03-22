@@ -1,5 +1,7 @@
 package com.wavein.gasmeter.tools.rd64h.info
 
+import android.util.Log
+
 // 子機無回應時, 會回傳D16
 data class D16Info(override val text:String) : BaseInfo(text) {
 	var btParentId:String = ""
@@ -15,5 +17,8 @@ data class D16Info(override val text:String) : BaseInfo(text) {
 		this.isBatteryVoltageLow = alarmValue and 0b00000111 == 0
 		this.isCarrierBusy = alarmValue and 0b00001011 == 0
 		this.isChildUnitNotResponding = alarmValue and 0b00001101 == 0
+		Log.i("@@@D16", "isBatteryVoltageLow:$isBatteryVoltageLow " +
+				"isCarrierBusy:$isCarrierBusy " +
+				"isChildUnitNotResponding:$isChildUnitNotResponding")
 	}
 }
