@@ -17,10 +17,13 @@ import com.wavein.gasmeter.tools.rd64h.*
 import com.wavein.gasmeter.tools.rd64h.info.*
 import com.wavein.gasmeter.ui.loading.Tip
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -307,11 +310,32 @@ class BluetoothViewModel @Inject constructor(
 	private var totalReceiveCount = 0
 	private var receivedCount = 0
 	private var fullResp:UByteArray = UByteArray(0)
+	private var timeoutJob:Job? = null
 
 	// 溝通結束處理
 	private fun onCommEnd() = viewModelScope.launch {
 		SharedEvent.catching {
+			if (commStateFlow.value != CommState.Communicating) return@catching
 			// Log.i("@@@耗時", "${elapsedTime()} 秒 (總耗時)")
+			// 恢復變數
+			sendSteps.clear()
+			receiveSteps.clear()
+			timeoutJob?.cancel()
+			// 異常1_自訂errMsg
+			val err1 = if (commResult.containsKey("error_msg")) {
+				val msg = (commResult["error_msg"] as BaseInfo).text
+				msg
+			} else ""
+			// 異常2_指定回傳條件
+			val err2 = if (commResult.containsKey("error_DL9")) {
+				"通信忙線中，請稍後再試"
+			} else if (commResult.containsKey("error_D16")) {
+				"HHD用GW終端無回應(D16)"
+			} else if (commResult.containsKey("error_D36")) {
+				"對表U-bus通信異常(D36)"
+			} else {
+				""
+			}
 			// 依組合決定通信結束後小吃文字
 			val metaInfo = commResult["meta"] as MetaInfo
 			when (metaInfo.op) {
@@ -324,7 +348,8 @@ class BluetoothViewModel @Inject constructor(
 					}
 					val notReadNumber = metaInfo.meterIds.size - d05mList.size
 					if (notReadNumber > 0) {
-						commResult["error"] = BaseInfo("${d05mList.size}台抄表成功，${notReadNumber}台無回應\n請檢查未抄表瓦斯表")
+						val errListText = "${d05mList.size}台抄表成功，${notReadNumber}台無回應\n請檢查未抄表瓦斯表"
+						commResult["error"] = BaseInfo(listOf(err1, err2, errListText).filter { it.isNotEmpty() }.joinToString("\n"))
 					} else {
 						commResult["success"] = BaseInfo("${d05mList.size}台抄表成功")
 					}
@@ -352,21 +377,9 @@ class BluetoothViewModel @Inject constructor(
 							"C02" -> if (!commResult.containsKey("D87D02")) errList.add("強制Session中斷")
 						}
 					}
-					if (errList.isNotEmpty()) {
-						val exceptionMsg = if (commResult.containsKey("error_msg")) {
-							val msg = (commResult["error_msg"] as BaseInfo).text
-							if (msg.isNotEmpty()) "$msg\n" else ""
-						} else ""
-						val errorType = if (commResult.containsKey("error_DL9")) {
-							"通信忙線中，請稍後再試"
-						} else if (commResult.containsKey("error_D16")) {
-							"HHD用GW終端無回應(D16)"
-						} else if (commResult.containsKey("error_D36")) {
-							"對表U-bus通信異常(D36)"
-						} else {
-							"通信異常"
-						}
-						commResult["error"] = BaseInfo("$exceptionMsg$errorType，以下通信失敗：\n${errList.joinToString("\n")}")
+					if (errList.isNotEmpty() || err1.isNotEmpty() || err2.isNotEmpty()) {
+						val errListText = "以下通信失敗：\n${errList.joinToString("\n")}"
+						commResult["error"] = BaseInfo(listOf(err1, err2, errListText).filter { it.isNotEmpty() }.joinToString("\n"))
 					} else {
 						commResult["success"] = BaseInfo("讀取/設定成功")
 					}
@@ -391,8 +404,7 @@ class BluetoothViewModel @Inject constructor(
 			commResult = mutableMapOf()
 
 			sendSteps = mutableListOf(
-				RTestStep(toSendText),
-				__AStep()
+				RTestStep(toSendText), __AStep()
 			)
 			receiveSteps = mutableListOf(
 				DTestStep()
@@ -431,7 +443,6 @@ class BluetoothViewModel @Inject constructor(
 		SharedEvent.catching {
 			if (commStateFlow.value != CommState.ReadyCommunicate) return@catching
 			startTime = System.currentTimeMillis()
-
 			commStateFlow.value = CommState.Communicating
 			commResult = mutableMapOf("meta" to MetaInfo("", "R87", listOf(meterId), r87Steps))
 
@@ -453,9 +464,7 @@ class BluetoothViewModel @Inject constructor(
 				__AStep(),
 			)
 			receiveSteps = mutableListOf(
-				D70Step(),
-				D36Step(),
-				*r87Steps.flatMapIndexed { index, step ->
+				D70Step(), D36Step(), *r87Steps.flatMapIndexed { index, step ->
 					when (step.op) {
 						"R01" -> listOf(D87D01Step())
 						"R05" -> listOf(D87D05Step())
@@ -486,105 +495,111 @@ class BluetoothViewModel @Inject constructor(
 	}
 
 	// 依步驟發送電文 !!!電文處理中途
-	private suspend fun sendByStep() {
-		// Log.i("@@@耗時", "${elapsedTime()} 秒")
-		if (sendSteps.isEmpty()) {
-			onCommEnd()
-			return
-		}
-		when (val sendStep = sendSteps.removeAt(0)) {
-			is RTestStep -> {
-				val sendText = sendStep.text
-				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
-				commTextStateFlow.value = Tip("通信中: $sendText [${sendSP.toHex()}]")
-				wt(WT134)
-				transceiver?.write(sendSP)
-			}
-
-			is __5Step -> {
-				commTextStateFlow.value = Tip("正在與母機建立連結", "", progressText) // 5↔D70
-				val sendSP = RD64H.telegramConvert("5", "+s+p")
-				wt(WT134)
-				transceiver?.write(sendSP)
-			}
-
-			is R80Step -> {
-				commTextStateFlow.value = Tip("抄表中", "", progressText) // R80↔D05
-				val btParentId = (commResult["D70"] as D70Info).btParentId
-				val sendText = RD64H.createR80Text(btParentId, sendStep.meterIds)
-				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
-				wt(WT134)
-				transceiver?.write(sendSP)
-			}
-
-			is __AStep -> {
-				val sendSP = RD64H.telegramConvert("A", "+s+p")
-				wt(WT2)
-				transceiver?.write(sendSP)
-				delay(1000L)
+	private suspend fun sendByStep() = viewModelScope.launch {
+		SharedEvent.catching {
+			// Log.i("@@@耗時", "${elapsedTime()} 秒")
+			withContext(Dispatchers.IO) { timeout() }
+			if (sendSteps.isEmpty()) {
 				onCommEnd()
+				return@catching
 			}
-
-			is R89Step -> {
-				commTextStateFlow.value = Tip("正在要求通信許可", "", progressText) // R89↔D36
-				val sendText = "ZA${sendStep.meterId}R8966ZD${sendStep.meterId}R36"
-				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
-				wt(WT134)
-				transceiver?.write(sendSP)
-			}
-
-			is R87Step -> {
-				when (sendStep.op) {
-					"R01" -> commTextStateFlow.value = Tip("正在讀取讀數", "", progressText) // R87R01
-					"R05" -> commTextStateFlow.value = Tip("正在讀取讀數", "", progressText) // R87R05
-					"R19" -> commTextStateFlow.value = Tip("正在讀取時刻", "", progressText) // R87R19
-					"R23" -> commTextStateFlow.value = Tip("正在讀取五回遮斷履歷", "", progressText) // R87R23
-					"R24" -> commTextStateFlow.value = Tip("正在讀取表內部資料", "", progressText) // R87R24
-					"R16" -> commTextStateFlow.value = Tip("正在讀取表狀態", "", progressText) // R87R16
-					"S16" -> commTextStateFlow.value = Tip("正在設定表狀態", "", progressText) // R87S16
-					"R57" -> commTextStateFlow.value = Tip("正在讀取時間使用量", "", progressText) // R87R57
-					"R58" -> commTextStateFlow.value = Tip("正在讀取最大使用量", "", progressText) // R87R58
-					"R59" -> commTextStateFlow.value = Tip("正在讀取1日最大使用量", "", progressText) // R87R59
-					"S31" -> commTextStateFlow.value = Tip("正在設定登錄母火流量", "", progressText) // R87S31
-					"R50" -> commTextStateFlow.value = Tip("正在讀取壓力遮斷判定值", "", progressText) // R87R50
-					"S50" -> commTextStateFlow.value = Tip("正在設定壓力遮斷判定值", "", progressText) // R87S50
-					"R51" -> commTextStateFlow.value = Tip("正在讀取壓力值", "", progressText) // R87R51
-					"C41" -> commTextStateFlow.value = Tip("正在設定中心遮斷", "", progressText) // R87C41
-					"C02" -> commTextStateFlow.value = Tip("正在中斷Session", "", progressText) // R87C02
+			when (val sendStep = sendSteps.removeAt(0)) {
+				is RTestStep -> {
+					val sendText = sendStep.text
+					val sendSP = RD64H.telegramConvert(sendText, "+s+p")
+					commTextStateFlow.value = Tip("通信中: $sendText [${sendSP.toHex()}]")
+					wt(WT134)
+					transceiver?.write(sendSP)
 				}
-				val r87 = "ZD${sendStep.adr}R87"
-				// 加入時刻
-				val d19Time = if (commResult.containsKey("D87D19")) {
-					(commResult["D87D19"] as D87D19Info).data
-				} else {
-					null
+
+				is __5Step -> {
+					commTextStateFlow.value = Tip("正在與母機建立連結", "", progressText) // 5↔D70
+					val sendSP = RD64H.telegramConvert("5", "+s+p")
+					wt(WT134)
+					transceiver?.write(sendSP)
 				}
-				val aLine = RD64H.createR87Aline(
-					securityLevel = sendStep.securityLevel, date = d19Time,
-					cc = sendStep.cc, adr = sendStep.adr, op = sendStep.op, data = sendStep.data
-				)
-				val sendText = r87 + aLine.toText()
-				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
-				wt(WT2)
-				transceiver?.write(sendSP)
-			}
 
-			is R70Step -> {
-				commTextStateFlow.value = commTextStateFlow.value.copy(subtitle = "", progress = progressText)
-				val sendText = "ZD${sendStep.meterId}R70"
-				val sendSP = RD64H.telegramConvert(sendText, "+s+p")
-				wt(WT2)
-				transceiver?.write(sendSP)
-			}
+				is R80Step -> {
+					commTextStateFlow.value = Tip("抄表中", "", progressText) // R80↔D05
+					val btParentId = (commResult["D70"] as D70Info).btParentId
+					val sendText = RD64H.createR80Text(btParentId, sendStep.meterIds)
+					val sendSP = RD64H.telegramConvert(sendText, "+s+p")
+					wt(WT134)
+					transceiver?.write(sendSP)
+				}
 
-			else -> {
-				throw Exception("例外的OP: $sendStep")
+				is __AStep -> {
+					val sendSP = RD64H.telegramConvert("A", "+s+p")
+					wt(WT2)
+					transceiver?.write(sendSP)
+					delay(1000L)
+					onCommEnd()
+				}
+
+				is R89Step -> {
+					commTextStateFlow.value = Tip("正在要求通信許可", "", progressText) // R89↔D36
+					val sendText = "ZA${sendStep.meterId}R8966ZD${sendStep.meterId}R36"
+					val sendSP = RD64H.telegramConvert(sendText, "+s+p")
+					wt(WT134)
+					transceiver?.write(sendSP)
+				}
+
+				is R87Step -> {
+					when (sendStep.op) {
+						"R01" -> commTextStateFlow.value = Tip("正在讀取讀數", "", progressText) // R87R01
+						"R05" -> commTextStateFlow.value = Tip("正在讀取讀數", "", progressText) // R87R05
+						"R19" -> commTextStateFlow.value = Tip("正在讀取時刻", "", progressText) // R87R19
+						"R23" -> commTextStateFlow.value = Tip("正在讀取五回遮斷履歷", "", progressText) // R87R23
+						"R24" -> commTextStateFlow.value = Tip("正在讀取表內部資料", "", progressText) // R87R24
+						"R16" -> commTextStateFlow.value = Tip("正在讀取表狀態", "", progressText) // R87R16
+						"S16" -> commTextStateFlow.value = Tip("正在設定表狀態", "", progressText) // R87S16
+						"R57" -> commTextStateFlow.value = Tip("正在讀取時間使用量", "", progressText) // R87R57
+						"R58" -> commTextStateFlow.value = Tip("正在讀取最大使用量", "", progressText) // R87R58
+						"R59" -> commTextStateFlow.value = Tip("正在讀取1日最大使用量", "", progressText) // R87R59
+						"S31" -> commTextStateFlow.value = Tip("正在設定登錄母火流量", "", progressText) // R87S31
+						"R50" -> commTextStateFlow.value = Tip("正在讀取壓力遮斷判定值", "", progressText) // R87R50
+						"S50" -> commTextStateFlow.value = Tip("正在設定壓力遮斷判定值", "", progressText) // R87S50
+						"R51" -> commTextStateFlow.value = Tip("正在讀取壓力值", "", progressText) // R87R51
+						"C41" -> commTextStateFlow.value = Tip("正在設定中心遮斷", "", progressText) // R87C41
+						"C02" -> commTextStateFlow.value = Tip("正在中斷Session", "", progressText) // R87C02
+					}
+					val r87 = "ZD${sendStep.adr}R87"
+					val aLine = RD64H.createR87Aline(
+						securityLevel = sendStep.securityLevel, cc = sendStep.cc, adr = sendStep.adr, op = sendStep.op, data = sendStep.data
+					)
+					val sendText = r87 + aLine.toText()
+					val sendSP = RD64H.telegramConvert(sendText, "+s+p")
+					wt(WT2)
+					transceiver?.write(sendSP)
+				}
+
+				is R70Step -> {
+					commTextStateFlow.value = commTextStateFlow.value.copy(subtitle = "", progress = progressText)
+					val sendText = "ZD${sendStep.meterId}R70"
+					val sendSP = RD64H.telegramConvert(sendText, "+s+p")
+					wt(WT2)
+					transceiver?.write(sendSP)
+				}
+
+				else -> {
+					throw Exception("例外的OP: $sendStep")
+				}
 			}
 		}
 	}
 
+	// timeout fun: 80秒無回應則結束通信
+	private suspend fun timeout() {
+		timeoutJob?.cancel()
+		timeoutJob = viewModelScope.launch {
+			delay(80000)
+			commResult["error_msg"] = BaseInfo("通信逾時")
+			onCommEnd()
+		}
+	}
+
 	private val WT134 = 1000L // 1000L
-	private val WT2 = 3500L // 3500L
+	private val WT2 = 3500L // 3500L, 受信可能期間=3~6秒
 
 	private suspend inline fun wt(delay:Long) {
 		delay(delay)
@@ -600,6 +615,7 @@ class BluetoothViewModel @Inject constructor(
 	// 依步驟接收電文 !!!電文處理中途
 	private fun onReceiveByStep(readSP:ByteArray) = viewModelScope.launch {
 		SharedEvent.catching {
+			withContext(Dispatchers.IO) { timeout() }
 			if (receiveSteps.isEmpty()) {
 				onCommEnd()
 				return@catching
@@ -682,10 +698,8 @@ class BluetoothViewModel @Inject constructor(
 					}
 
 					is D87D23Step -> {
-						val info = (
-								if (commResult.containsKey("D87D23")) commResult["D87D23"]
-								else BaseInfo.get(fullRespText, D87D23Info::class.java)
-								) as D87D23Info
+						val info = (if (commResult.containsKey("D87D23")) commResult["D87D23"]
+						else BaseInfo.get(fullRespText, D87D23Info::class.java)) as D87D23Info
 						info.writePart(fullRespText)
 						commResult["D87D23"] = info
 						receiveSteps.removeAt(0)

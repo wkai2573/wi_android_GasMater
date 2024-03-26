@@ -124,7 +124,7 @@ class MeterRowComboAdapter(context:Context, resource:Int, meterRows:List<MeterRo
 
 // 表資料/設定 分頁管理器
 class MeterInfoSetPageAdapter(fragment:Fragment) : FragmentStateAdapter(fragment) {
-	override fun getItemCount():Int = 1 // 要改回2 todo 暫時移除進階查詢
+	override fun getItemCount():Int = 1 // todo 暫時移除進階查詢, 要改回2
 	override fun createFragment(position:Int):Fragment {
 		val fragment = when (position) {
 			0 -> MeterInfoFragment()
