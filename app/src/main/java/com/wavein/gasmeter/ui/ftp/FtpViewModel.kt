@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.github.doyaaaaaken.kotlincsv.dsl.csvWriter
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import com.wavein.gasmeter.Application.Companion.IS_DEV_MODE
 import com.wavein.gasmeter.tools.Preference
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.TimeUtils
@@ -40,31 +41,29 @@ class FtpViewModel @Inject constructor(
 	val appStateFlow = MutableStateFlow(AppState.NotChecked)
 	val ftpConnStateFlow = MutableStateFlow<FtpConnState>(FtpConnState.Idle)
 
-	// 變數
+	// 系統、下載、上傳ftp
 	var systemFtpInfo:FtpInfo = FtpInfo(
 		FtpEnum.System,
-		Preference[Preference.FTP_SYSTEM_HOST, "118.163.191.31"]!!, // "118.163.191.31"
-		Preference[Preference.FTP_SYSTEM_USERNAME, "aktwset01"]!!,  // "aktwset01"
-		Preference[Preference.FTP_SYSTEM_PASSWORD, "NSsetup09"]!!,  // "NSsetup09"
-		Preference[Preference.FTP_SYSTEM_ROOT, "WaveIn/system"]!!   // "WaveIn/system"
+		Preference[Preference.FTP_SYSTEM_HOST, "118.163.191.31"]!!,
+		Preference[Preference.FTP_SYSTEM_USERNAME, "aktwset01"]!!,
+		Preference[Preference.FTP_SYSTEM_PASSWORD, "NSsetup09"]!!,
+		Preference[Preference.FTP_SYSTEM_ROOT, "WaveIn/system"]!!
 	)
 
-	//todo 前三個要改回""
 	var downloadFtpInfo:FtpInfo = FtpInfo(
 		FtpEnum.Download,
-		Preference[Preference.FTP_DOWNLOAD_HOST, "118.163.191.31"]!!, // "118.163.191.31"
-		Preference[Preference.FTP_DOWNLOAD_USERNAME, "aktwset01"]!!,  // "aktwset01"
-		Preference[Preference.FTP_DOWNLOAD_PASSWORD, "NSsetup09"]!!,  // "NSsetup09"
-		Preference[Preference.FTP_DOWNLOAD_ROOT, "WaveIn/download"]!! // "WaveIn/download"
+		Preference[Preference.FTP_DOWNLOAD_HOST, if (IS_DEV_MODE) "118.163.191.31" else ""]!!,
+		Preference[Preference.FTP_DOWNLOAD_USERNAME, if (IS_DEV_MODE) "aktwset01" else ""]!!,
+		Preference[Preference.FTP_DOWNLOAD_PASSWORD, if (IS_DEV_MODE) "NSsetup09" else ""]!!,
+		Preference[Preference.FTP_DOWNLOAD_ROOT, if (IS_DEV_MODE) "WaveIn/download" else ""]!!
 	)
 
-	//todo 前三個要改回""
 	var uploadFtpInfo:FtpInfo = FtpInfo(
 		FtpEnum.Upload,
-		Preference[Preference.FTP_UPLOAD_HOST, "118.163.191.31"]!!, // "118.163.191.31"
-		Preference[Preference.FTP_UPLOAD_USERNAME, "aktwset01"]!!,  // "aktwset01"
-		Preference[Preference.FTP_UPLOAD_PASSWORD, "NSsetup09"]!!,  // "NSsetup09"
-		Preference[Preference.FTP_UPLOAD_ROOT, "WaveIn/upload"]!!   // "WaveIn/upload"
+		Preference[Preference.FTP_UPLOAD_HOST, if (IS_DEV_MODE) "118.163.191.31" else ""]!!,
+		Preference[Preference.FTP_UPLOAD_USERNAME, if (IS_DEV_MODE) "aktwset01" else ""]!!,
+		Preference[Preference.FTP_UPLOAD_PASSWORD, if (IS_DEV_MODE) "NSsetup09" else ""]!!,
+		Preference[Preference.FTP_UPLOAD_ROOT, if (IS_DEV_MODE) "WaveIn/upload" else ""]!!
 	)
 
 	fun saveFtpInfo(ftpInfo:FtpInfo) {

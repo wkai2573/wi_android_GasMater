@@ -483,7 +483,7 @@ class BluetoothViewModel @Inject constructor(
 						"R51" -> listOf(D87D51Step())
 						"C41" -> listOf(D87D41Step())
 						"C02" -> listOf(D87D02Step())
-						// todo 其他R87項目...
+						// todo 新增R87時_這裡加接收Step
 						else -> listOf()
 					}
 				}.toTypedArray()
@@ -776,7 +776,7 @@ class BluetoothViewModel @Inject constructor(
 						continueSend = true
 					}
 
-					// todo 其他R87項目...
+					// todo 新增R87時_這裡加Step處理
 				}
 
 				if (continueSend) sendByStep()

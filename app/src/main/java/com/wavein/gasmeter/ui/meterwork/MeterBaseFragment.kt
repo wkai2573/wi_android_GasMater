@@ -461,7 +461,7 @@ class MeterBaseFragment : Fragment() {
 								logRows.add(LogRow(meterId = meterId, op = "C02", oldValue = "", newValue = ""))
 							}
 						}
-						// todo 其他R87結果...
+						// todo 新增R87時_這裡加通信完畢後處理
 
 						newMeterRow
 					}
