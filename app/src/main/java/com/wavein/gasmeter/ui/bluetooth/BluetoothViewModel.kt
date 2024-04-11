@@ -11,6 +11,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.material.snackbar.Snackbar
+import com.wavein.gasmeter.Application.Companion.R89_CHANNEL_CODE
 import com.wavein.gasmeter.tools.Preference
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.rd64h.*
@@ -278,7 +279,7 @@ class BluetoothViewModel @Inject constructor(
 			try {
 				outputStream!!.write(bytes)
 				onConnectEvent(ConnectEvent.BytesSent(bytes))
-				// Log.i("@@@傳送電文", RD64H.telegramConvert(bytes, "-p").toText())
+				// Log.i("@@@SendTx", RD64H.telegramConvert(bytes, "-p").toText()) // todo
 			} catch (e:IOException) {
 				e.printStackTrace()
 			}
@@ -538,7 +539,7 @@ class BluetoothViewModel @Inject constructor(
 
 				is R89Step -> {
 					commTextStateFlow.value = Tip("正在要求通信許可", "", progressText) // R89↔D36
-					val sendText = "ZA${sendStep.meterId}R8966ZD${sendStep.meterId}R36"
+					val sendText = "ZA${sendStep.meterId}R89${R89_CHANNEL_CODE}ZD${sendStep.meterId}R36"
 					val sendSP = RD64H.telegramConvert(sendText, "+s+p")
 					wt(WT134)
 					transceiver?.write(sendSP)

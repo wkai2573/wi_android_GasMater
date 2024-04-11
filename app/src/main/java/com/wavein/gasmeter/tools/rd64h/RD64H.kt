@@ -1,6 +1,7 @@
 package com.wavein.gasmeter.tools.rd64h
 
 import android.util.Log
+import com.wavein.gasmeter.Application.Companion.R80_CHANNEL_CODE
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -136,7 +137,7 @@ object RD64H {
 		if (meterIds.size > 45 || meterIds.isEmpty()) throw IllegalArgumentException("單次抄表最多45台")
 		val countCode = meterIds.size.toString().padStart(2, '0')
 		val metersCode = meterIds.joinToString("") { "$it????" }
-		val R80 = "ZA${btParentId}R8066$countCode$metersCode"
+		val R80 = "ZA${btParentId}R80$R80_CHANNEL_CODE$countCode$metersCode"
 		return R80
 	}
 
