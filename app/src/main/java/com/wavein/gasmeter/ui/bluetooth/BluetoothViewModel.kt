@@ -497,6 +497,33 @@ class BluetoothViewModel @Inject constructor(
 		}
 	}
 
+	// 設定子機頻道
+	fun sendTelegramToGW(meterId:String) = viewModelScope.launch {
+		SharedEvent.catching {
+			if (commStateFlow.value != CommState.ReadyCommunicate) return@catching
+			startTime = System.currentTimeMillis()
+			commStateFlow.value = CommState.Communicating
+			commResult = mutableMapOf("meta" to MetaInfo("", "R89_GW", listOf(meterId)))
+
+			sendSteps = mutableListOf(
+				__5Step(),
+				RTestStep("ZA${meterId}R8911ZD${meterId}R36"),
+				RTestStep("ZD${meterId}R34"),
+				RTestStep("ZD${meterId}S34@@@@O1030"),
+				__AStep(),
+			)
+			receiveSteps = mutableListOf(
+				D70Step(),
+				D36Step(),
+				DTestStep(),
+				DTestStep(),
+			)
+			totalReceiveCount = receiveSteps.size
+			receivedCount = 0
+			sendByStep()
+		}
+	}
+
 	// 依步驟發送電文 !!!電文處理中途
 	private suspend fun sendByStep() = viewModelScope.launch {
 		SharedEvent.catching {
@@ -511,7 +538,7 @@ class BluetoothViewModel @Inject constructor(
 					val sendText = sendStep.text
 					val sendSP = RD64H.telegramConvert(sendText, "+s+p")
 					commTextStateFlow.value = Tip("通信中: $sendText [${sendSP.toHex()}]")
-					wt(WT134)
+					wt(WT2)
 					transceiver?.write(sendSP)
 				}
 
