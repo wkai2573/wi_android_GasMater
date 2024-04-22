@@ -54,7 +54,7 @@ data class ALine(
 			data = fullData.trimEnd()
 
 			Log.i(
-				"@@@ Recv",
+				"@@@ Recv_UBus",
 				"CC:${cc.stringToHex()}h ADR:[$adr] DP:[$dp] OPC:[$op] DATA:[$fullData]" +
 						(if (dateH.isNotEmpty()) " DATE:${dateH}h" else "") +
 						(if (macH.isNotEmpty()) " MAC:${macH}h" else "") +

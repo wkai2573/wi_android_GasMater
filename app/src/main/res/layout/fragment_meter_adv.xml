@@ -102,6 +102,12 @@
         app:fieldAdv41Title="41. 中心遮斷" />
 
       <com.wavein.gasmeter.ui.component.FieldAdv41
+        android:id="@+id/field_42"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:fieldAdv41Title="42. 中心遮斷解除" />
+
+      <com.wavein.gasmeter.ui.component.FieldAdv41
         android:id="@+id/field_02"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

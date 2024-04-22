@@ -225,7 +225,7 @@ object RD64H {
 				val bcc = getBCC(ccU + adrU + adrU + dpU + opU + data42U + dateU + macU)
 				val fullTelegramU = ccU + adrU + adrU + dpU + opU + data42U + dateU + macU + ubyteArrayOf(bcc)
 				Log.i(
-					"@@@ Send",
+					"@@@ Send_UBus",
 					"CC:${ccU.toHex()}h ADR:[$adr] DP:[$dp] OPC:[$op] DATA:[$data42]" +
 							" DATE:${dateHex}h MAC:${macU.toHex()}h BCC:${ubyteArrayOf(bcc).toHex()}h"
 				)
@@ -246,7 +246,7 @@ object RD64H {
 				val bcc = getBCC(ccU + adrU + adrU + dpU + opU + data64U)
 				val fullTelegramU = ccU + adrU + adrU + dpU + opU + data64U + ubyteArrayOf(bcc)
 				Log.i(
-					"@@@ Send",
+					"@@@ Send_UBus",
 					"CC:${ccU.toHex()}h ADR:[$adr] DP:[$dp] OPC:[$op] DATA:[$data64]" +
 							" BCC:${ubyteArrayOf(bcc).toHex()}h"
 				)

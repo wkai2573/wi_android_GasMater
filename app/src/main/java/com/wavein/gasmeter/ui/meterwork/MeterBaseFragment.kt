@@ -31,6 +31,7 @@ import com.wavein.gasmeter.tools.rd64h.info.D87D23Info
 import com.wavein.gasmeter.tools.rd64h.info.D87D24Info
 import com.wavein.gasmeter.tools.rd64h.info.D87D31Info
 import com.wavein.gasmeter.tools.rd64h.info.D87D41Info
+import com.wavein.gasmeter.tools.rd64h.info.D87D42Info
 import com.wavein.gasmeter.tools.rd64h.info.D87D50Info
 import com.wavein.gasmeter.tools.rd64h.info.D87D51Info
 import com.wavein.gasmeter.tools.rd64h.info.D87D57Info
@@ -451,6 +452,16 @@ class MeterBaseFragment : Fragment() {
 							if (metaInfo.r87Steps?.any { it.op == "C41" } == true) {
 								logRows.add(
 									LogRow(meterId = meterId, op = "C41", oldValue = meterRow.alarmInfo1 ?: "未查詢", newValue = newMeterRow.alarmInfo1 ?: "")
+								)
+							}
+						}
+						// D87D42: 中心遮斷解除
+						if (commResult.containsKey("D87D42")) {
+							val info = commResult["D87D42"] as D87D42Info
+							newMeterRow = newMeterRow.copy(alarmInfo1 = info.alarmInfo1)
+							if (metaInfo.r87Steps?.any { it.op == "C42" } == true) {
+								logRows.add(
+									LogRow(meterId = meterId, op = "C42", oldValue = meterRow.alarmInfo1 ?: "未查詢", newValue = newMeterRow.alarmInfo1 ?: "")
 								)
 							}
 						}

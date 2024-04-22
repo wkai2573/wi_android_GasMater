@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import androidx.appcompat.widget.AppCompatCheckBox
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -20,6 +21,7 @@ import com.wavein.gasmeter.tools.rd64h.R87Step
 import com.wavein.gasmeter.tools.rd64h.RD64H
 import com.wavein.gasmeter.tools.rd64h.SecurityLevel
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
+import com.wavein.gasmeter.ui.bluetooth.CommEndEvent
 import com.wavein.gasmeter.ui.loading.Tip
 import com.wavein.gasmeter.ui.meterwork.MeterBaseFragment
 import com.wavein.gasmeter.ui.meterwork.MeterViewModel
@@ -47,6 +49,7 @@ class MeterAdvFragment : Fragment() {
 	private val setPassword = "1234567"
 	private var r87Steps:MutableList<R87Step> = mutableListOf()
 	private var estimatedTime:Int = 0
+	private val checkboxes:MutableList<AppCompatCheckBox> = mutableListOf()
 
 	override fun onDestroyView() {
 		super.onDestroyView()
@@ -172,8 +175,39 @@ class MeterAdvFragment : Fragment() {
 				}
 			}
 			field51.binding?.readCheckbox?.let { it.setOnCheckedChangeListener { _, _ -> if (hasMacKey(it)) refresh() } }
-			field41.binding?.writeCheckbox?.let { it.setOnCheckedChangeListener { _, _ -> if (hasMacKey(it)) refresh() } }
+			field41.binding?.writeCheckbox?.let {
+				it.setOnCheckedChangeListener { _, _ ->
+					if (!it.isPressed) return@setOnCheckedChangeListener
+					if (!hasMacKey(it)) return@setOnCheckedChangeListener
+					field42.binding?.writeCheckbox?.isChecked = false
+					refresh()
+				}
+			}
+			field42.binding?.writeCheckbox?.let {
+				it.setOnCheckedChangeListener { _, _ ->
+					if (!it.isPressed) return@setOnCheckedChangeListener
+					if (!hasMacKey(it)) return@setOnCheckedChangeListener
+					field41.binding?.writeCheckbox?.isChecked = false
+					refresh()
+				}
+			}
 			field02.binding?.writeCheckbox?.let { it.setOnCheckedChangeListener { _, _ -> if (hasMacKey(it)) refresh() } }
+			checkboxes.addAll(
+				listOfNotNull(
+					field23.binding?.readCheckbox,
+					field03.binding?.readCheckbox,
+					field16.binding?.readCheckbox, field16.binding?.writeCheckbox,
+					field57.binding?.readCheckbox,
+					field58.binding?.readCheckbox,
+					field59.binding?.readCheckbox,
+					field31.binding?.readCheckbox, field31.binding?.writeCheckbox,
+					field50.binding?.readCheckbox, field50.binding?.writeCheckbox,
+					field51.binding?.readCheckbox,
+					field41.binding?.writeCheckbox,
+					field42.binding?.writeCheckbox,
+					field02.binding?.writeCheckbox,
+				)
+			)
 		}
 
 		// 詳細按鈕
@@ -301,6 +335,18 @@ class MeterAdvFragment : Fragment() {
 			}
 		}
 
+		// 訂閱通信成功後, 取消全部checkboxes
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				blVM.commEndSharedEvent.collectLatest { event:CommEndEvent ->
+					if (event is CommEndEvent.Success) {
+						checkboxes.forEach { it.isChecked = false }
+						refresh()
+					}
+				}
+			}
+		}
+
 		refresh()
 	}
 
@@ -389,6 +435,8 @@ class MeterAdvFragment : Fragment() {
 			r87Steps.add(R87Step(securityLevel = SecurityLevel.Auth, adr = meterId, op = "R51"))
 		if (binding.field41.binding?.writeCheckbox?.isChecked == true)
 			r87Steps.add(R87Step(securityLevel = SecurityLevel.Auth, adr = meterId, op = "C41"))
+		if (binding.field42.binding?.writeCheckbox?.isChecked == true)
+			r87Steps.add(R87Step(securityLevel = SecurityLevel.Auth, adr = meterId, op = "C42"))
 		if (binding.field02.binding?.writeCheckbox?.isChecked == true)
 			r87Steps.add(R87Step(adr = meterId, op = "C02"))
 	}

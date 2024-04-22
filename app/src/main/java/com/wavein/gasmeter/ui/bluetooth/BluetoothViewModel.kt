@@ -279,7 +279,7 @@ class BluetoothViewModel @Inject constructor(
 			try {
 				outputStream!!.write(bytes)
 				onConnectEvent(ConnectEvent.BytesSent(bytes))
-				// Log.i("@@@SendTx", RD64H.telegramConvert(bytes, "-p").toText()) // todo
+				Log.i("@@@ Send_Tx", RD64H.telegramConvert(bytes, "-p").toText())
 			} catch (e:IOException) {
 				e.printStackTrace()
 			}
@@ -374,7 +374,8 @@ class BluetoothViewModel @Inject constructor(
 							"R50" -> if (!commResult.containsKey("D87D50")) errList.add("壓力遮斷判定值")
 							"S50" -> if (!commResult.containsKey("D87D50")) errList.add("壓力遮斷判定值設定")
 							"R51" -> if (!commResult.containsKey("D87D51")) errList.add("現在壓力值")
-							"C41" -> if (!commResult.containsKey("D87D41")) errList.add("中心遮斷制御")
+							"C41" -> if (!commResult.containsKey("D87D41")) errList.add("中心遮斷")
+							"C42" -> if (!commResult.containsKey("D87D42")) errList.add("中心遮斷解除")
 							"C02" -> if (!commResult.containsKey("D87D02")) errList.add("強制Session中斷")
 						}
 					}
@@ -483,6 +484,7 @@ class BluetoothViewModel @Inject constructor(
 						"S50" -> listOf(D87D50Step())
 						"R51" -> listOf(D87D51Step())
 						"C41" -> listOf(D87D41Step())
+						"C42" -> listOf(D87D42Step())
 						"C02" -> listOf(D87D02Step())
 						// todo 新增R87時_這裡加接收Step
 						else -> listOf()
@@ -624,7 +626,7 @@ class BluetoothViewModel @Inject constructor(
 
 			// 檢查是否完整電文(前後有STX,ETX,BCC), 若不完整則等下個電文再串接
 			val readS = RD64H.telegramConvert(readSP, "-p").toUByteArray()
-			// Log.i("@@@接收電文", """text:${readS.toText()} origHex:${readSP.toHex()}""")
+			Log.i("@@@ Recv_Tx", """TEXT:[${readS.toText()}] HEX:[${readSP.toHex()}]""")
 			if (readS[0] == RD64H.STXByte) {
 				fullResp = readS.copyOf()
 			} else {
@@ -766,6 +768,13 @@ class BluetoothViewModel @Inject constructor(
 					is D87D41Step -> {
 						val info = BaseInfo.get(fullRespText, D87D41Info::class.java) as D87D41Info
 						commResult["D87D41"] = info
+						receiveSteps.removeAt(0)
+						continueSend = true
+					}
+
+					is D87D42Step -> {
+						val info = BaseInfo.get(fullRespText, D87D42Info::class.java) as D87D42Info
+						commResult["D87D42"] = info
 						receiveSteps.removeAt(0)
 						continueSend = true
 					}
