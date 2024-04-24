@@ -389,8 +389,9 @@ class MeterAdvFragment : Fragment() {
 	// 開始R87通信
 	private fun sendR87Telegram():Boolean {
 		val meterId = meterVM.selectedMeterRowFlow.value?.meterId ?: return true
+		val callingChannel = meterVM.selectedMeterRowFlow.value?.callingChannel ?: "66"
 		meterBaseFragment.checkBluetoothOn {
-			blVM.sendR87Telegram(meterId = meterId, r87Steps = r87Steps)
+			blVM.sendR87Telegram(meterId = meterId, r87Steps = r87Steps, callingChannel)
 		}
 		return false
 	}
