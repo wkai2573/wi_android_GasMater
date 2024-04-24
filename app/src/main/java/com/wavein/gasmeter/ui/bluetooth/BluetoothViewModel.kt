@@ -11,7 +11,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.material.snackbar.Snackbar
-import com.wavein.gasmeter.Application.Companion.R89_CHANNEL_CODE
 import com.wavein.gasmeter.tools.Preference
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.rd64h.*
@@ -306,6 +305,7 @@ class BluetoothViewModel @Inject constructor(
 	var commResult:MutableMap<String, BaseInfo> = mutableMapOf()
 
 	// 溝通中處理變數
+	private var callingChannel = "66" // 通信頻道, 通信前更改
 	private var sendSteps = mutableListOf<BaseStep>()
 	private var receiveSteps = mutableListOf<BaseStep>()
 	private var totalReceiveCount = 0
@@ -418,9 +418,10 @@ class BluetoothViewModel @Inject constructor(
 	}
 
 	// 發送R80電文組合
-	fun sendR80Telegram(meterIds:List<String>) = viewModelScope.launch {
+	fun sendR80Telegram(meterIds:List<String>, callingChannel:String) = viewModelScope.launch {
 		SharedEvent.catching {
 			if (commStateFlow.value != CommState.ReadyCommunicate) return@catching
+			this@BluetoothViewModel.callingChannel = callingChannel
 			startTime = System.currentTimeMillis()
 			commStateFlow.value = CommState.Communicating
 			commResult = mutableMapOf("meta" to MetaInfo("", "R80", meterIds))
@@ -441,9 +442,10 @@ class BluetoothViewModel @Inject constructor(
 	}
 
 	// 發送R87電文組合
-	fun sendR87Telegram(meterId:String, r87Steps:List<R87Step>) = viewModelScope.launch {
+	fun sendR87Telegram(meterId:String, r87Steps:List<R87Step>, callingChannel:String) = viewModelScope.launch {
 		SharedEvent.catching {
 			if (commStateFlow.value != CommState.ReadyCommunicate) return@catching
+			this@BluetoothViewModel.callingChannel = callingChannel
 			startTime = System.currentTimeMillis()
 			commStateFlow.value = CommState.Communicating
 			commResult = mutableMapOf("meta" to MetaInfo("", "R87", listOf(meterId), r87Steps))
@@ -552,7 +554,7 @@ class BluetoothViewModel @Inject constructor(
 				is R80Step -> {
 					commTextStateFlow.value = Tip("抄表中", "", progressText) // R80↔D05
 					val btParentId = (commResult["D70"] as D70Info).btParentId
-					val sendText = RD64H.createR80Text(btParentId, sendStep.meterIds)
+					val sendText = RD64H.createR80Text(btParentId, sendStep.meterIds, callingChannel)
 					val sendSP = RD64H.telegramConvert(sendText, "+s+p")
 					wt(WT134)
 					transceiver?.write(sendSP)
@@ -568,7 +570,7 @@ class BluetoothViewModel @Inject constructor(
 
 				is R89Step -> {
 					commTextStateFlow.value = Tip("正在要求通信許可", "", progressText) // R89↔D36
-					val sendText = "ZA${sendStep.meterId}R89${R89_CHANNEL_CODE}ZD${sendStep.meterId}R36"
+					val sendText = "ZA${sendStep.meterId}R89${callingChannel}ZD${sendStep.meterId}R36"
 					val sendSP = RD64H.telegramConvert(sendText, "+s+p")
 					wt(WT134)
 					transceiver?.write(sendSP)

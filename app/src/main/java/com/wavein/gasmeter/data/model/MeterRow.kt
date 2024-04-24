@@ -27,10 +27,10 @@ data class MeterRow(
 	val lastMeterDegree:Float? = null,           // 前次抄表值 *前次抄表數值
 	val lastMeterReadTime:String? = null,        // 前次抄表時間 *前次抄表日期
 	val isManualMeterDegree:Boolean? = null,     // *人工輸入
+	val callingChannel:String? = null,           // *通信CH
 	var electricFieldStrength:String? = null,    // 電波強度
 
 	// 原csv欄位,未使用
-	val callingChannel:String? = null,           // *通信CH
 	val businessesCode:String? = null,           // *事業体碼
 	val dash:String? = null,                     // -
 

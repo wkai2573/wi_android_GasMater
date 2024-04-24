@@ -94,7 +94,7 @@ class R16DetailSheet : BottomSheetDialogFragment() {
 				it.setEditable(false)
 			}
 
-			"write" -> optionViews.forEach {
+			"write" -> optionViews.forEach { it ->
 				val tagSplit = it.tag.toString().split("|")
 				val charIndex = tagSplit[0]
 				val bitIndex = tagSplit[1]
@@ -105,12 +105,13 @@ class R16DetailSheet : BottomSheetDialogFragment() {
 				} else {
 					if (valueEnabled) OptionEnum.Enable else OptionEnum.Disable
 				}
+				val readValue = readBitsMap?.get(charIndex)?.getValue(bitIndex)
+				it.readValue = readValue
 				it.setSelected(optionEnum)
 
 				// 瓦斯表目前的設定 設為粗體
 				if (readBitsMap != null) {
-					val readValue = readBitsMap!![charIndex]!![bitIndex]!!
-					it.setBold(if (readValue) OptionEnum.Enable else OptionEnum.Disable)
+					it.setBold(if (readValue == true) OptionEnum.Enable else OptionEnum.Disable)
 				}
 			}
 		}

@@ -97,7 +97,7 @@ class MeterInfoFragment : Fragment() {
 				.setPositiveButton("確定") { dialog, which ->
 					dialog.dismiss()
 					val meterRow = meterVM.selectedMeterRowFlow.value ?: return@setPositiveButton
-					meterBaseFragment.checkBluetoothOn { blVM.sendR80Telegram(listOf(meterRow.meterId)) }
+					meterBaseFragment.checkBluetoothOn { blVM.sendR80Telegram(listOf(meterRow.meterId), meterRow.callingChannel ?: "66") }
 				}
 				.show()
 		}

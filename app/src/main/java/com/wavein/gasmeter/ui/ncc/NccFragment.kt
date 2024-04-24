@@ -274,7 +274,7 @@ class NccFragment : Fragment() {
 		// UI: R80群組抄表按鈕
 		binding.action2Btn.setOnClickListener {
 			onResume()
-			checkBluetoothOn { blVM.sendR80Telegram(listOf("00000002306003", "00000002306005")) }
+			checkBluetoothOn { blVM.sendR80Telegram(listOf("00000002306003", "00000002306005"), "33") }
 		}
 
 		// UI: 測試按鈕

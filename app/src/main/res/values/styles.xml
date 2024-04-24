@@ -43,20 +43,20 @@
     <item name="cornerSizeBottomRight">4dp</item>
   </style>
 
-  <!--选项卡内部按钮颜色-->
+  <!--選項卡內部按鈕顏色-->
   <style name="MyOutlinedButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
     <item name="android:minWidth">10dip</item>
     <item name="android:paddingLeft">8dp</item>
     <item name="android:paddingTop">0dp</item>
     <item name="android:paddingRight">8dp</item>
     <item name="android:paddingBottom">0dp</item>
-    <!--边框颜色-->
+    <!--邊框顏色-->
     <!--<item name="strokeColor">?attr/background</item>-->
-    <!--边框宽度-->
+    <!--邊框寬度-->
     <!--<item name="strokeWidth">1dp</item>-->
-    <!--文字按下抬起颜色-->
+    <!--文字按下抬起顏色-->
     <!--<item name="android:textColor">@drawable/outline_text_color</item>-->
-    <!--背景按下抬起颜色-->
+    <!--背景按下抬起顏色-->
     <!--<item name="backgroundTint">@drawable/outline_bg_color</item>-->
   </style>
 </resources>

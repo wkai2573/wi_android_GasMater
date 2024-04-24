@@ -8,7 +8,5 @@ class Application : Application() {
 
 	companion object {
 		const val IS_DEV_MODE = false // todo 正式時記得設為false
-		const val R89_CHANNEL_CODE = "33"
-		const val R80_CHANNEL_CODE = "33"
 	}
 }

@@ -140,7 +140,9 @@ class MeterListFragment : Fragment() {
 				}
 				return@setOnClickListener
 			}
-			val notReadMeterIds = meterGroup.meterRows.filter { !it.degreeRead }.map { it.meterId }
+			val notReadMeter = meterGroup.meterRows.filter { !it.degreeRead }
+			val notReadMeterIds = notReadMeter.map { it.meterId }
+			val callingChannel = notReadMeter[0].callingChannel ?: "66"
 			if (notReadMeterIds.size > 45) {
 				lifecycleScope.launch {
 					SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("一次最多對45台進行抄表", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
@@ -160,7 +162,7 @@ class MeterListFragment : Fragment() {
 				setNeutralButton("取消") { dialog, which -> dialog.dismiss() }
 				setPositiveButton("確定") { dialog, which ->
 					dialog.dismiss()
-					readGroupMeters(notReadMeterIds)
+					readGroupMeters(notReadMeterIds, callingChannel)
 				}
 				show()
 			}
@@ -170,8 +172,8 @@ class MeterListFragment : Fragment() {
 	}
 
 	// 群組抄表
-	private fun readGroupMeters(meterIds:List<String>) {
-		meterBaseFragment.checkBluetoothOn { blVM.sendR80Telegram(meterIds) }
+	private fun readGroupMeters(meterIds:List<String>, callingChannel:String) {
+		meterBaseFragment.checkBluetoothOn { blVM.sendR80Telegram(meterIds, callingChannel) }
 	}
 
 	// 如果全部抄表完成, 顯示全部
