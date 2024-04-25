@@ -11,29 +11,7 @@ object Preference {
 	// 儲存的key
 	const val NCC_METER_ID = "nccMeterId"
 
-	const val APP_KEY = "appkey"
-	const val APP_ACTIVATED = "appActivated"
-	const val USER_COMPANY = "userCompany"
-	const val USER_DEP = "userDep"
-	const val USER_NAME = "userName"
-
-	const val SESSION_KEY_FILE = "sessionKeyFile"
-
 	const val LAST_BT_DEVICE_MAC = "lastBtDeviceMac"
-
-	const val FTP_DOWNLOAD_HOST = "ftpDownloadHost"
-	const val FTP_DOWNLOAD_USERNAME = "ftpDownloadUsername"
-	const val FTP_DOWNLOAD_PASSWORD = "ftpDownloadPassword"
-	const val FTP_DOWNLOAD_ROOT = "ftpDownloadRoot"
-	const val FTP_UPLOAD_HOST = "ftpUploadHost"
-	const val FTP_UPLOAD_USERNAME = "ftpUploadUsername"
-	const val FTP_UPLOAD_PASSWORD = "ftpUploadPassword"
-	const val FTP_UPLOAD_ROOT = "ftpUploadRoot"
-	const val FTP_SYSTEM_HOST = "ftpSystemHost"
-	const val FTP_SYSTEM_USERNAME = "ftpSystemUsername"
-	const val FTP_SYSTEM_PASSWORD = "ftpSystemPassword"
-	const val FTP_SYSTEM_ROOT = "ftpSystemRoot"
-
 	private const val SHARED_PREF_NAME = "secret_shared_prefs_wavein"
 
 	private lateinit var sharedPreferences:SharedPreferences

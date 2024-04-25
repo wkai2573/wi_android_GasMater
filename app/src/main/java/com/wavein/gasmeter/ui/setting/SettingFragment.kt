@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,11 +23,18 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.wavein.gasmeter.databinding.FragmentSettingBinding
 import com.wavein.gasmeter.tools.Preference
 import com.wavein.gasmeter.tools.SharedEvent
+import com.wavein.gasmeter.tools.rd64h.info.D87D24Info
+import com.wavein.gasmeter.tools.rd64h.info.GwD34Info
+import com.wavein.gasmeter.tools.rd64h.info.MetaInfo
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.bluetooth.BtDialogFragment
+import com.wavein.gasmeter.ui.bluetooth.CommEndEvent
+import com.wavein.gasmeter.ui.bluetooth.CommState
 import com.wavein.gasmeter.ui.bluetooth.ConnectEvent
 import com.wavein.gasmeter.ui.loading.Tip
 import kotlinx.coroutines.flow.asSharedFlow
@@ -42,9 +50,6 @@ class SettingFragment : Fragment() {
 	private val binding get() = _binding!!
 	private val blVM by activityViewModels<BluetoothViewModel>()
 	private val settingVM by activityViewModels<SettingViewModel>()
-
-	// cb
-	private var onBluetoothOn:(() -> Unit)? = null
 
 	// 靜態變數
 	companion object {
@@ -123,6 +128,7 @@ class SettingFragment : Fragment() {
 
 						ConnectEvent.ConnectionFailed -> {
 							SharedEvent.loadingFlow.value = Tip("")
+							SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("設備連結失敗", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
 						}
 
 						ConnectEvent.Listening -> {
@@ -140,18 +146,142 @@ class SettingFragment : Fragment() {
 			}
 		}
 
-	}
+		// GW頻道切換__________
 
+		binding.homeIdField.editText?.setText(Preference[Preference.NCC_METER_ID, ""])
 
-	// 檢查藍牙是否開啟
-	private fun checkBluetoothOn(onBluetoothOn:() -> Unit) {
-		this.onBluetoothOn = onBluetoothOn
-		if (!blVM.isBluetoothOn()) {
-			blVM.checkBluetoothOn(bluetoothRequestLauncher)
-		} else {
-			onBluetoothOn.invoke()
+		(binding.channelField.editText as? MaterialAutoCompleteTextView)?.apply {
+			setSimpleItems(arrayOf("1", "2", "3", "4", "5", "6"))
+			setText("3", false)
+		}
+
+		binding.gwChannelSetBtn.setOnClickListener {
+			val meterId = binding.homeIdField.editText?.text?.toString() ?: ""
+			if (meterId.length != 14) {
+				binding.homeIdField.error = "長度必須為14位"
+				return@setOnClickListener
+			}
+			Preference[Preference.NCC_METER_ID] = meterId
+			//todo 傳送電文
+			checkBluetoothOn {
+				blVM.sendTxGwReadChannel(meterId)
+			}
+		}
+
+		binding.gwChannelReadBtn.setOnClickListener {
+			val meterId = binding.homeIdField.editText?.text?.toString() ?: ""
+			if (meterId.length != 14) {
+				binding.homeIdField.error = "長度必須為14位"
+				return@setOnClickListener
+			}
+			Preference[Preference.NCC_METER_ID] = meterId
+			//todo 傳送電文
+			checkBluetoothOn {
+				blVM.sendTxGwReadChannel(meterId)
+			}
 		}
 	}
+
+
+	//region__________連線方法__________
+
+	// 連線相關的訂閱
+	private fun initConnSubscription() {
+
+		// 訂閱通信中 進度文字
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				blVM.commTextStateFlow.asStateFlow().collectLatest {
+					Log.i("@@@通信狀態", it.title)
+					SharedEvent.loadingFlow.value = when (it.title) {
+						"未連結設備", "通信完畢" -> Tip()
+						"設備已連結" -> Tip("設備已連結，準備通信")
+						else -> it.copy()
+					}
+				}
+			}
+		}
+
+		// 訂閱藍牙事件
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				blVM.connectEventFlow.asSharedFlow().collectLatest { event ->
+					when (event) {
+						ConnectEvent.Connecting -> {}
+						ConnectEvent.Connected -> {}
+						ConnectEvent.ConnectionFailed -> {
+							SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("設備連結失敗", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
+						}
+
+						ConnectEvent.Listening -> {}
+						ConnectEvent.ConnectionLost -> {}
+
+						is ConnectEvent.BytesSent -> {}
+						is ConnectEvent.BytesReceived -> {}
+						else -> {}
+					}
+				}
+			}
+		}
+
+		// 訂閱溝通狀態
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				blVM.commStateFlow.asStateFlow().collectLatest { state ->
+					when (state) {
+						CommState.NotConnected -> {}
+						CommState.Communicating, CommState.Connecting -> {}
+						CommState.ReadyCommunicate -> {
+							onConnected?.invoke()
+							onConnected = null
+						}
+
+						else -> {}
+					}
+				}
+			}
+		}
+
+		// 訂閱溝通結束事件
+		viewLifecycleOwner.lifecycleScope.launch {
+			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+				blVM.commEndSharedEvent.asSharedFlow().collectLatest { event ->
+					SharedEvent.catching {
+						when (event) {
+							is CommEndEvent.Success -> {
+								val message = if (event.commResult.containsKey("success")) {
+									event.commResult["success"].toString()
+								} else {
+									"通信成功"
+								}
+								SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(message, SharedEvent.Color.Success, Snackbar.LENGTH_INDEFINITE))
+								SharedEvent.eventFlow.emit(SharedEvent.PlayEffect())
+								afterComm(event.commResult) // 依據結果更新csvRows
+							}
+
+							is CommEndEvent.Error -> {
+								val message = if (event.commResult.containsKey("error")) {
+									event.commResult["error"].toString()
+								} else {
+									event.commResult.toString()
+								}
+								SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(message, SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
+								SharedEvent.eventFlow.emit(SharedEvent.PlayEffect())
+								afterComm(event.commResult) // 依據結果更新csvRows
+							}
+
+							else -> {}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// cb
+	private var onBluetoothOn:(() -> Unit)? = null
+	private var onConnected:(() -> Unit)? = null
+	private var onConnectionFailed:(() -> Unit)? = null
 
 	// 藍牙請求器
 	private val bluetoothRequestLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -161,6 +291,59 @@ class SettingFragment : Fragment() {
 		}
 		this.onBluetoothOn = null
 	}
+
+	// 檢查藍牙是否開啟
+	private fun checkBluetoothOn(onConnected:() -> Unit) {
+		this.onBluetoothOn = { checkReadyCommunicate(onConnected) }
+		if (!blVM.isBluetoothOn()) {
+			blVM.checkBluetoothOn(bluetoothRequestLauncher)
+		} else {
+			onBluetoothOn?.invoke()
+			onBluetoothOn = null
+		}
+	}
+
+	// 檢查能不能進行通信
+	private fun checkReadyCommunicate(onConnected:() -> Unit) {
+		when (blVM.commStateFlow.value) {
+			CommState.NotConnected -> autoConnectDevice(onConnected)
+			CommState.ReadyCommunicate -> onConnected.invoke()
+			CommState.Connecting -> {}
+			CommState.Communicating -> {}
+			else -> {}
+		}
+	}
+
+	// 如果有連線過的設備,直接嘗試連線, 沒有若連線失敗則開藍牙窗
+	private fun autoConnectDevice(onConnected:() -> Unit) {
+		if (blVM.autoConnectDeviceStateFlow.value != null) {
+			this.onConnectionFailed = { BtDialogFragment.open(requireContext()) }
+			this.onConnected = onConnected
+			blVM.connectDevice()
+		} else {
+			this.onConnected = onConnected
+			BtDialogFragment.open(requireContext())
+		}
+	}
+
+	// 處理通信結果
+	private suspend fun afterComm(commResult:Map<String, Any>) {
+		SharedEvent.catching {
+			Log.i("@@@通信結果 ", commResult.toString())
+			val metaInfo = commResult["meta"] as MetaInfo
+
+			when (metaInfo.op) {
+				"R89_GW" -> {
+					if (commResult.containsKey("GwD34")) {
+						val info = commResult["GwD34"] as GwD34Info
+						binding.gwReadTv.text = info.data
+					}
+				}
+			}
+		}
+	}
+
+	//endregion
 
 	//region __________權限方法__________
 

@@ -268,7 +268,7 @@ class NccFragment : Fragment() {
 			// }
 			// [R87_S34_toGw] 設定子機
 			checkBluetoothOn {
-				blVM.sendTelegramToGW(meterId)
+				blVM.sendTxGwReadChannel(meterId)
 			}
 		}
 		// UI: R80群組抄表按鈕

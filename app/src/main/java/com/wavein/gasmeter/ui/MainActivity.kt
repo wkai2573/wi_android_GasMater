@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -79,8 +80,10 @@ class MainActivity : AppCompatActivity() {
 		val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main) as NavHostFragment
 		navController = navHostFragment.navController
 		navController.addOnDestinationChangedListener { _, destination, _ ->
-			// 隱藏顯示 navBar
-			binding.navView.visibility = View.GONE
+			// 隱藏顯示 navBar (高度設為0)
+			val params = binding.navView.layoutParams as ConstraintLayout.LayoutParams
+			params.height = 0
+			binding.navView.layoutParams = params
 			setBackPressedDispatcherAppToBack()
 		}
 		appBarConfiguration = AppBarConfiguration(

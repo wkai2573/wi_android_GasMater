@@ -23,7 +23,7 @@
         app:layout_scrollFlags="scroll|enterAlways|snap"
         app:liftOnScroll="true"
         app:navigationIcon="@drawable/ic_bluetooth_24"
-        app:title="連線與設定" />
+        app:title="GW 頻道切換器" />
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
@@ -43,9 +43,7 @@
           android:id="@+id/btArea"
           android:layout_width="match_parent"
           android:layout_height="match_parent"
-          android:orientation="vertical"
-          android:visibility="gone"
-          tools:visibility="visible">
+          android:orientation="vertical">
 
           <TextView
             android:layout_width="match_parent"
@@ -73,6 +71,92 @@
             android:layout_marginVertical="8dp"
             android:text="選擇裝置"
             app:icon="@drawable/ic_bluetooth_24" />
+
+          <com.google.android.material.divider.MaterialDivider
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="16dp" />
+        </LinearLayout>
+
+        <!-- 頻道切換 -->
+        <LinearLayout
+          android:id="@+id/gwChannelArea"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:orientation="vertical">
+
+          <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginVertical="8dp"
+            android:text="GW頻道切換"
+            android:textColor="?attr/colorPrimary"
+            android:textSize="16sp" />
+
+          <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/homeIdField"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="需要家ID"
+            android:paddingHorizontal="24dp"
+            android:paddingVertical="8dp"
+            app:counterEnabled="true"
+            app:counterMaxLength="14">
+
+            <com.google.android.material.textfield.TextInputEditText
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content" />
+          </com.google.android.material.textfield.TextInputLayout>
+
+          <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/channelField"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="24dp"
+            android:paddingVertical="8dp"
+            android:hint="頻道">
+
+            <AutoCompleteTextView
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:inputType="none" />
+          </com.google.android.material.textfield.TextInputLayout>
+
+          <Button
+            android:id="@+id/gwChannelSetBtn"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginVertical="8dp"
+            android:text="設定頻道"
+            app:icon="@drawable/ic_send_24" />
+
+          <com.google.android.material.divider.MaterialDivider
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="16dp" />
+
+          <Button
+            android:id="@+id/gwChannelReadBtn"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginVertical="8dp"
+            android:text="讀取頻道"
+            app:icon="@drawable/ic_send_24" />
+
+          <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/gwReadTv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="24dp"
+            android:layout_marginVertical="8dp"
+            android:textSize="18sp"
+            android:text="" />
 
           <com.google.android.material.divider.MaterialDivider
             android:layout_width="match_parent"

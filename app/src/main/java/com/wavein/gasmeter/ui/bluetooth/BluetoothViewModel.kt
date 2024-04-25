@@ -499,8 +499,8 @@ class BluetoothViewModel @Inject constructor(
 		}
 	}
 
-	// 設定子機頻道
-	fun sendTelegramToGW(meterId:String) = viewModelScope.launch {
+	// 讀取子機頻道
+	fun sendTxGwReadChannel(meterId:String) = viewModelScope.launch {
 		SharedEvent.catching {
 			if (commStateFlow.value != CommState.ReadyCommunicate) return@catching
 			startTime = System.currentTimeMillis()
@@ -511,14 +511,37 @@ class BluetoothViewModel @Inject constructor(
 				__5Step(),
 				RTestStep("ZA${meterId}R8911ZD${meterId}R36"),
 				RTestStep("ZD${meterId}R34"),
-				RTestStep("ZD${meterId}S34@@@@O1030"),
 				__AStep(),
 			)
 			receiveSteps = mutableListOf(
 				D70Step(),
 				D36Step(),
-				DTestStep(),
-				DTestStep(),
+				GwD34Step(),
+			)
+			totalReceiveCount = receiveSteps.size
+			receivedCount = 0
+			sendByStep()
+		}
+	}
+
+	// 設定子機頻道
+	fun sendTxGwSetChannel(meterId:String, channel:String) = viewModelScope.launch {
+		SharedEvent.catching {
+			if (commStateFlow.value != CommState.ReadyCommunicate) return@catching
+			startTime = System.currentTimeMillis()
+			commStateFlow.value = CommState.Communicating
+			commResult = mutableMapOf("meta" to MetaInfo("", "R89_GW", listOf(meterId)))
+
+			sendSteps = mutableListOf(
+				__5Step(),
+				RTestStep("ZA${meterId}R8911ZD${meterId}R36"),
+				RTestStep("ZD${meterId}S34@@@@O10${channel}0"),
+				__AStep(),
+			)
+			receiveSteps = mutableListOf(
+				D70Step(),
+				D36Step(),
+				GwD34Step(),
 			)
 			totalReceiveCount = receiveSteps.size
 			receivedCount = 0
@@ -811,6 +834,13 @@ class BluetoothViewModel @Inject constructor(
 					is D87D02Step -> {
 						val info = BaseInfo.get(fullRespText, D87D02Info::class.java) as D87D02Info
 						commResult["D87D02"] = info
+						receiveSteps.removeAt(0)
+						continueSend = true
+					}
+
+					is GwD34Step -> {
+						val info = BaseInfo.get(fullRespText, GwD34Info::class.java) as GwD34Info
+						commResult["GwD34"] = info
 						receiveSteps.removeAt(0)
 						continueSend = true
 					}
