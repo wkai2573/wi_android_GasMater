@@ -85,14 +85,15 @@ class SettingFragment : Fragment() {
 				checkBluetoothOn {
 					val lastDevice = blVM.getBondedRD64HDevices().find { it.address == lastBtDeviceMac }
 					if (lastDevice != null) {
-						blVM.connectDevice(lastDevice)
+						// blVM.connectDevice(lastDevice)
+						blVM.setAutoConnectBluetoothDevice(lastDevice)
 					}
 				}
 			}
 		}
 
 		binding.btSelectBtn.setOnClickListener {
-			checkBluetoothOn { BtDialogFragment.open(requireContext()) }
+			BtDialogFragment.open(requireContext())
 		}
 
 		// 訂閱藍牙設備
@@ -112,39 +113,8 @@ class SettingFragment : Fragment() {
 			}
 		}
 
-		// 訂閱藍牙事件: 連線成功後立即中斷連線
-		viewLifecycleOwner.lifecycleScope.launch {
-			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-				blVM.connectEventFlow.asSharedFlow().collectLatest { event ->
-					when (event) {
-						ConnectEvent.Connecting -> {
-							SharedEvent.loadingFlow.value = Tip("設備連結中")
-						}
-
-						ConnectEvent.Connected -> {
-							SharedEvent.loadingFlow.value = Tip("")
-							blVM.disconnectDevice()
-						}
-
-						ConnectEvent.ConnectionFailed -> {
-							SharedEvent.loadingFlow.value = Tip("")
-							SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("設備連結失敗", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
-						}
-
-						ConnectEvent.Listening -> {
-							SharedEvent.loadingFlow.value = Tip("")
-						}
-
-						ConnectEvent.ConnectionLost -> {
-							SharedEvent.loadingFlow.value = Tip("")
-						}
-
-						is ConnectEvent.BytesSent -> {}
-						is ConnectEvent.BytesReceived -> {}
-					}
-				}
-			}
-		}
+		// 連線相關的訂閱
+		initConnSubscription()
 
 		// GW頻道切換__________
 
@@ -161,10 +131,11 @@ class SettingFragment : Fragment() {
 				binding.homeIdField.error = "長度必須為14位"
 				return@setOnClickListener
 			}
+			binding.homeIdField.error = ""
 			Preference[Preference.NCC_METER_ID] = meterId
-			//todo 傳送電文
+			// 傳送電文
 			checkBluetoothOn {
-				blVM.sendTxGwReadChannel(meterId)
+				blVM.sendTxGwSetChannel(meterId, binding.channelField.editText?.text.toString())
 			}
 		}
 
@@ -174,8 +145,9 @@ class SettingFragment : Fragment() {
 				binding.homeIdField.error = "長度必須為14位"
 				return@setOnClickListener
 			}
+			binding.homeIdField.error = ""
 			Preference[Preference.NCC_METER_ID] = meterId
-			//todo 傳送電文
+			// 傳送電文
 			checkBluetoothOn {
 				blVM.sendTxGwReadChannel(meterId)
 			}
@@ -195,7 +167,7 @@ class SettingFragment : Fragment() {
 					Log.i("@@@通信狀態", it.title)
 					SharedEvent.loadingFlow.value = when (it.title) {
 						"未連結設備", "通信完畢" -> Tip()
-						"設備已連結" -> Tip("設備已連結，準備通信")
+						"設備已連結" -> Tip("設備已連結")
 						else -> it.copy()
 					}
 				}
@@ -337,6 +309,9 @@ class SettingFragment : Fragment() {
 					if (commResult.containsKey("GwD34")) {
 						val info = commResult["GwD34"] as GwD34Info
 						binding.gwReadTv.text = info.data
+						SharedEvent.eventFlow.emit(
+							SharedEvent.ShowSnackbar("通信成功，目前的頻道為 ${info.data[4]}", SharedEvent.Color.Success, Snackbar.LENGTH_INDEFINITE)
+						)
 					}
 				}
 			}

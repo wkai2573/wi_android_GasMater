@@ -127,7 +127,8 @@ class BtDialogFragment(
 		when (device.bondState) {
 			// 已配對, 連接設備
 			BluetoothDevice.BOND_BONDED -> {
-				blVM.connectDevice(device)
+				// blVM.connectDevice(device)
+				blVM.setAutoConnectBluetoothDevice(device)
 				dialog?.dismiss()
 			}
 			// 未配對, 配對設備
@@ -160,7 +161,7 @@ class BtDialogFragment(
 					val scannedDevice = IntentCompat.getParcelableExtra(intent, BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java) ?: return
 					if (scannedDevice.name != blVM.deviceName) return
 					if (scannedDevice in blVM.scannedDeviceListStateFlow.value) return
-					blVM.scannedDeviceListStateFlow.value = blVM.scannedDeviceListStateFlow.value + scannedDevice
+					blVM.scannedDeviceListStateFlow.value += scannedDevice
 					scannedDeviceListAdapter.submitList(blVM.scannedDeviceListStateFlow.value)
 				}
 			}

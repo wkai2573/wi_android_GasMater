@@ -126,7 +126,7 @@ class BluetoothViewModel @Inject constructor(
 	}
 
 	// 選定為自動連結的設備
-	private fun setAutoConnectBluetoothDevice(device:BluetoothDevice) {
+	fun setAutoConnectBluetoothDevice(device:BluetoothDevice) {
 		autoConnectDeviceStateFlow.value = device
 	}
 
@@ -384,6 +384,15 @@ class BluetoothViewModel @Inject constructor(
 						commResult["error"] = BaseInfo(listOf(err1, err2, errListText).filter { it.isNotEmpty() }.joinToString("\n"))
 					} else {
 						commResult["success"] = BaseInfo("讀取/設定成功")
+					}
+				}
+
+				// R87_GW 異常訊息
+				"R89_GW" -> {
+					if (commResult.containsKey("GwD34")) {
+						commResult["success"] = BaseInfo("通信成功")
+					} else {
+						commResult["error"] = BaseInfo("通信失敗")
 					}
 				}
 			}
