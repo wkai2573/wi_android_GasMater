@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="app_name">NXU Gas Meter</string>
+  <string name="app_name">GW Channel Changer</string>
 
   <string name="request_permission">請求權限</string>
   <string name="DeviceConnection">設備連線</string>

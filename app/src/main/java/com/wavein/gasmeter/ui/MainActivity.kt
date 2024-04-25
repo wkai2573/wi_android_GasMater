@@ -28,9 +28,7 @@ import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.VibrationAndSoundUtil
 import com.wavein.gasmeter.tools.allowInfiniteLines
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
-import com.wavein.gasmeter.ui.ftp.FtpViewModel
 import com.wavein.gasmeter.ui.loading.LoadingDialogFragment
-import com.wavein.gasmeter.ui.setting.CsvViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asSharedFlow
@@ -50,8 +48,6 @@ class MainActivity : AppCompatActivity() {
 	private lateinit var binding:ActivityMainBinding
 	private val navVM by viewModels<NavViewModel>()
 	private val blVM by viewModels<BluetoothViewModel>()
-	private val ftpVM by viewModels<FtpViewModel>()
-	private val csvVM by viewModels<CsvViewModel>()
 
 	// 變數
 	private var showSystemAreaClickCountdown = 5
@@ -84,45 +80,13 @@ class MainActivity : AppCompatActivity() {
 		navController = navHostFragment.navController
 		navController.addOnDestinationChangedListener { _, destination, _ ->
 			// 隱藏顯示 navBar
-			binding.navView.visibility = when (destination.id) {
-				R.id.nav_logoFragment, R.id.nav_nccFragment -> View.GONE
-				else -> View.VISIBLE
-			}
-			when (destination.id) {
-				R.id.nav_logoFragment -> {}
-				else -> setBackPressedDispatcherAppToBack()
-			}
-			// 連線頁: 連點5次設定 顯示系統設定
-			if (destination.id == R.id.nav_settingFragment) {
-				showSystemAreaClickCountdown -= 1
-				if (!ftpVM.systemAreaOpenedStateFlow.value && showSystemAreaClickCountdown == 0) {
-					lifecycleScope.launch {
-						SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("系統設定已顯示"))
-						ftpVM.systemAreaOpenedStateFlow.value = true
-					}
-				}
-			} else {
-				showSystemAreaClickCountdown = 5
-			}
-			// 抄表&查詢頁面: 未選擇設備 & csv 返回連線頁
-			if (destination.id == R.id.nav_meterBaseFragment || destination.id == R.id.nav_meterSearchFragment) {
-				if (blVM.autoConnectDeviceStateFlow.value == null || !csvVM.selectedFileStateFlow.value.isOpened) {
-					lifecycleScope.launch {
-						SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("請先選擇 設備 & CSV檔案", SharedEvent.Color.Error))
-						binding.navView.selectedItemId = R.id.nav_settingFragment
-						delay(100)
-						binding.navView.selectedItemId = R.id.nav_settingFragment
-					}
-				}
-			}
+			binding.navView.visibility = View.GONE
+			setBackPressedDispatcherAppToBack()
 		}
 		appBarConfiguration = AppBarConfiguration(
 			topLevelDestinationIds = setOf(
 				// 可用的fragment, bottomNav顯示的項目在menu.xml設定
-				R.id.nav_logoFragment,
 				R.id.nav_settingFragment,
-				R.id.nav_meterBaseFragment,
-				R.id.nav_meterSearchFragment,
 				R.id.nav_nccFragment,
 			)
 		)
@@ -277,14 +241,6 @@ class MainActivity : AppCompatActivity() {
 							Toast.makeText(this@MainActivity, "再按一次返回鍵退出", Toast.LENGTH_SHORT).show()
 							backPressedTime = System.currentTimeMillis()
 						}
-					}
-
-					R.id.nav_meterBaseFragment -> {
-						navVM.meterBaseOnBackKeyClick(true)
-					}
-
-					R.id.nav_meterSearchFragment -> {
-						navVM.navigate(R.id.nav_settingFragment)
 					}
 
 					R.id.nav_nccFragment -> {

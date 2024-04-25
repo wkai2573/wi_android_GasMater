@@ -3,30 +3,13 @@
   xmlns:app="http://schemas.android.com/apk/res-auto"
   xmlns:tools="http://schemas.android.com/tools"
   android:id="@+id/nav_graph"
-  app:startDestination="@id/nav_logoFragment">
-
-  <fragment android:id="@+id/nav_logoFragment"
-    android:name="com.wavein.gasmeter.ui.logo.LogoFragment"
-    android:label="fragment_logo"
-    tools:layout="@layout/fragment_logo" />
+  app:startDestination="@id/nav_settingFragment">
 
   <fragment android:id="@+id/nav_settingFragment"
     android:name="com.wavein.gasmeter.ui.setting.SettingFragment"
     android:label="fragment_bt"
     tools:layout="@layout/fragment_setting" />
-  <fragment android:id="@+id/nav_meterBaseFragment"
-    android:name="com.wavein.gasmeter.ui.meterwork.MeterBaseFragment"
-    android:label="fragment_meter_base"
-    tools:layout="@layout/fragment_meter_base" />
-  <fragment android:id="@+id/nav_meterSearchFragment"
-    android:name="com.wavein.gasmeter.ui.metersearch.MeterSearchFragment"
-    android:label="fragment_meter_search"
-    tools:layout="@layout/fragment_meter_search" />
 
-  <fragment android:id="@+id/nav_testFragment"
-    android:name="com.wavein.gasmeter.ui.ncc.TestFragment"
-    android:label="fragment_test"
-    tools:layout="@layout/fragment_test" />
   <fragment android:id="@+id/nav_nccFragment"
     android:name="com.wavein.gasmeter.ui.ncc.NccFragment"
     android:label="fragment_ncc"

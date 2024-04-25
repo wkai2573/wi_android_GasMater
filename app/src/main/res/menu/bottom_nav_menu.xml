@@ -5,16 +5,6 @@
     android:enabled="true"
     android:icon="@drawable/ic_bluetooth_24"
     android:title="連線"/>
-  <item
-    android:id="@+id/nav_meterBaseFragment"
-    android:enabled="true"
-    android:icon="@drawable/ic_gas_meter_24"
-    android:title="抄表"/>
-  <item
-    android:id="@+id/nav_meterSearchFragment"
-    android:enabled="true"
-    android:icon="@drawable/ic_search_24"
-    android:title="查詢"/>
 
   <!-- todo 測試時打開 -->
 <!--  <item-->

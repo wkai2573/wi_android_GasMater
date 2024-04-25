@@ -10,7 +10,7 @@ android {
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.wavein.gasmeter"
+        applicationId "com.wavein.metergwchannelchanger"
         minSdk 29
         targetSdk 33
         versionCode 102
