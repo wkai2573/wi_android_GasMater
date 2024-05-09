@@ -1,6 +1,7 @@
 package com.wavein.gasmeter.ui.meterwork.row
 
 import android.app.AlertDialog
+import android.content.DialogInterface
 import android.graphics.Color
 import android.os.Bundle
 import android.text.InputType
@@ -16,6 +17,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.wavein.gasmeter.databinding.FragmentMeterInfoBinding
 import com.wavein.gasmeter.databinding.InputLayoutBinding
+import com.wavein.gasmeter.tools.Preference
 import com.wavein.gasmeter.tools.SharedEvent
 import com.wavein.gasmeter.tools.TimeUtils
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
@@ -146,36 +148,49 @@ class MeterInfoFragment : Fragment() {
 			val inputLayoutBinding = InputLayoutBinding.inflate(LayoutInflater.from(requireContext()))
 			val inputLayout = inputLayoutBinding.textInput.apply {
 				hint = "通信ID"
+				isErrorEnabled = true
+				isCounterEnabled = true
+				counterMaxLength = 14
 				editText?.setText(meterVM.selectedMeterRowFlow.value?.meterId ?: "")
 			}
 
 			MaterialAlertDialogBuilder(requireContext())
 				.setTitle("編輯通信ID")
 				.setView(inputLayout)
+				.setCancelable(false)
 				.setNegativeButton("取消") { dialog, which -> dialog.dismiss() }
-				.setPositiveButton("確定") { dialog, which ->
-					dialog.dismiss()
-					val newMeterId = inputLayout.editText?.text.toString()
-					// 檢查ID重複
-					val existedRow = meterVM.meterRowsStateFlow.value.find { it.meterId == newMeterId }
-					if (existedRow != null) {
-						lifecycleScope.launch {
-							SharedEvent.eventFlow.emit(
-								SharedEvent.ShowSnackbar(
-									"通信ID重複\n此通信ID已存在於群組號: ${existedRow.group}", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE
-								)
-							)
-						}
-						return@setPositiveButton
-					} else {
-						val oldMeterId = meterVM.selectedMeterRowFlow.value?.meterId
-						val newMeterRow = meterVM.selectedMeterRowFlow.value?.copy(meterId = newMeterId) ?: return@setPositiveButton
-						meterBaseFragment.updateCsvRowManual(newMeterRow, oldMeterId)
-					}
-				}
+				.setPositiveButton("確定") { dialog, which -> }
 				.create()
 				.apply {
-					setOnShowListener { inputLayout.editText?.requestFocus() }
+					setOnShowListener {
+						inputLayout.editText?.requestFocus()
+						// 覆寫確定按鈕, 防止自動dismiss
+						getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener positiveClickListener@ {
+							val newMeterId = inputLayout.editText?.text.toString()
+							if (newMeterId.length != 14) {
+								inputLayout.error = "長度必須為14位"
+								return@positiveClickListener
+							}
+							inputLayout.error = ""
+							this.dismiss()
+							// 檢查ID重複
+							val existedRow = meterVM.meterRowsStateFlow.value.find { it.meterId == newMeterId }
+							if (existedRow != null) {
+								lifecycleScope.launch {
+									SharedEvent.eventFlow.emit(
+										SharedEvent.ShowSnackbar(
+											"通信ID重複\n此通信ID已存在於群組號: ${existedRow.group}", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE
+										)
+									)
+								}
+								return@positiveClickListener
+							} else {
+								val oldMeterId = meterVM.selectedMeterRowFlow.value?.meterId
+								val newMeterRow = meterVM.selectedMeterRowFlow.value?.copy(meterId = newMeterId) ?: return@positiveClickListener
+								meterBaseFragment.updateCsvRowManual(newMeterRow, oldMeterId)
+							}
+						}
+					}
 					show()
 				}
 		}
