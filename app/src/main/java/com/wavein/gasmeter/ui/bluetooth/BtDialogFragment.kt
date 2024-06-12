@@ -158,9 +158,9 @@ class BtDialogFragment(
 				// 掃描中_當發現設備
 				BluetoothDevice.ACTION_FOUND -> {
 					val scannedDevice = IntentCompat.getParcelableExtra(intent, BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java) ?: return
-					if (scannedDevice.name != blVM.deviceName) return
+					if (scannedDevice.name !in blVM.pairableDeviceNames) return
 					if (scannedDevice in blVM.scannedDeviceListStateFlow.value) return
-					blVM.scannedDeviceListStateFlow.value = blVM.scannedDeviceListStateFlow.value + scannedDevice
+					blVM.scannedDeviceListStateFlow.value += scannedDevice
 					scannedDeviceListAdapter.submitList(blVM.scannedDeviceListStateFlow.value)
 				}
 			}

@@ -88,7 +88,7 @@ class BluetoothViewModel @Inject constructor(
 	//region 藍牙相關(經典藍牙)__________________________________________________
 
 	// 常數
-	val deviceName = "RD64HGL"
+	val pairableDeviceNames = listOf("RD64HGL", "MBH7BTZ43PANA")
 
 	// 實例
 	private var parentDeviceClient:ParentDeviceClient? = null
@@ -101,7 +101,7 @@ class BluetoothViewModel @Inject constructor(
 	// 取得已配對的RD-64H藍牙設備
 	fun getBondedRD64HDevices():List<BluetoothDevice> {
 		val devices:Set<BluetoothDevice> = bluetoothAdapter?.bondedDevices ?: emptySet()
-		return devices.filter { it.name == deviceName }
+		return devices.filter { it.name in pairableDeviceNames }
 	}
 
 	// 開始掃描
