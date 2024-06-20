@@ -23,6 +23,7 @@ import com.wavein.gasmeter.data.model.Selectable
 import com.wavein.gasmeter.data.model.toMeterGroups
 import com.wavein.gasmeter.databinding.FragmentMeterListBinding
 import com.wavein.gasmeter.tools.SharedEvent
+import com.wavein.gasmeter.tools.SortUtils.groupedByPrefixSortedByNumber
 import com.wavein.gasmeter.ui.NavViewModel
 import com.wavein.gasmeter.ui.bluetooth.BluetoothViewModel
 import com.wavein.gasmeter.ui.meterwork.Filter
@@ -210,7 +211,7 @@ class MeterListFragment : Fragment() {
 		val meterRows = when (meterVM.metersFilterFlow.value) {
 			Filter.All -> meterGroup.meterRows
 			Filter.Undone -> meterGroup.meterRows.filter { !it.degreeRead }
-		}.sortedBy { it.queue }
+		}.groupedByPrefixSortedByNumber { it.queue }
 		val sMeterRows = meterRows.map {
 			Selectable(selected = meterVM.selectedMeterRowFlow.value == it, data = it)
 		}
