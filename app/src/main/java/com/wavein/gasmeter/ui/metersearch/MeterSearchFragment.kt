@@ -42,14 +42,14 @@ import kotlinx.coroutines.launch
 
 class MeterSearchFragment : Fragment() {
 
-	// binding & viewModel
+
 	private var _binding:FragmentMeterSearchBinding? = null
 	private val binding get() = _binding!!
 	private val navVM by activityViewModels<NavViewModel>()
 	private val meterVM by activityViewModels<MeterViewModel>()
 	private val searchVM by viewModels<MeterSearchViewModel>()
 
-	// 實例
+
 	private lateinit var meterListAdapter:MeterListAdapter
 
 	override fun onDestroyView() {
@@ -65,10 +65,10 @@ class MeterSearchFragment : Fragment() {
 	@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 	override fun onViewCreated(view:View, savedInstanceState:Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
-		// 未選csv提示
+
 		binding.noCsvTipTv.visibility = if (meterVM.meterRowsStateFlow.value.isEmpty()) View.VISIBLE else View.GONE
 
-		// search ui
+
 		binding.searchInput.editText?.let {
 			it.textChanges()
 				.debounce(300)
@@ -87,9 +87,9 @@ class MeterSearchFragment : Fragment() {
 			searchVM.searchStateFlow.value = searchVM.searchStateFlow.value.copy(shutoff = isChecked)
 		}
 
-		// rv
+
 		meterListAdapter = MeterListAdapter(MeterRowRender.Detail) {
-			// 點擊項目: 選擇該meter, 並跳轉到meterRow頁面
+
 			meterVM.setSelectedMeterGroup(meterVM.meterRowsStateFlow.value.toMeterGroups().find { meterGroup -> meterGroup.group == it.group })
 			meterVM.selectedMeterRowFlow.value = it
 			navVM.meterBaseChangeTabStateFlow.value = 2
@@ -98,12 +98,12 @@ class MeterSearchFragment : Fragment() {
 		}
 		binding.meterRowsRv.apply {
 			layoutManager = LinearLayoutManager(requireContext())
-			addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)) //分隔線
+			addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
 			itemAnimator = DefaultItemAnimator()
 			adapter = meterListAdapter
 		}
 
-		// 訂閱查詢變化
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				searchVM.searchStateFlow.asStateFlow().collectLatest {

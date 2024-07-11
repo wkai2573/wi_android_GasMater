@@ -5,8 +5,8 @@ import com.wavein.gasmeter.tools.rd64h.SecurityLevel
 
 data class D87D31Info(override val text:String) : BaseInfo(text) {
 	var data:String = ""
-	var registerFuseFlowRate1:String = "" // 登録口火流量1(24-06) 4位
-	var registerFuseFlowRate2:String = "" // 登録口火流量2(24-06) 4位
+	var registerFuseFlowRate1:String = ""
+	var registerFuseFlowRate2:String = ""
 
 	init {
 		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常:D87D31Info")

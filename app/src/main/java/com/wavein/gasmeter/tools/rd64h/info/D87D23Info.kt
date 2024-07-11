@@ -4,14 +4,14 @@ import com.wavein.gasmeter.tools.rd64h.ALine
 import com.wavein.gasmeter.tools.rd64h.SecurityLevel
 
 data class D87D23Info(override val text:String) : BaseInfo(text) {
-	var data:String = "" // 遮断 5 回分履歴 65位
+	var data:String = ""
 	var shutdownHistory1:String = ""
 	var shutdownHistory2:String = ""
 	var shutdownHistory3:String = ""
 	var shutdownHistory4:String = ""
 	var shutdownHistory5:String = ""
 
-	// 寫入接續part
+
 	fun writePart(text:String) {
 		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常:D87D23Info")
 		val (meterId, aLineRaw) = matchResult.destructured

@@ -15,7 +15,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-// 自訂View元件: 進階欄位_告警情報專用(R03)
+
 class FieldAdv03 : LinearLayout {
 	var binding:CustFieldAdv03Binding? = null
 
@@ -39,7 +39,7 @@ class FieldAdv03 : LinearLayout {
 	}
 
 	private fun initLayout(attrs:AttributeSet?, defStyle:Int? = null) {
-		// 取得 xml 傳入參數
+
 		val typedArray = if (defStyle == null)
 			context.obtainStyledAttributes(attrs, R.styleable.FieldAdv03)
 		else
@@ -47,7 +47,7 @@ class FieldAdv03 : LinearLayout {
 		val title = typedArray.getString(R.styleable.FieldAdv03_fieldAdv03Title)
 		val readValue = typedArray.getString(R.styleable.FieldAdv03_fieldAdv03ReadValue) ?: ""
 		typedArray.recycle()
-		// ui
+
 		binding?.titleTv?.text = title
 		setReadValue(readValue)
 	}

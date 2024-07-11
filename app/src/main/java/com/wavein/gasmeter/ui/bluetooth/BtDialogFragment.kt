@@ -31,24 +31,24 @@ class BtDialogFragment(
 	private val onDismissCallback:((dialog:DialogInterface) -> Unit)? = null,
 ) : DialogFragment() {
 
-	// binding & viewModel
+
 	private var binding:DialogBtBinding? = null
 	private val blVM by activityViewModels<BluetoothViewModel>()
 
-	// adapter
+
 	private lateinit var bondedDeviceListAdapter:DeviceListAdapter
 	private lateinit var scannedDeviceListAdapter:DeviceListAdapter
 
 	override fun onDismiss(dialog:DialogInterface) {
 		super.onDismiss(dialog)
-		// 停止掃描
+
 		blVM.stopDiscovery()
 		blVM.scanStateFlow.value = ScanState.Idle
-		// 註銷廣播
+
 		kotlin.runCatching {
 			requireContext().unregisterReceiver(receiver)
 		}
-		// cb
+
 		onDismissCallback?.invoke(dialog)
 		binding = null
 	}
@@ -65,7 +65,7 @@ class BtDialogFragment(
 	}
 
 	private fun init(activity:FragmentActivity) {
-		// 註冊廣播:偵測藍牙掃描結果
+
 		val intentFilter = IntentFilter().apply {
 			addAction(BluetoothDevice.ACTION_FOUND)
 			addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
@@ -77,85 +77,85 @@ class BtDialogFragment(
 		initScanDevice(activity)
 	}
 
-	// 初始化已配對設備
+
 	private fun initBondedDevice() {
 		bondedDeviceListAdapter = DeviceListAdapter {
 			connectDevice(it)
 		}
-		// 已配對的設備
+
 		binding!!.bondedDeviceRv.apply {
 			layoutManager = LinearLayoutManager(requireContext())
-			// addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)) //分隔線
+
 			itemAnimator = DefaultItemAnimator()
 			adapter = bondedDeviceListAdapter
 		}
 		bondedDeviceListAdapter.submitList(blVM.getBondedRD64HDevices())
 	}
 
-	// 初始化掃描設備
+
 	private fun initScanDevice(activity:FragmentActivity) {
-		// 訂閱scanState
+
 		lifecycleScope.launch {
 			activity.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.scanStateFlow.collectLatest { scanState -> onScanStateChange(scanState) }
 			}
 		}
 
-		// 訂閱scanState
+
 		lifecycleScope.launch {
 			activity.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.scanStateFlow.collectLatest { scanState -> onScanStateChange(scanState) }
 			}
 		}
 
-		// 搜尋藍牙設備
+
 		binding!!.scanBtn.setOnClickListener { blVM.toggleDiscovery() }
 		scannedDeviceListAdapter = DeviceListAdapter {
 			connectDevice(it)
 		}
 		binding!!.scannedDeviceRv.apply {
 			layoutManager = LinearLayoutManager(requireContext())
-			// addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL)) //分隔線
+
 			itemAnimator = DefaultItemAnimator()
 			adapter = scannedDeviceListAdapter
 		}
 	}
 
-	// 設定頁-> 選定為連線的設備 & 配對並連線設備 & 連線成功後立即中斷
-	// 抄表頁-> 選定為連線的設備 & 配對並連線設備
+
+
 	private fun connectDevice(device:BluetoothDevice) {
 		when (device.bondState) {
-			// 已配對, 連接設備
+
 			BluetoothDevice.BOND_BONDED -> {
 				blVM.connectDevice(device)
 				dialog?.dismiss()
 			}
-			// 未配對, 配對設備
+
 			BluetoothDevice.BOND_NONE -> device.createBond()
 		}
 	}
 
-	// 藍牙配對處理(接收廣播)
+
 	private val receiver:BroadcastReceiver = object : BroadcastReceiver() {
 		override fun onReceive(context:Context, intent:Intent) {
 			when (intent.action) {
-				// 配對後, 連接此設備
+
 				BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
 					val bondDevice = IntentCompat.getParcelableExtra(intent, BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java) ?: return
 					when (bondDevice.bondState) {
 						BluetoothDevice.BOND_BONDED -> connectDevice(bondDevice)
 					}
 				}
-				// 開始掃描
+
 				BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
 					blVM.scannedDeviceListStateFlow.value = emptyList()
 					blVM.scanStateFlow.value = ScanState.Scanning
 				}
-				// 掃描結束
+
 				BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
 					blVM.scanStateFlow.value = ScanState.Idle
 				}
-				// 掃描中_當發現設備
+
 				BluetoothDevice.ACTION_FOUND -> {
 					val scannedDevice = IntentCompat.getParcelableExtra(intent, BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java) ?: return
 					if (scannedDevice.name !in blVM.pairableDeviceNames) return
@@ -167,7 +167,7 @@ class BtDialogFragment(
 		}
 	}
 
-	// 藍牙掃描處理
+
 	private fun onScanStateChange(scanState:ScanState) {
 		if (binding == null) return
 		when (scanState) {
@@ -189,7 +189,7 @@ class BtDialogFragment(
 	}
 
 	companion object {
-		// 開啟選擇bt視窗
+
 		fun open(context:Context) {
 			val supportFragmentManager = (context as FragmentActivity).supportFragmentManager
 			BtDialogFragment().show(supportFragmentManager, "BtDialogFragment")

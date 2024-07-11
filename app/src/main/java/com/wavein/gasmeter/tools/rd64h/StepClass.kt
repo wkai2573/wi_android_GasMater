@@ -1,6 +1,6 @@
 package com.wavein.gasmeter.tools.rd64h
 
-// 傳收步驟class
+
 open class BaseStep
 data class RTestStep(val text:String) : BaseStep()
 class DTestStep : BaseStep()
@@ -15,7 +15,7 @@ data class R89Step(val meterId:String) : BaseStep()
 class D36Step : BaseStep()
 data class R70Step(val meterId:String) : BaseStep()
 
-// R87, 參數說明請參考 ALine.kt | RD64H.kt_createR87Aline
+
 data class R87Step(
 	val securityLevel:SecurityLevel = SecurityLevel.NoSecurity,
 	val cc:String = "\u0021\u0040\u0000\u0000",

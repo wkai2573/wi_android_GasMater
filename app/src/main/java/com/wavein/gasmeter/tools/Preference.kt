@@ -5,10 +5,10 @@ import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
-// APP儲存資料: 參考jim的PreferenceProvider
+
 object Preference {
 
-	// 儲存的key
+
 	const val NCC_METER_ID = "nccMeterId"
 
 	const val APP_KEY = "appkey"
@@ -38,7 +38,7 @@ object Preference {
 
 	private lateinit var sharedPreferences:SharedPreferences
 
-	// 初始化
+
 	fun init(context:Context) {
 		val masterKey = MasterKey.Builder(context, MasterKey.DEFAULT_MASTER_KEY_ALIAS)
 			.setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
@@ -53,12 +53,12 @@ object Preference {
 		)
 	}
 
-	// 清空
+
 	fun clear(key:String) {
 		sharedPreferences.edit().remove(key).apply()
 	}
 
-	// 儲存
+
 	operator fun <T> set(key:String, value:T?) {
 		val editor = sharedPreferences.edit()
 		when (value) {
@@ -84,7 +84,7 @@ object Preference {
 		editor.apply()
 	}
 
-	// 讀取
+
 	operator fun <T> get(key:String, defaultValue:T):T? {
 		when (defaultValue) {
 			is Boolean -> {

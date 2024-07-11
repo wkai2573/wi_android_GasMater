@@ -46,7 +46,7 @@ class MeterListAdapter(
 			if (sMeterRow.selected) {
 				binding.layout.setBackgroundColor(Color.parseColor("#E5E1E5"))
 			} else {
-				// 設定成?android:attr/selectableItemBackground, 參考 https://stackoverflow.com/a/68083456/12729834
+
 				binding.layout.apply {
 					background = with(TypedValue()) {
 						context.theme.resolveAttribute(androidx.appcompat.R.attr.selectableItemBackground, this, true)

@@ -53,17 +53,17 @@ import java.util.Locale
 @ExperimentalUnsignedTypes
 class NccFragment : Fragment() {
 
-	// binding & viewModel
+
 	private var _binding:FragmentNccBinding? = null
 	private val binding get() = _binding!!
 	private val blVM by activityViewModels<BluetoothViewModel>()
 	private var jobs:MutableList<Job> = mutableListOf()
 
-	// adapter
+
 	private var logItems = mutableListOf<LogMsg>()
 	private lateinit var logAdapter:LogAdapter
 
-	// cb
+
 	private var onBluetoothOn:(() -> Unit)? = null
 	private var onConnected:(() -> Unit)? = null
 	private var onConnectionFailed:(() -> Unit)? = null
@@ -72,7 +72,7 @@ class NccFragment : Fragment() {
 		super.onDestroyView()
 		jobs.forEach { it.cancel() }
 		jobs.clear()
-		// 防止內存洩漏
+
 		_binding = null
 	}
 
@@ -83,7 +83,7 @@ class NccFragment : Fragment() {
 
 	override fun onViewCreated(view:View, savedInstanceState:Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
-		// 檢查權限，沒權限則請求權限
+
 		if (hasPermissions()) {
 			onPermissionsAllow()
 		} else {
@@ -94,11 +94,11 @@ class NccFragment : Fragment() {
 		}
 	}
 
-	// 當權限皆允許
+
 	private fun onPermissionsAllow() {
 		binding.permission.layout.visibility = View.GONE
 
-		// 訂閱藍牙事件
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.connectEventFlow.asSharedFlow().collectLatest { event ->
@@ -135,7 +135,7 @@ class NccFragment : Fragment() {
 			}
 		}
 
-		// 訂閱溝通狀態
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.commStateFlow.asStateFlow().collectLatest { state ->
@@ -158,7 +158,7 @@ class NccFragment : Fragment() {
 			}
 		}
 
-		// 訂閱溝通結束事件
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.commEndSharedEvent.asSharedFlow().collectLatest { event ->
@@ -175,7 +175,7 @@ class NccFragment : Fragment() {
 			}
 		}
 
-		// 訂閱通信中 進度文字
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.commTextStateFlow.asStateFlow().collectLatest {
@@ -185,12 +185,12 @@ class NccFragment : Fragment() {
 			}
 		}
 
-		// UI: 提示文字
+
 		val htmlText = "顏色說明🔹 <font color='#d68b00'>系統</font> <font color='#0000ff'>傳送</font>" +
 				" <font color='#4a973b'>接收</font> <font color='#ff3fa4'>分析結果</font> <font color='#ff0000'>錯誤</font>"
 		binding.tipTv.text = Html.fromHtml(htmlText, Html.FROM_HTML_MODE_COMPACT)
 
-		// UI: LogRv & 清空按鈕
+
 		logItems = mutableListOf()
 		logAdapter = LogAdapter(requireContext(), R.layout.item_logmsg, logItems)
 		binding.logList.adapter = logAdapter
@@ -199,7 +199,7 @@ class NccFragment : Fragment() {
 			clearMsg()
 		}
 
-		// UI: 選擇設備按鈕
+
 		binding.btSelectBtn.setOnClickListener {
 			onResume()
 			BtDialogFragment.open(requireContext())
@@ -209,75 +209,30 @@ class NccFragment : Fragment() {
 			blVM.disconnectDevice()
 		}
 
-		// UI: 發送按鈕
+
 		binding.sendBtn.setOnClickListener {
 			onResume()
 			val toSendText = binding.sendInput.editText?.text.toString()
 			checkBluetoothOn { blVM.sendSingleTelegram(toSendText) }
 		}
 
-		// UI: R80個別抄表按鈕
-		binding.meterInput.editText?.setText(Preference[Preference.NCC_METER_ID, "00000002306003"]) //讀取上次輸入
+
+		binding.meterInput.editText?.setText(Preference[Preference.NCC_METER_ID, "00000002306003"])
 		binding.action1Btn.setOnClickListener {
 			onResume()
 			val meterId = binding.meterInput.editText?.text.toString()
-			Preference[Preference.NCC_METER_ID] = meterId //紀錄本次輸入
-			// [R80] 成功
-			// checkBluetoothOn { blVM.sendR80Telegram(listOf(meterId)) }
-			// [R87_R05+R23] 成功
-			// checkBluetoothOn {
-			// 	blVM.sendR87Telegram(
-			// 		meterId, listOf(
-			// 		 	R87Step(adr = meterId, op = "R05"), // 讀數&狀態
-			// 			R87Step(adr = meterId, op = "R23"), // 五回遮斷履歷
-			// 		)
-			// 	)
-			// }
-			// [R23+R24] 成功
-			// checkBluetoothOn {
-			// 	blVM.sendR87Telegram(
-			// 		meterId, listOf(
-			// 			R87Step(adr = meterId, op = "R23"), // 五回遮斷履歷
-			// 			R87Step(adr = meterId, op = "R24"), // 讀數&狀態
-			// 		)
-			// 	)
-			// }
-			// [R87_R19] 成功
-			// checkBluetoothOn {
-			// 	blVM.sendR87Telegram(
-			// 		meterId, listOf(
-			// 			R87Step(adr = meterId, op = "R19"), // 時刻
-			// 		)
-			// 	)
-			// }
-			// [R87_R16] 成功
-			// checkBluetoothOn {
-			// 	blVM.sendR87Telegram(
-			// 		meterId, listOf(
-			// 			R87Step(adr = meterId, op = "R16", securityLevel = SecurityLevel.Auth), // 表狀態
-			// 		)
-			// 	)
-			// }
-			// [R87_S16] 成功
-			// checkBluetoothOn {
-			// 	blVM.sendR87Telegram(
-			// 		meterId, listOf(
-			// 			R87Step(adr = meterId, op = "S16", data = "B@@@@@@@@@C@IIB@D@", securityLevel = SecurityLevel.Auth), // 設定表狀態
-			// 		)
-			// 	)
-			// }
-			// [R87_S34_toGw] 設定子機
+			Preference[Preference.NCC_METER_ID] = meterId
 			checkBluetoothOn {
 				blVM.sendTelegramToGW(meterId)
 			}
 		}
-		// UI: R80群組抄表按鈕
+
 		binding.action2Btn.setOnClickListener {
 			onResume()
 			checkBluetoothOn { blVM.sendR80Telegram(listOf("00000002306003", "00000002306005"), "33") }
 		}
 
-		// UI: 測試按鈕
+
 		binding.testBtn.setOnClickListener {
 			val respText =
 				"ZD00000002306003D87120001003030303030303032333036303033303030303030303233303630303300454>314430353030303031323838394042424043404840202020202020202020202020202020202020202020202020202020202020202020202020202020202020202020202079"
@@ -288,13 +243,13 @@ class NccFragment : Fragment() {
 
 	override fun onResume() {
 		super.onResume()
-		// 關閉軟鍵盤
+
 		val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
 		imm?.hideSoftInputFromWindow(binding.sendInput.editText?.windowToken, 0)
 		binding.sendInput.editText?.clearFocus()
 	}
 
-	// 藍牙請求器
+
 	private val bluetoothRequestLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
 		if (result.resultCode == Activity.RESULT_OK) {
 			this.onBluetoothOn?.invoke()
@@ -303,7 +258,7 @@ class NccFragment : Fragment() {
 		this.onBluetoothOn = null
 	}
 
-	// 檢查藍牙是否開啟
+
 	private fun checkBluetoothOn(onConnected:() -> Unit) {
 		this.onBluetoothOn = { checkReadyCommunicate(onConnected) }
 		if (!blVM.isBluetoothOn()) {
@@ -314,7 +269,7 @@ class NccFragment : Fragment() {
 		}
 	}
 
-	// 檢查能不能進行通信
+
 	private fun checkReadyCommunicate(onConnected:() -> Unit) {
 		when (blVM.commStateFlow.value) {
 			CommState.NotConnected -> autoConnectDevice(onConnected)
@@ -324,7 +279,7 @@ class NccFragment : Fragment() {
 		}
 	}
 
-	// 如果有連線過的設備,直接嘗試連線, 沒有若連線失敗則開藍牙窗
+
 	private fun autoConnectDevice(onConnected:() -> Unit) {
 		if (blVM.autoConnectDeviceStateFlow.value != null) {
 			this.onConnectionFailed = { BtDialogFragment.open(requireContext()) }
@@ -352,7 +307,7 @@ class NccFragment : Fragment() {
 	}
 
 
-	//region __________權限方法__________
+
 
 	private val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
 		arrayOf(
@@ -374,7 +329,7 @@ class NccFragment : Fragment() {
 		}
 	}
 
-	// 當權限不允許
+
 	private fun onPermissionsNoAllow() {
 		val revokedPermissions:List<String> =
 			getPermissionsMap().filterValues { isGranted -> !isGranted }.map { (permission, isGranted) -> permission }
@@ -388,19 +343,17 @@ class NccFragment : Fragment() {
 		binding.permission.revokedTv.text = revokedPermissionsText
 	}
 
-	// 是否有全部權限
+
 	private fun hasPermissions(context:Context = requireContext(), permissions:Array<String> = this.permissions):Boolean =
 		getPermissionsMap(context, permissions).all { (permission, isGranted) -> isGranted }
 
-	// 取得權限狀態
+
 	private fun getPermissionsMap(
 		context:Context = requireContext(),
 		permissions:Array<String> = this.permissions,
 	):Map<String, Boolean> = permissions.associateWith {
 		ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
 	}
-
-	//endregion
 }
 
 
@@ -410,7 +363,7 @@ class LogAdapter(context:Context, resource:Int, groups:List<LogMsg>) : ArrayAdap
 		val logMsg:LogMsg = getItem(position)!!
 		view.text = logMsg.spannable
 		view.setOnClickListener {
-			// 點擊複製至剪貼簿
+
 			val clipboard:ClipboardManager? = ContextCompat.getSystemService(context, ClipboardManager::class.java)
 			val clip = ClipData.newPlainText("label", view.text.toString())
 			clipboard?.setPrimaryClip(clip)

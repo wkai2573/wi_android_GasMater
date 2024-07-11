@@ -8,7 +8,7 @@ import android.provider.Settings
 object AppManager {
 
 
-	// ==取得設備 & 唯一識別碼==
+
 	private lateinit var uniqueCode:String
 	lateinit var client:String
 	private fun initUniqueCode(context:Context) {
@@ -16,7 +16,7 @@ object AppManager {
 		client = "${Build.MANUFACTURER}/${Build.MODEL}/$uniqueCode"
 	}
 
-	// ==初始化==
+
 	fun initAll(application:Application) {
 		Preference.init(application)
 		NetworkInfo.initDetectionNetwork(application)

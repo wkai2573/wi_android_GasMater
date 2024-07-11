@@ -21,7 +21,7 @@ class R16DetailSheet : BottomSheetDialogFragment() {
 	private lateinit var binding:BsheetR16DetailBinding
 	private val advVM by activityViewModels<MeterAdvViewModel>()
 
-	// 傳入值
+
 	private val type by lazy { arguments?.getString("type") ?: "read" }
 	private val readBitsMap by lazy {
 		var value = arguments?.getString("read") ?: return@lazy null
@@ -58,7 +58,7 @@ class R16DetailSheet : BottomSheetDialogFragment() {
 
 	override fun onDismiss(dialog:DialogInterface) {
 		super.onDismiss(dialog)
-		// 關閉時將設定值傳送給訂閱者
+
 		if (type == "write") {
 			advVM.emitResult(SheetResult.S16(getResult()))
 		}
@@ -83,7 +83,7 @@ class R16DetailSheet : BottomSheetDialogFragment() {
 
 		if (type == "read") binding.writeTipTv.visibility = View.GONE
 
-		//根據傳入值，設定UI(維持按鈕顯示 & 各option的值)
+
 		when (type) {
 			"read" -> optionViews.forEach {
 				val tagSplit = it.tag.toString().split("|")
@@ -109,7 +109,7 @@ class R16DetailSheet : BottomSheetDialogFragment() {
 				it.readValue = readValue
 				it.setSelected(optionEnum)
 
-				// 瓦斯表目前的設定 設為粗體
+
 				if (readBitsMap != null) {
 					it.setBold(if (readValue == true) OptionEnum.Enable else OptionEnum.Disable)
 				}
@@ -117,7 +117,7 @@ class R16DetailSheet : BottomSheetDialogFragment() {
 		}
 	}
 
-	// 將設定值轉成bits字串
+
 	private fun getResult():String {
 		val muskBitsMap = this.writeMaskBitsMap.mapValues { (_, value) -> value.toMutableMap() }.toMutableMap()
 		val valueBitsMap = this.writeValueBitsMap.mapValues { (_, value) -> value.toMutableMap() }.toMutableMap()

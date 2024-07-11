@@ -10,8 +10,8 @@ class MeterViewModel : ViewModel() {
 
 	val meterRowsStateFlow = MutableStateFlow<List<MeterRow>>(emptyList())
 
-	// 選擇的group & meter
-	// group設定後要清除meter的選擇, 所以設為private
+
+
 	private val selectedMeterGroupFlow = MutableStateFlow<MeterGroup?>(null)
 	val selectedMeterGroupStateFlow get() = selectedMeterGroupFlow.asStateFlow()
 	fun setSelectedMeterGroup(meterGroup:MeterGroup?) {
@@ -21,10 +21,10 @@ class MeterViewModel : ViewModel() {
 
 	val selectedMeterRowFlow = MutableStateFlow<MeterRow?>(null)
 
-	// 左分頁filter
+
 	val groupsFilterFlow = MutableStateFlow(Filter.All)
 
-	// 中分頁filter
+
 	val metersFilterFlow = MutableStateFlow(Filter.All)
 
 }

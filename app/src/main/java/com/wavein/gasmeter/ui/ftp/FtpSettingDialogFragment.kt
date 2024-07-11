@@ -27,7 +27,7 @@ class FtpSettingDialogFragment(
 	private val onDismissCallback:((dialog:DialogInterface) -> Unit)? = null,
 ) : DialogFragment() {
 
-	// binding & viewModel
+
 	private var _binding:DialogFtpSettingBinding? = null
 	private val binding get() = _binding!!
 	private val ftpVM by activityViewModels<FtpViewModel>()
@@ -52,9 +52,9 @@ class FtpSettingDialogFragment(
 		} ?: throw IllegalStateException("Activity cannot be null")
 	}
 
-	// 初始化ui
+
 	private fun init(activity:FragmentActivity) {
-		// 設定snackbar錨點
+
 		SharedEvent.snackbarDefaultView = binding.root
 		SharedEvent.snackbarDefaultAnchorView = binding.buttonsLayout
 
@@ -84,7 +84,7 @@ class FtpSettingDialogFragment(
 		)
 
 	companion object {
-		// 開啟ftp設定視窗
+
 		fun open(
 			context:Context,
 			ftpInfo:FtpInfo,

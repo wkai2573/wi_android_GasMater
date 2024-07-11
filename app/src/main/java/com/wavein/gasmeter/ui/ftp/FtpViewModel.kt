@@ -33,15 +33,15 @@ import javax.inject.Inject
 
 @HiltViewModel
 class FtpViewModel @Inject constructor(
-	private val savedStateHandle:SavedStateHandle, //導航參數(hilt注入)
+	private val savedStateHandle:SavedStateHandle,
 ) : ViewModel() {
 
-	// 可觀察變數
+
 	var systemAreaOpenedStateFlow = MutableStateFlow(false)
 	val appStateFlow = MutableStateFlow(AppState.NotChecked)
 	val ftpConnStateFlow = MutableStateFlow<FtpConnState>(FtpConnState.Idle)
 
-	// 系統、下載、上傳ftp
+
 	var systemFtpInfo:FtpInfo = FtpInfo(
 		FtpEnum.System,
 		Preference[Preference.FTP_SYSTEM_HOST, "118.163.191.31"]!!,
@@ -100,20 +100,13 @@ class FtpViewModel @Inject constructor(
 		}
 	}
 
-	// 編碼
+
 	private val LOCAL_CHARSET = Charsets.UTF_8
 	private val SERVER_CHARSET = Charsets.ISO_8859_1
 	private fun encode(text:String):String = String(text.toByteArray(LOCAL_CHARSET), SERVER_CHARSET)
 	private fun decode(text:String):String = String(text.toByteArray(SERVER_CHARSET), LOCAL_CHARSET)
 
-	/**
-	 * ftp連線到結束
-	 * @param ftpInfo FTP連線資訊
-	 * @param path 進入目錄
-	 * @param autoDisconnect 自動中斷FTP，若連線中有延遲處理則需要設為false，並自行呼叫disconnect(ftpClient)
-	 * @param ftpLoginError 當連結失敗時的處理，return true 顯示原因小吃(預設)
-	 * @param ftpHandle 連線FTP中要做的事
-	 */
+	
 	private fun ftpProcess(
 		ftpInfo:FtpInfo,
 		path:String = "",
@@ -133,7 +126,7 @@ class FtpViewModel @Inject constructor(
 				}
 				ftpConnStateFlow.value = FtpConnState.Connected
 				ftpClient.enterLocalPassiveMode()
-				ftpClient.controlEncoding = "UTF-8" // 設置ftp控制編碼
+				ftpClient.controlEncoding = "UTF-8"
 				if (ftpInfo.root.isNotEmpty() && !ftpClient.changeWorkingDirectory(encode(ftpInfo.root))) {
 					if (ftpLoginError()) showSnack("${ftpInfo.root} 目錄無法開啟")
 					return@launch
@@ -163,16 +156,16 @@ class FtpViewModel @Inject constructor(
 		ftpConnStateFlow.value = FtpConnState.Idle
 	}
 
-	// ==Dialog==
-	// 測試FTP
+
+
 	fun testFtp(ftpInfo:FtpInfo) {
 		ftpProcess(ftpInfo, "") { ftpClient ->
 			showSnack("連線成功", SharedEvent.Color.Success)
 		}
 	}
 
-	// ==SYSTEM==
-	// 檢查產品開通
+
+
 	fun checkAppActivate(uuid:String, appkey:String, company:String, dep:String, username:String) {
 		appStateFlow.value = AppState.Checking
 		if (uuid.isEmpty() || appkey.isEmpty()) {
@@ -192,7 +185,7 @@ class FtpViewModel @Inject constructor(
 				val uuidFilename = "$uuid.txt"
 				val files = ftpClient.listFiles()
 				when {
-					// 序號未被註冊，該序號綁定此裝置
+
 					files.isEmpty() -> {
 						ftpClient.setFileType(FTP.ASCII_FILE_TYPE)
 						val uuidRows = listOf(
@@ -207,7 +200,7 @@ class FtpViewModel @Inject constructor(
 							onAppkeyVerifyFail("產品開通失敗 (無法建立uuid檔案於FTP)")
 						}
 					}
-					// 檢查序號正確
+
 					files[0].name == uuidFilename -> {
 						Preference[Preference.APP_KEY] = appkey
 						Preference[Preference.APP_ACTIVATED] = true
@@ -216,7 +209,7 @@ class FtpViewModel @Inject constructor(
 						Preference[Preference.USER_NAME] = username
 						appStateFlow.value = AppState.Activated
 					}
-					// 檢查序號錯誤，該序號已被其他裝置綁定
+
 					else -> onAppkeyVerifyFail("此序號已被其他裝置註冊")
 				}
 			})
@@ -253,7 +246,7 @@ class FtpViewModel @Inject constructor(
 		}
 	}
 
-	// ==UPLOAD==
+
 	fun uploadFile(context:Context, fileState:FileState) {
 		val path = Preference[Preference.APP_KEY, ""]!!
 		if (path.isEmpty() || !fileState.isOpened) return
@@ -270,9 +263,7 @@ class FtpViewModel @Inject constructor(
 		}
 	}
 
-	/** 上傳log: 將手機/Documents/log 裡的檔案上傳至ftp, 上傳成功後移動至 log_uploaded_yyyy, 移除3年前的 log_uploaded_yyyy
-	 *  建立log參考: SettingViewModel.createLogFile()
-	 */
+	
 	fun uploadLog() {
 		val documentsFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
 		documentsFolder.mkdirs()
@@ -284,10 +275,10 @@ class FtpViewModel @Inject constructor(
 
 		ftpProcess(systemFtpInfo, "log") { ftpClient ->
 			files.forEach { file ->
-				// 上傳ftp
+
 				val inputStream = FileInputStream(file)
 				val uploadSuccess = kotlin.runCatching { ftpClient.storeFile(encode(file.name), inputStream) }.getOrElse { false }
-				// 移動檔案 (log > log_uploaded_yyyy)
+
 				if (uploadSuccess) {
 					val destinationFile = File(logUploadedFolder, file.name)
 					file.renameTo(destinationFile)
@@ -295,20 +286,20 @@ class FtpViewModel @Inject constructor(
 			}
 		}
 
-		// 移除3年前的 log_uploaded_yyyy
+
 		val threeYearsAgo = LocalDate.now().minusYears(3).format(DateTimeFormatter.ofPattern("yyyy"))
 		val log3yearsAgoFolder = File(documentsFolder, "log_uploaded_$threeYearsAgo")
 		log3yearsAgoFolder.deleteRecursively()
 	}
 
-	// ==DOWNLOAD==
-	// 根目錄
+
+
 	private val rootDirectory get() = Environment.getExternalStorageDirectory()
 
-	// Download資料夾
+
 	private val downloadDirectory get() = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-	// 外部空間根目錄/NXU Gas Meter
-	// private val directory get() = File(rootDirectory, "NXU Gas Meter")
+
+
 
 	fun downloadFileOpenFolder(context:Context, csvVM:CsvViewModel, meterVM:MeterViewModel) {
 		ftpProcess(downloadFtpInfo, "") { ftpClient ->
@@ -372,9 +363,9 @@ class FtpViewModel @Inject constructor(
 		}
 	}
 
-	//__________ 以下參考 __________
 
-	// 上傳空文件
+
+
 	fun uploadEmptyFile(ftpInfo:FtpInfo, path:String, filename:String) {
 		ftpProcess(ftpInfo, path) { ftpClient ->
 			ftpClient.setFileType(FTP.ASCII_FILE_TYPE)
@@ -383,7 +374,7 @@ class FtpViewModel @Inject constructor(
 		}
 	}
 
-	// 上傳文件
+
 	fun uploadFile_r(ftpInfo:FtpInfo, path:String, filename:String, fileDescriptor:FileDescriptor) {
 		ftpProcess(ftpInfo, path) { ftpClient ->
 			ftpClient.setFileType(FTP.BINARY_FILE_TYPE)
@@ -392,14 +383,14 @@ class FtpViewModel @Inject constructor(
 		}
 	}
 
-	// 刪除檔案
+
 	fun deleteFile(ftpInfo:FtpInfo, path:String, filename:String) {
 		ftpProcess(ftpInfo, path) { ftpClient ->
 			ftpClient.deleteFile(filename)
 		}
 	}
 
-	// 問chatGPT用
+
 	fun uploadFileToFtp(filename:String, host:String, username:String, password:String, directory:String, fileDescriptor:FileDescriptor) {
 		val ftpClient = FTPClient()
 		ftpClient.connect(host)
@@ -419,7 +410,7 @@ class FtpViewModel @Inject constructor(
 
 }
 
-// 進入目錄，沒有則創建再進入 (進入根的時候不要用)
+
 private fun FTPClient.makeAndChangeDirectory(directory:String):Boolean {
 	val directories = directory.split("/")
 	for (dir in directories) {
@@ -434,7 +425,7 @@ private fun FTPClient.makeAndChangeDirectory(directory:String):Boolean {
 	return true
 }
 
-// class
+
 data class FtpInfo(val ftpEnum:FtpEnum, var host:String = "", var username:String = "", var password:String = "", var root:String = "")
 enum class FtpEnum { System, Download, Upload }
 
@@ -444,5 +435,5 @@ sealed class FtpConnState {
 	object Idle : FtpConnState()
 	data class Connecting(val msg:String) : FtpConnState()
 	object Connected : FtpConnState()
-	// data class Error(val msg:String) : FtpConnState()
+
 }

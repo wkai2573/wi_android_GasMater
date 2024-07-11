@@ -16,7 +16,7 @@ import javax.inject.Singleton
 object AppModule {
 
 	@Provides
-	@Singleton //< 唯一實例
+	@Singleton
 	fun provideBluetoothManager(@ApplicationContext context:Context):BluetoothManager? =
 		context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
 

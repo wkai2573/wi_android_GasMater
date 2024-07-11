@@ -1,6 +1,6 @@
 package com.wavein.gasmeter.tools.rd64h.info
 
-// 送出R89後 或 UBus通信失敗, 會回傳D36
+
 data class D36Info(override val text:String) : BaseInfo(text) {
 	var btParentAlarmRaw:String = ""
 	var meterId:String = ""

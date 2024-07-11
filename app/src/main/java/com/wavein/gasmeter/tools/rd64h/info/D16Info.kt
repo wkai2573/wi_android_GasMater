@@ -2,7 +2,7 @@ package com.wavein.gasmeter.tools.rd64h.info
 
 import android.util.Log
 
-// 子機無回應時, 會回傳D16
+
 data class D16Info(override val text:String) : BaseInfo(text) {
 	var btParentId:String = ""
 	var isBatteryVoltageLow:Boolean = false

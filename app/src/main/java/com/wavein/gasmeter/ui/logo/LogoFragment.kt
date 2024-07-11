@@ -25,13 +25,13 @@ import kotlinx.coroutines.launch
 
 class LogoFragment : Fragment() {
 
-	// binding & viewModel
+
 	private var _binding:FragmentLogoBinding? = null
 	private val binding get() = _binding!!
 	private val navVM by activityViewModels<NavViewModel>()
 	private val settingVM by activityViewModels<SettingViewModel>()
 
-	// 防止內存洩漏
+
 	override fun onDestroyView() {
 		super.onDestroyView()
 		_binding = null
@@ -45,7 +45,7 @@ class LogoFragment : Fragment() {
 	override fun onViewCreated(view:View, savedInstanceState:Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
 
-		// 註冊UUID
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				settingVM.uuidStateFlow.asStateFlow().collectLatest { uuid ->
@@ -55,7 +55,7 @@ class LogoFragment : Fragment() {
 			}
 		}
 
-		// tv: 版本
+
 		val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
 			requireContext().packageManager.getPackageInfo(requireContext().packageName, PackageManager.PackageInfoFlags.of(0))
 		} else {
@@ -65,7 +65,7 @@ class LogoFragment : Fragment() {
 		binding.verTv.text = versionText
 	}
 
-	// 延遲後跳轉
+
 	override fun onResume() {
 		super.onResume()
 		viewLifecycleOwner.lifecycleScope.launch {

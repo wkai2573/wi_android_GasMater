@@ -12,11 +12,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NavViewModel @Inject constructor(
-	private val savedStateHandle:SavedStateHandle, //導航參數(hilt注入)
+	private val savedStateHandle:SavedStateHandle,
 ) : ViewModel() {
 
-	// 事件變數
-	// 導航至指定fragment
+
+
 	private val _navigateSharedFlow = MutableSharedFlow<Int>()
 	val navigateSharedFlow = _navigateSharedFlow.asSharedFlow()
 
@@ -24,15 +24,15 @@ class NavViewModel @Inject constructor(
 		_navigateSharedFlow.emit(navId)
 	}
 
-	// meterBase頁中切換tab
+
 	val meterBaseChangeTabStateFlow = MutableStateFlow(-1)
 
-	// 瓦斯表的back鍵目的地
-	// 若從群組瓦斯表進入, 為false
-	// 若從查詢進入, 為true
+
+
+
 	var meterRowPageBackDestinationIsSearch = false
 
-	// meterBase頁中點返回鍵
+
 	val meterBaseBackKeyClickSharedFlow = MutableSharedFlow<Boolean>()
 	fun meterBaseOnBackKeyClick(smoothScroll:Boolean) = viewModelScope.launch {
 		meterBaseBackKeyClickSharedFlow.emit(smoothScroll)

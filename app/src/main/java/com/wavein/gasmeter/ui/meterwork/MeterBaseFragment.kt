@@ -60,7 +60,7 @@ import kotlinx.coroutines.launch
 
 class MeterBaseFragment : Fragment() {
 
-	// binding & viewModel
+
 	private var _binding:FragmentMeterBaseBinding? = null
 	private val binding get() = _binding!!
 	private val navVM by activityViewModels<NavViewModel>()
@@ -83,15 +83,15 @@ class MeterBaseFragment : Fragment() {
 	override fun onViewCreated(view:View, savedInstanceState:Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
 
-		// 未選csv提示
+
 		binding.noCsvTipTv.visibility = if (meterVM.meterRowsStateFlow.value.isEmpty()) View.VISIBLE else View.GONE
 
-		// pager
+
 		val meterPageAdapter = MeterPageAdapter(this)
 		binding.pager.adapter = meterPageAdapter
-		binding.pager.isUserInputEnabled = false  // 禁用滑動切換tab
+		binding.pager.isUserInputEnabled = false
 
-		// tab
+
 		TabLayoutMediator(binding.tabLayout, binding.pager) { tab, position ->
 			when (position) {
 				0 -> tab.text = "群組列表"
@@ -101,7 +101,7 @@ class MeterBaseFragment : Fragment() {
 			}
 		}.attach()
 
-		// 訂閱選擇的群組, 禁用tab
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				meterVM.selectedMeterGroupStateFlow.collectLatest { meterGroup ->
@@ -113,7 +113,7 @@ class MeterBaseFragment : Fragment() {
 			}
 		}
 
-		// 訂閱選擇的表, 禁用tab
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				meterVM.selectedMeterRowFlow.asStateFlow().collectLatest { meterRow ->
@@ -124,7 +124,7 @@ class MeterBaseFragment : Fragment() {
 			}
 		}
 
-		// 訂閱切換tab
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				navVM.meterBaseChangeTabStateFlow.asStateFlow().collectLatest { tabIndex ->
@@ -136,7 +136,7 @@ class MeterBaseFragment : Fragment() {
 			}
 		}
 
-		// 訂閱點擊back事件: 檢查目前抄表頁裡面的分頁,決定執行動作
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				navVM.meterBaseBackKeyClickSharedFlow.asSharedFlow().collectLatest { smoothScroll ->
@@ -154,11 +154,11 @@ class MeterBaseFragment : Fragment() {
 			}
 		}
 
-		// 連線相關的訂閱
+
 		initConnSubscription()
 	}
 
-	// tabView禁用與顯示
+
 	private fun setTabView(it:Any?, tab:TabLayout.Tab) {
 		if (it == null) {
 			tab.view.isEnabled = false
@@ -173,17 +173,17 @@ class MeterBaseFragment : Fragment() {
 		}
 	}
 
-	// 切換tab (給子fragment呼叫)
+
 	fun changeTab(tabIndex:Int, smoothScroll:Boolean = true) {
 		binding.pager.setCurrentItem(tabIndex, smoothScroll)
 	}
 
-	//region__________連線方法__________
 
-	// 連線相關的訂閱
+
+
 	private fun initConnSubscription() {
 
-		// 訂閱通信中 進度文字
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.commTextStateFlow.asStateFlow().collectLatest {
@@ -197,7 +197,7 @@ class MeterBaseFragment : Fragment() {
 			}
 		}
 
-		// 訂閱藍牙事件
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.connectEventFlow.asSharedFlow().collectLatest { event ->
@@ -219,7 +219,7 @@ class MeterBaseFragment : Fragment() {
 			}
 		}
 
-		// 訂閱溝通狀態
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.commStateFlow.asStateFlow().collectLatest { state ->
@@ -237,7 +237,7 @@ class MeterBaseFragment : Fragment() {
 			}
 		}
 
-		// 訂閱溝通結束事件
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.commEndSharedEvent.asSharedFlow().collectLatest { event ->
@@ -251,7 +251,7 @@ class MeterBaseFragment : Fragment() {
 								}
 								SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(message, SharedEvent.Color.Success, Snackbar.LENGTH_INDEFINITE))
 								SharedEvent.eventFlow.emit(SharedEvent.PlayEffect())
-								updateCsvRowsByCommResult(event.commResult) // 依據結果更新csvRows
+								updateCsvRowsByCommResult(event.commResult)
 							}
 
 							is CommEndEvent.Error -> {
@@ -262,7 +262,7 @@ class MeterBaseFragment : Fragment() {
 								}
 								SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar(message, SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
 								SharedEvent.eventFlow.emit(SharedEvent.PlayEffect())
-								updateCsvRowsByCommResult(event.commResult) // 依據結果更新csvRows
+								updateCsvRowsByCommResult(event.commResult)
 							}
 
 							else -> {}
@@ -273,12 +273,12 @@ class MeterBaseFragment : Fragment() {
 		}
 	}
 
-	// cb
+
 	private var onBluetoothOn:(() -> Unit)? = null
 	private var onConnected:(() -> Unit)? = null
 	private var onConnectionFailed:(() -> Unit)? = null
 
-	// 藍牙請求器
+
 	private val bluetoothRequestLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
 		if (result.resultCode == Activity.RESULT_OK) {
 			this.onBluetoothOn?.invoke()
@@ -287,7 +287,7 @@ class MeterBaseFragment : Fragment() {
 		this.onBluetoothOn = null
 	}
 
-	// 檢查藍牙是否開啟
+
 	fun checkBluetoothOn(onConnected:() -> Unit) {
 		this.onBluetoothOn = { checkReadyCommunicate(onConnected) }
 		if (!blVM.isBluetoothOn()) {
@@ -298,7 +298,7 @@ class MeterBaseFragment : Fragment() {
 		}
 	}
 
-	// 檢查能不能進行通信
+
 	private fun checkReadyCommunicate(onConnected:() -> Unit) {
 		when (blVM.commStateFlow.value) {
 			CommState.NotConnected -> autoConnectDevice(onConnected)
@@ -309,7 +309,7 @@ class MeterBaseFragment : Fragment() {
 		}
 	}
 
-	// 如果有連線過的設備,直接嘗試連線, 沒有若連線失敗則開藍牙窗
+
 	private fun autoConnectDevice(onConnected:() -> Unit) {
 		if (blVM.autoConnectDeviceStateFlow.value != null) {
 			this.onConnectionFailed = { BtDialogFragment.open(requireContext()) }
@@ -321,7 +321,7 @@ class MeterBaseFragment : Fragment() {
 		}
 	}
 
-	// 根據結果更新csvRows & ftp紀錄log
+
 	private suspend fun updateCsvRowsByCommResult(commResult:Map<String, Any>) {
 		SharedEvent.catching {
 			Log.i("@@@通信結果 ", commResult.toString())
@@ -330,7 +330,7 @@ class MeterBaseFragment : Fragment() {
 			var newCsvRows = meterVM.meterRowsStateFlow.value
 			when (metaInfo.op) {
 				"R80" -> {
-					// D05m: 群組抄表
+
 					if (commResult.containsKey("D05m")) {
 						val d05mList = (commResult["D05m"] as D05mInfo).list
 						newCsvRows = newCsvRows.map { meterRow ->
@@ -362,7 +362,7 @@ class MeterBaseFragment : Fragment() {
 					newCsvRows = newCsvRows.map { meterRow ->
 						var newMeterRow = meterRow
 						if (meterRow.meterId != meterId) return@map newMeterRow
-						// D87D23: 五回遮斷履歷
+
 						if (commResult.containsKey("D87D23")) {
 							val info = commResult["D87D23"] as D87D23Info
 							newMeterRow = newMeterRow.copy(
@@ -373,7 +373,7 @@ class MeterBaseFragment : Fragment() {
 								shutdownHistory5 = info.shutdownHistory5,
 							)
 						}
-						// D87D24: 表內部狀態 (可抓 告警情報 & 登錄母火流量)
+
 						if (commResult.containsKey("D87D24")) {
 							val info = commResult["D87D24"] as D87D24Info
 							newMeterRow = newMeterRow.copy(
@@ -383,7 +383,7 @@ class MeterBaseFragment : Fragment() {
 								registerFuseFlowRate2 = info.registerFuseFlowRate2,
 							)
 						}
-						// D87D16: 表狀態
+
 						if (commResult.containsKey("D87D16")) {
 							val info = commResult["D87D16"] as D87D16Info
 							newMeterRow = newMeterRow.copy(meterStatus = info.meterStatus)
@@ -393,22 +393,22 @@ class MeterBaseFragment : Fragment() {
 								)
 							}
 						}
-						// D87D57: 時間使用量
+
 						if (commResult.containsKey("D87D57")) {
 							val info = commResult["D87D57"] as D87D57Info
 							newMeterRow = newMeterRow.copy(hourlyUsage = info.hourlyUsage)
 						}
-						// D87D58: 最大使用量
+
 						if (commResult.containsKey("D87D58")) {
 							val info = commResult["D87D58"] as D87D58Info
 							newMeterRow = newMeterRow.copy(maximumUsage = info.maximumUsage, maximumUsageTime = info.maximumUsageTime)
 						}
-						// D87D59: 1日最大使用量
+
 						if (commResult.containsKey("D87D59")) {
 							val info = commResult["D87D59"] as D87D59Info
 							newMeterRow = newMeterRow.copy(oneDayMaximumUsage = info.oneDayMaximumUsage, oneDayMaximumUsageDate = info.oneDayMaximumUsageDate)
 						}
-						// D87D31: 登錄母火流量
+
 						if (commResult.containsKey("D87D31")) {
 							val info = commResult["D87D31"] as D87D31Info
 							newMeterRow = newMeterRow.copy(registerFuseFlowRate1 = info.registerFuseFlowRate1, registerFuseFlowRate2 = info.registerFuseFlowRate2)
@@ -427,7 +427,7 @@ class MeterBaseFragment : Fragment() {
 								)
 							}
 						}
-						// D87D50: 壓力遮斷判定值
+
 						if (commResult.containsKey("D87D50")) {
 							val info = commResult["D87D50"] as D87D50Info
 							newMeterRow = newMeterRow.copy(pressureShutOffJudgmentValue = info.pressureShutOffJudgmentValue)
@@ -440,12 +440,12 @@ class MeterBaseFragment : Fragment() {
 								)
 							}
 						}
-						// D87D51: 現在壓力值
+
 						if (commResult.containsKey("D87D51")) {
 							val info = commResult["D87D51"] as D87D51Info
 							newMeterRow = newMeterRow.copy(pressureValue = info.pressureValue)
 						}
-						// D87D41: 中心遮斷
+
 						if (commResult.containsKey("D87D41")) {
 							val info = commResult["D87D41"] as D87D41Info
 							newMeterRow = newMeterRow.copy(alarmInfo1 = info.alarmInfo1)
@@ -455,7 +455,7 @@ class MeterBaseFragment : Fragment() {
 								)
 							}
 						}
-						// D87D42: 中心遮斷解除
+
 						if (commResult.containsKey("D87D42")) {
 							val info = commResult["D87D42"] as D87D42Info
 							newMeterRow = newMeterRow.copy(alarmInfo1 = info.alarmInfo1)
@@ -465,19 +465,19 @@ class MeterBaseFragment : Fragment() {
 								)
 							}
 						}
-						// D87D02: 強制Session中斷
+
 						if (commResult.containsKey("D87D02")) {
 							val info = commResult["D87D02"] as D87D02Info
 							if (metaInfo.r87Steps?.any { it.op == "C02" } == true) {
 								logRows.add(LogRow(meterId = meterId, op = "C02", oldValue = "", newValue = ""))
 							}
 						}
-						// todo 新增R87時_這裡加通信完畢後處理
+
 
 						newMeterRow
 					}
 
-					// Ftp Log 紀錄有更新瓦斯表的功能(Sxx,Cxx)
+
 					if (logRows.isNotEmpty()) {
 						settingVM.createLogFile(logRows)
 					}
@@ -485,12 +485,12 @@ class MeterBaseFragment : Fragment() {
 				}
 			}
 
-			// 更新ui並儲存csv
+
 			csvVM.updateSaveCsv(newCsvRows, meterVM)
 		}
 	}
 
-	// 手動更新csv (用group & meterId找)
+
 	fun updateCsvRowManual(newMeterRow:MeterRow, _origMeterId:String? = null) {
 		val origMeterId = _origMeterId ?: newMeterRow.meterId
 		val newCsvRows = meterVM.meterRowsStateFlow.value.map { meterRow ->
@@ -502,11 +502,11 @@ class MeterBaseFragment : Fragment() {
 		}
 		csvVM.updateSaveCsv(newCsvRows, meterVM)
 	}
-	//endregion
+
 }
 
 
-// 分頁管理器
+
 class MeterPageAdapter(fragment:Fragment) : FragmentStateAdapter(fragment) {
 
 	override fun getItemCount():Int = 3

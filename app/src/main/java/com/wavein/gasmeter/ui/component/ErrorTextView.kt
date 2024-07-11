@@ -10,7 +10,7 @@ import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.CustErrorTextviewBinding
 
 
-// 自訂View元件: ErrorTextView
+
 class ErrorTextView : LinearLayout {
 	private var binding:CustErrorTextviewBinding? = null
 
@@ -42,14 +42,14 @@ class ErrorTextView : LinearLayout {
 	}
 
 	private fun initLayout(attrs:AttributeSet?, defStyle:Int? = null) {
-		// 取得 xml 傳入參數
+
 		val typedArray = if (defStyle == null)
 			context.obtainStyledAttributes(attrs, R.styleable.ErrorTextView)
 		else
 			context.obtainStyledAttributes(attrs, R.styleable.ErrorTextView, defStyle, 0)
 		val text = typedArray.getString(R.styleable.ErrorTextView_errorText)
 		typedArray.recycle()
-		// ui
+
 		setText(text)
 	}
 }

@@ -10,7 +10,7 @@ import java.io.InputStreamReader
 
 object FileUtils {
 
-	// 取得檔名 by uri, 必須是"文檔樹URI"才會成功取得
+
 	@SuppressLint("Range")
 	fun getFilename(context:Context, uri:Uri):String? {
 		val cursor:Cursor? = context.contentResolver.query(uri, null, null, null, null)
@@ -24,7 +24,7 @@ object FileUtils {
 		return null
 	}
 
-	// 讀取檔案內容
+
 	fun readFileContent(
 		context:Context,
 		uri:Uri,
@@ -54,7 +54,7 @@ object FileUtils {
 			}
 
 			val fileContent = stringBuilder.toString().let {
-				// 移除BOM
+
 				if (it.startsWith("\uFEFF"))
 					it.substring(1)
 				else

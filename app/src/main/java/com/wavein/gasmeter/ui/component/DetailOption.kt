@@ -19,7 +19,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
-// 自訂View元件: Field
+
 class DetailOption : LinearLayout {
 	private var binding:CustDetailOptionBinding? = null
 
@@ -52,7 +52,7 @@ class DetailOption : LinearLayout {
 		}
 	}
 
-	// 重整style, 當與讀取值不同時(準備更改), 調為紅框
+
 	private fun refreshStyle() {
 		binding?.btn2?.let { setBtnColor(it, selected == OptionEnum.Enable, readValue != true) }
 		binding?.btn3?.let { setBtnColor(it, selected == OptionEnum.Disable, readValue != false) }
@@ -60,18 +60,18 @@ class DetailOption : LinearLayout {
 
 	private fun setBtnColor(btn:MaterialButton, selected:Boolean, isRed:Boolean) {
 		if (!selected) {
-			// 未選中
+
 			btn.strokeColor = ColorStateList.valueOf(Color.parseColor("#e0deec"))
 			btn.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#f2f3f8"))
 			btn.setTextColor(Color.parseColor("#6869a3"))
 		} else {
 			if (isRed) {
-				// 選中紅色
+
 				btn.strokeColor = ColorStateList.valueOf(ContextCompat.getColor(context, R.color.md_theme_light_error))
 				btn.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(context, R.color.md_theme_light_errorContainer))
 				btn.setTextColor(ContextCompat.getColor(context, R.color.md_theme_light_error))
 			} else {
-				// 選中原色
+
 				btn.strokeColor = ColorStateList.valueOf(ContextCompat.getColor(context, R.color.md_theme_light_primary))
 				btn.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#ebeff6"))
 				btn.setTextColor(ContextCompat.getColor(context, R.color.md_theme_light_primary))
@@ -102,7 +102,7 @@ class DetailOption : LinearLayout {
 	}
 
 	private fun initLayout(attrs:AttributeSet?, defStyle:Int? = null) {
-		// 取得 xml 傳入參數
+
 		val typedArray = if (defStyle == null)
 			context.obtainStyledAttributes(attrs, R.styleable.DetailOption)
 		else
@@ -111,7 +111,7 @@ class DetailOption : LinearLayout {
 		val editable = typedArray.getBoolean(R.styleable.DetailOption_detailOptionEditable, true)
 		val optionText = typedArray.getString(R.styleable.DetailOption_detailOptionText) ?: "維持|啟用|關閉"
 		typedArray.recycle()
-		// ui
+
 		binding?.titleTv?.text = title
 		setEditable(editable)
 		val optionTextList = optionText.split("|")
@@ -119,7 +119,7 @@ class DetailOption : LinearLayout {
 		binding?.btn2?.text = optionTextList.getOrElse(1) { "" }
 		binding?.btn3?.text = optionTextList.getOrElse(2) { "" }
 
-		// 3選項, 有改設定要變色
+
 		if (binding?.btn1?.text != "") {
 			binding?.toggleGroup?.addOnButtonCheckedListener { group, checkedId, isChecked ->
 				if (isChecked) refreshStyle()

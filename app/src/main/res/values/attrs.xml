@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <!-- 自訂元件參數 -->
+
   <declare-styleable name="Field">
     <attr name="fieldTitle" format="string" />
     <attr name="fieldValue" format="string" />

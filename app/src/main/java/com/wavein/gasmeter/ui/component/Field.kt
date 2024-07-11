@@ -10,7 +10,7 @@ import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.CustFieldNormalBinding
 
 
-// 自訂View元件: Field
+
 class Field : LinearLayout {
 	private var binding:CustFieldNormalBinding? = null
 
@@ -37,7 +37,7 @@ class Field : LinearLayout {
 	}
 
 	private fun initLayout(attrs:AttributeSet?, defStyle:Int? = null) {
-		// 取得 xml 傳入參數
+
 		val typedArray = if (defStyle == null)
 			context.obtainStyledAttributes(attrs, R.styleable.Field)
 		else
@@ -45,7 +45,7 @@ class Field : LinearLayout {
 		val title = typedArray.getString(R.styleable.Field_fieldTitle)
 		val value = typedArray.getString(R.styleable.Field_fieldValue)
 		typedArray.recycle()
-		// ui
+
 		binding?.titleTv?.text = title
 		binding?.valueTv?.text = value
 	}

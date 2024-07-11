@@ -5,8 +5,8 @@ import com.wavein.gasmeter.tools.rd64h.SecurityLevel
 
 data class D87D58Info(override val text:String) : BaseInfo(text) {
 	var data:String = ""
-	var maximumUsage:String = ""     // 最大使用量(58-01) 4位
-	var maximumUsageTime:String = "" // 最大使用量日時(58-02) 8位
+	var maximumUsage:String = ""
+	var maximumUsageTime:String = ""
 
 	init {
 		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常:D87D58Info")

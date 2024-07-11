@@ -35,7 +35,7 @@ val SetOpMeaningMap = mapOf(
 @HiltViewModel
 @SuppressLint("MissingPermission")
 class SettingViewModel @Inject constructor(
-	private val savedStateHandle:SavedStateHandle, //導航參數(hilt注入)
+	private val savedStateHandle:SavedStateHandle,
 ) : ViewModel() {
 
 	val uuidStateFlow = MutableStateFlow("")
@@ -44,7 +44,7 @@ class SettingViewModel @Inject constructor(
 		initUuid()
 	}
 
-	// 初始化UUID
+
 	fun initUuid() = viewModelScope.launch {
 		val uuid = readDocumentFileContent() ?: createUuidFileSaveToExternalStorage()
 		if (uuid == null) {
@@ -54,7 +54,7 @@ class SettingViewModel @Inject constructor(
 		}
 	}
 
-	// 讀取UUID
+
 	private fun readDocumentFileContent():String? {
 		runCatching {
 			val documentsDirectory = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS), uuidFilename)
@@ -78,7 +78,7 @@ class SettingViewModel @Inject constructor(
 		return null
 	}
 
-	// 產生UUID檔案並儲存至文件資料夾
+
 	private fun createUuidFileSaveToExternalStorage():String? {
 		val directoryType = Environment.DIRECTORY_DOCUMENTS
 
@@ -86,7 +86,7 @@ class SettingViewModel @Inject constructor(
 			val externalStorageState = Environment.getExternalStorageState()
 			if (Environment.MEDIA_MOUNTED == externalStorageState) {
 				val directory = Environment.getExternalStoragePublicDirectory(directoryType)
-				directory.mkdirs() // 確保目錄存在
+				directory.mkdirs()
 
 				val file = File(directory, uuidFilename)
 				FileOutputStream(file).use { outputStream ->
@@ -105,13 +105,11 @@ class SettingViewModel @Inject constructor(
 		return null
 	}
 
-	/** 建立log檔案 (儲存到本機/documents/log/)
-	 * 上傳log參考: FtpViewModel.uploadLog()
-	 */
+	
 	fun createLogFile(logRows:List<LogRow>) {
 		if (logRows.isEmpty()) return
 		val meterId = logRows[0].meterId
-		// log內容
+
 		val filename = "${meterId}_${TimeUtils.getCurrentTime("yyyyMMdd_HHmmss")}.log"
 		val currentTime = TimeUtils.getCurrentTime()
 		val rows:List<List<String>> = listOf(
@@ -122,7 +120,7 @@ class SettingViewModel @Inject constructor(
 		)
 		val csvContent = csvWriter().writeAllAsString(rows)
 
-		// 寫入本機/documents
+
 		runCatching {
 			val externalStorageState = Environment.getExternalStorageState()
 			if (Environment.MEDIA_MOUNTED == externalStorageState) {

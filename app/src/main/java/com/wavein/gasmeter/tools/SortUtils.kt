@@ -2,7 +2,7 @@ package com.wavein.gasmeter.tools
 
 object SortUtils {
 
-	// 按前綴分組，按數字排序
+
 	fun <T> List<T>.groupedByPrefixSortedByNumber(selector:(T) -> String):List<T> {
 		return this.sortedWith { s1, s2 ->
 			val (prefix1, number1) = splitString(selector(s1))

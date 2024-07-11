@@ -25,7 +25,7 @@ class LoadingDialogFragment(
 	private val onDismissCallback:((dialog:DialogInterface) -> Unit)? = null,
 ) : androidx.fragment.app.DialogFragment() {
 
-	// binding & viewModel
+
 	private var binding:DialogLoadingBinding? = null
 
 	override fun onDismiss(dialog:DialogInterface) {
@@ -41,15 +41,15 @@ class LoadingDialogFragment(
 			val dialog = ComponentDialog(it, theme).apply {
 				setContentView(binding!!.root)
 				setCanceledOnTouchOutside(false)
-				onBackPressedDispatcher.addCallback { } // 覆寫返回鍵, https://stackoverflow.com/questions/21307858/detect-back-button-but-dont-dismiss-dialogfragment/72866899#72866899
-				window?.decorView?.setBackgroundColor(Color.TRANSPARENT) // 透明背景, https://blog.csdn.net/Mr_Tony/article/details/104783448
+				onBackPressedDispatcher.addCallback { }
+				window?.decorView?.setBackgroundColor(Color.TRANSPARENT)
 			}
 			dialog
 		} ?: throw IllegalStateException("Activity cannot be null")
 	}
 
 	private fun init(activity:FragmentActivity) {
-		// 訂閱loading文字
+
 		lifecycleScope.launch {
 			activity.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				SharedEvent.loadingFlow.asStateFlow().collectLatest { tip ->
@@ -64,7 +64,7 @@ class LoadingDialogFragment(
 	}
 
 	companion object {
-		// 開啟視窗
+
 		fun open(context:Context):LoadingDialogFragment {
 			val supportFragmentManager = (context as FragmentActivity).supportFragmentManager
 			return LoadingDialogFragment().apply {

@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 
 class MeterRowFragment : Fragment() {
 
-	// binding & viewModel
+
 	private var _binding:FragmentMeterRowBinding? = null
 	private val binding get() = _binding!!
 	private val meterVM by activityViewModels<MeterViewModel>()
@@ -45,10 +45,10 @@ class MeterRowFragment : Fragment() {
 	override fun onViewCreated(view:View, savedInstanceState:Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
 
-		// group & combo
+
 		binding.queueCombo.layout.hint = "抄表順路"
 
-		// 訂閱選擇的group
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				meterVM.selectedMeterGroupStateFlow.collectLatest {
@@ -57,13 +57,13 @@ class MeterRowFragment : Fragment() {
 			}
 		}
 
-		// 訂閱選擇的meterRow
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				meterVM.selectedMeterRowFlow.asStateFlow().collectLatest {
 					setCombo(it)
 					binding.fieldGroup.setValue("${it?.group}")
-					// 切換meter後要換回基本頁
+
 					if (lastMeterId != it?.meterId) {
 						binding.pager.setCurrentItem(0, false)
 					}
@@ -72,12 +72,12 @@ class MeterRowFragment : Fragment() {
 			}
 		}
 
-		// pager
+
 		val meterPageAdapter = MeterInfoSetPageAdapter(this)
 		binding.pager.adapter = meterPageAdapter
-		binding.pager.isUserInputEnabled = false  // 禁用滑動切換tab
+		binding.pager.isUserInputEnabled = false
 
-		// tab
+
 		TabLayoutMediator(binding.infoSetTabLayout, binding.pager) { tab, position ->
 			when (position) {
 				0 -> tab.text = "基本資料"
@@ -108,11 +108,11 @@ class MeterRowFragment : Fragment() {
 }
 
 
-// 瓦斯表ComboAdapter
+
 class MeterRowComboAdapter(context:Context, resource:Int, meterRows:List<MeterRow>) :
 	ArrayAdapter<MeterRow>(context, resource, meterRows) {
 
-	// 提示未抄表數量 & 未完成顏色
+
 	override fun getView(position:Int, convertView:View?, parent:ViewGroup):View {
 		val view:TextView = super.getView(position, convertView, parent) as TextView
 		val meterRow:MeterRow = getItem(position)!!
@@ -122,7 +122,7 @@ class MeterRowComboAdapter(context:Context, resource:Int, meterRows:List<MeterRo
 }
 
 
-// 表資料/設定 分頁管理器
+
 class MeterInfoSetPageAdapter(fragment:Fragment) : FragmentStateAdapter(fragment) {
 	override fun getItemCount():Int = 2
 	override fun createFragment(position:Int):Fragment {

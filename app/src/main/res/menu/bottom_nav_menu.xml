@@ -15,11 +15,4 @@
     android:enabled="true"
     android:icon="@drawable/ic_search_24"
     android:title="查詢"/>
-
-  <!-- todo 測試時打開 -->
-<!--  <item-->
-<!--    android:id="@+id/nav_nccFragment"-->
-<!--    android:enabled="true"-->
-<!--    android:icon="@drawable/ic_info_24"-->
-<!--    android:title="NCC"/>-->
 </menu>

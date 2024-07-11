@@ -8,7 +8,7 @@ import com.wavein.gasmeter.ui.loading.Tip
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 
-// 共用事件
+
 sealed class SharedEvent {
 
 	enum class Color { Normal, Error, Success, Info }
@@ -17,8 +17,8 @@ sealed class SharedEvent {
 		val message:String,
 		val color:Color = Color.Normal,
 		val duration:Int = Snackbar.LENGTH_SHORT,
-		val view:View? = snackbarDefaultView,             // 顯示上下層
-		val anchorView:View? = snackbarDefaultAnchorView, // 顯示位置錨點
+		val view:View? = snackbarDefaultView,
+		val anchorView:View? = snackbarDefaultAnchorView,
 	) : SharedEvent()
 
 	data class ShowDialog(
@@ -35,17 +35,17 @@ sealed class SharedEvent {
 	data class PlayEffect(val vibrate:Boolean = true, val sound:Boolean = true) : SharedEvent()
 
 	companion object {
-		// 事件流
+
 		val eventFlow = MutableSharedFlow<SharedEvent>()
 
-		// Snackbar:預設錨點
+
 		var snackbarDefaultView:View? = null
 		var snackbarDefaultAnchorView:View? = null
 
-		// 可觀察變數
+
 		val loadingFlow = MutableStateFlow(Tip())
 
-		// 顯示錯誤dialog
+
 		private suspend fun showErrDialog(e:Exception) {
 			var errMessage = e.message ?: "unknown error"
 			for (element in e.stackTrace) {
@@ -54,7 +54,7 @@ sealed class SharedEvent {
 			eventFlow.emit(SharedEvent.ShowDialog("Error", errMessage))
 		}
 
-		// 若處理中有發生錯誤, 顯示錯誤dialog
+
 		suspend fun catching(handle:suspend () -> Unit) {
 			try {
 				handle()

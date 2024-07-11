@@ -41,23 +41,23 @@ import kotlinx.coroutines.launch
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
-	// 實例
+
 	private lateinit var appBarConfiguration:AppBarConfiguration
 	private lateinit var navController:NavController
 	private lateinit var vibrationAndSoundUtil:VibrationAndSoundUtil
 
-	// binding & viewModel
+
 	private lateinit var binding:ActivityMainBinding
 	private val navVM by viewModels<NavViewModel>()
 	private val blVM by viewModels<BluetoothViewModel>()
 	private val ftpVM by viewModels<FtpViewModel>()
 	private val csvVM by viewModels<CsvViewModel>()
 
-	// 變數
+
 	private var showSystemAreaClickCountdown = 5
 	private var loadingDialog:LoadingDialogFragment? = null
 
-	// 切換語言
+
 	override fun attachBaseContext(newBase:Context?) {
 		val context = newBase?.let {
 			LanguageUtils.wrap(newBase, LanguageUtils.getLocale(newBase))
@@ -68,22 +68,22 @@ class MainActivity : AppCompatActivity() {
 	override fun onCreate(savedInstanceState:Bundle?) {
 		super.onCreate(savedInstanceState)
 
-		// 初始化
+
 		AppManager.initAll(application)
 		vibrationAndSoundUtil = VibrationAndSoundUtil(this)
 
-		// ui
+
 		binding = ActivityMainBinding.inflate(layoutInflater)
 		setContentView(binding.root)
 
-		// 上方bar
+
 		setSupportActionBar(binding.toolbar)
 
-		// 下方navBar
+
 		val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment_activity_main) as NavHostFragment
 		navController = navHostFragment.navController
 		navController.addOnDestinationChangedListener { _, destination, _ ->
-			// 隱藏顯示 navBar
+
 			binding.navView.visibility = when (destination.id) {
 				R.id.nav_logoFragment, R.id.nav_nccFragment -> View.GONE
 				else -> View.VISIBLE
@@ -92,7 +92,7 @@ class MainActivity : AppCompatActivity() {
 				R.id.nav_logoFragment -> {}
 				else -> setBackPressedDispatcherAppToBack()
 			}
-			// 連線頁: 連點5次設定 顯示系統設定
+
 			if (destination.id == R.id.nav_settingFragment) {
 				showSystemAreaClickCountdown -= 1
 				if (!ftpVM.systemAreaOpenedStateFlow.value && showSystemAreaClickCountdown == 0) {
@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity() {
 			} else {
 				showSystemAreaClickCountdown = 5
 			}
-			// 抄表&查詢頁面: 未選擇設備 & csv 返回連線頁
+
 			if (destination.id == R.id.nav_meterBaseFragment || destination.id == R.id.nav_meterSearchFragment) {
 				if (blVM.autoConnectDeviceStateFlow.value == null || !csvVM.selectedFileStateFlow.value.isOpened) {
 					lifecycleScope.launch {
@@ -118,7 +118,7 @@ class MainActivity : AppCompatActivity() {
 		}
 		appBarConfiguration = AppBarConfiguration(
 			topLevelDestinationIds = setOf(
-				// 可用的fragment, bottomNav顯示的項目在menu.xml設定
+
 				R.id.nav_logoFragment,
 				R.id.nav_settingFragment,
 				R.id.nav_meterBaseFragment,
@@ -129,7 +129,7 @@ class MainActivity : AppCompatActivity() {
 		setupActionBarWithNavController(navController, appBarConfiguration)
 		binding.navView.setupWithNavController(navController)
 
-		// 訂閱斷線處理
+
 		lifecycleScope.launch {
 			repeatOnLifecycle(Lifecycle.State.STARTED) {
 				NetworkInfo.networkStateFlow.asStateFlow().collectLatest { state ->
@@ -152,7 +152,7 @@ class MainActivity : AppCompatActivity() {
 			}
 		}
 
-		// 訂閱全域loading
+
 		lifecycleScope.launch {
 			repeatOnLifecycle(Lifecycle.State.STARTED) {
 				SharedEvent.loadingFlow.asStateFlow().collectLatest {
@@ -168,12 +168,12 @@ class MainActivity : AppCompatActivity() {
 			}
 		}
 
-		// 訂閱ui事件
+
 		lifecycleScope.launch {
 			repeatOnLifecycle(Lifecycle.State.STARTED) {
 				SharedEvent.eventFlow.asSharedFlow().collectLatest { event ->
 					when (event) {
-						// 小吃
+
 						is SharedEvent.ShowSnackbar -> {
 							val view = event.view ?: binding.coordinator
 							val snackbar = when (event.color) {
@@ -212,9 +212,9 @@ class MainActivity : AppCompatActivity() {
 							snackbar.allowInfiniteLines()
 							snackbar.show()
 						}
-						// 訊息對話框
+
 						is SharedEvent.ShowDialog -> {
-							val builder = MaterialAlertDialogBuilder(this@MainActivity/*, R.style.MyAlertDialogTheme*/)
+							val builder = MaterialAlertDialogBuilder(this@MainActivity)
 								.setTitle(event.title)
 								.setMessage(event.message)
 								.setPositiveButton(event.positiveButton.first, event.positiveButton.second)
@@ -235,11 +235,11 @@ class MainActivity : AppCompatActivity() {
 								show()
 							}
 						}
-						// 訊息對話框 by builder
+
 						is SharedEvent.ShowDialogB -> {
 							event.alertDialog.show()
 						}
-						// 震動&音效
+
 						is SharedEvent.PlayEffect -> {
 							vibrationAndSoundUtil.vibrateAndPlaySound(event.vibrate, event.sound)
 						}
@@ -248,7 +248,7 @@ class MainActivity : AppCompatActivity() {
 			}
 		}
 
-		// 訂閱切換nav事件
+
 		lifecycleScope.launch {
 			repeatOnLifecycle(Lifecycle.State.STARTED) {
 				navVM.navigateSharedFlow.collectLatest {
@@ -263,9 +263,9 @@ class MainActivity : AppCompatActivity() {
 		super.onDestroy()
 	}
 
-	// back鍵, 依頁面不同動作
+
 	private var backPressedTime:Long = 0
-	private val backPressedInterval = 2000 // 兩次返回鍵間隔
+	private val backPressedInterval = 2000
 	private fun setBackPressedDispatcherAppToBack() {
 		val callback = object : OnBackPressedCallback(true) {
 			override fun handleOnBackPressed() {
@@ -292,8 +292,8 @@ class MainActivity : AppCompatActivity() {
 					}
 
 					else -> {
-						moveTaskToBack(true) // 縮小app
-						// this.onBackPressed() // 預設的返回操作 (會回logo頁)
+						moveTaskToBack(true)
+
 					}
 				}
 			}

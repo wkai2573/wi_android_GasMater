@@ -8,10 +8,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MeterSearchViewModel @Inject constructor(
-	private val savedStateHandle:SavedStateHandle, //導航參數(hilt注入)
+	private val savedStateHandle:SavedStateHandle,
 ) : ViewModel() {
 
-	// 可觀察變數
+
 	val searchStateFlow = MutableStateFlow(SearchState())
 }
 

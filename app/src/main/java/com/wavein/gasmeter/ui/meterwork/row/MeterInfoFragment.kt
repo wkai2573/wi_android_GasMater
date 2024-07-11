@@ -31,14 +31,14 @@ import kotlinx.coroutines.launch
 
 class MeterInfoFragment : Fragment() {
 
-	// binding & viewModel
+
 	private var _binding:FragmentMeterInfoBinding? = null
 	private val binding get() = _binding!!
 	private val blVM by activityViewModels<BluetoothViewModel>()
 	private val meterVM by activityViewModels<MeterViewModel>()
 	private val csvVM by activityViewModels<CsvViewModel>()
 
-	// 實例
+
 	private val meterBaseFragment:MeterBaseFragment get() = ((parentFragment as MeterRowFragment).parentFragment as MeterBaseFragment)
 
 	override fun onDestroyView() {
@@ -54,7 +54,7 @@ class MeterInfoFragment : Fragment() {
 	override fun onViewCreated(view:View, savedInstanceState:Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
 
-		// 訂閱選擇的meterRow
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				meterVM.selectedMeterRowFlow.asStateFlow().collectLatest {
@@ -82,7 +82,7 @@ class MeterInfoFragment : Fragment() {
 			}
 		}
 
-		// 個別抄表按鈕
+
 		binding.meterDegreeReadBtn.setOnClickListener {
 			if (meterVM.selectedMeterRowFlow.value?.degreeRead == true) {
 				lifecycleScope.launch {
@@ -92,7 +92,7 @@ class MeterInfoFragment : Fragment() {
 			}
 			MaterialAlertDialogBuilder(requireContext())
 				.setTitle("個別抄表")
-				.setMessage("準備進行個別抄表\n耗時約45秒") // 1+2+1+37+3.5
+				.setMessage("準備進行個別抄表\n耗時約45秒")
 				.setNegativeButton("取消") { dialog, which ->
 					dialog.dismiss()
 				}
@@ -104,7 +104,7 @@ class MeterInfoFragment : Fragment() {
 				.show()
 		}
 
-		// 手動抄表按鈕
+
 		binding.manualMeterDegreeBtn.setOnClickListener {
 			val inputLayoutBinding = InputLayoutBinding.inflate(LayoutInflater.from(requireContext()))
 			val inputLayout = inputLayoutBinding.textInput.apply {
@@ -123,7 +123,7 @@ class MeterInfoFragment : Fragment() {
 				.apply {
 					setOnShowListener {
 						inputLayout.editText?.requestFocus()
-						// 覆寫確定按鈕
+
 						getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
 							try {
 								val newDegree = inputLayout.editText?.text.toString().toFloat()
@@ -143,7 +143,7 @@ class MeterInfoFragment : Fragment() {
 				}
 		}
 
-		// 編輯表ID按鈕
+
 		binding.meterIdBtn.setOnClickListener {
 			val inputLayoutBinding = InputLayoutBinding.inflate(LayoutInflater.from(requireContext()))
 			val inputLayout = inputLayoutBinding.textInput.apply {
@@ -164,7 +164,7 @@ class MeterInfoFragment : Fragment() {
 				.apply {
 					setOnShowListener {
 						inputLayout.editText?.requestFocus()
-						// 覆寫確定按鈕, 防止自動dismiss
+
 						getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener positiveClickListener@ {
 							val newMeterId = inputLayout.editText?.text.toString()
 							if (newMeterId.length != 14) {
@@ -173,7 +173,7 @@ class MeterInfoFragment : Fragment() {
 							}
 							inputLayout.error = ""
 							this.dismiss()
-							// 檢查ID重複
+
 							val existedRow = meterVM.meterRowsStateFlow.value.find { it.meterId == newMeterId }
 							if (existedRow != null) {
 								lifecycleScope.launch {
@@ -195,7 +195,7 @@ class MeterInfoFragment : Fragment() {
 				}
 		}
 
-		// 編輯備註按鈕
+
 		binding.remarkBtn.setOnClickListener {
 			val inputLayoutBinding = InputLayoutBinding.inflate(LayoutInflater.from(requireContext()))
 			val inputLayout = inputLayoutBinding.textInput.apply {

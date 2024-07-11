@@ -34,7 +34,7 @@ class DeviceListAdapter(private val onClick:(BluetoothDevice) -> Unit) :
 		fun bind(item:BluetoothDevice) {
 			val showText = "${item.name}\n${item.address}"
 			binding.btInfoTv.text = showText
-//			binding.btInfoTv.text = "${item.name}🏀${item.address}🏀${item.uuids}"
+
 		}
 	}
 

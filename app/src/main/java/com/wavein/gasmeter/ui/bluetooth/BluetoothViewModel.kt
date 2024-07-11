@@ -35,8 +35,8 @@ import javax.inject.Inject
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalUnsignedTypes::class)
 class BluetoothViewModel @Inject constructor(
-	private val savedStateHandle:SavedStateHandle, //導航參數(hilt注入)
-	// 注入實例
+	private val savedStateHandle:SavedStateHandle,
+
 	private val bluetoothAdapter:BluetoothAdapter?,
 ) : ViewModel() {
 
@@ -48,14 +48,14 @@ class BluetoothViewModel @Inject constructor(
 		}
 	}
 
-	//region 開啟藍牙相關__________________________________________________
 
-	// is藍牙開啟
+
+
 	fun isBluetoothOn():Boolean {
 		return bluetoothAdapter?.isEnabled ?: false
 	}
 
-	// 藍牙未開啟提示
+
 	private suspend fun bluetoothOffTip():Boolean {
 		if (!isBluetoothOn()) {
 			SharedEvent.eventFlow.emit(SharedEvent.ShowSnackbar("請開啟藍牙", SharedEvent.Color.Error, Snackbar.LENGTH_INDEFINITE))
@@ -64,7 +64,7 @@ class BluetoothViewModel @Inject constructor(
 		return false
 	}
 
-	// 檢查藍牙並請求開啟
+
 	fun checkBluetoothOn(bluetoothRequestLauncher:ActivityResultLauncher<Intent>) = viewModelScope.launch {
 		SharedEvent.catching {
 			if (bluetoothAdapter == null) {
@@ -77,34 +77,34 @@ class BluetoothViewModel @Inject constructor(
 		}
 	}
 
-	// 請求開啟藍牙
+
 	private fun requestBluetooth(bluetoothRequestLauncher:ActivityResultLauncher<Intent>) {
 		val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
 		bluetoothRequestLauncher.launch(enableBtIntent)
 	}
 
-	//endregion
 
-	//region 藍牙相關(經典藍牙)__________________________________________________
 
-	// 常數
+
+
+
 	val pairableDeviceNames = listOf("RD64HGL", "MBH7BTZ43PANA")
 
-	// 實例
+
 	private var parentDeviceClient:ParentDeviceClient? = null
 
-	// 可觀察變數
+
 	val scanStateFlow = MutableStateFlow(ScanState.Idle)
 	val scannedDeviceListStateFlow = MutableStateFlow(emptyList<BluetoothDevice>())
 	var autoConnectDeviceStateFlow = MutableStateFlow<BluetoothDevice?>(null)
 
-	// 取得已配對的RD-64H藍牙設備
+
 	fun getBondedRD64HDevices():List<BluetoothDevice> {
 		val devices:Set<BluetoothDevice> = bluetoothAdapter?.bondedDevices ?: emptySet()
 		return devices.filter { it.name in pairableDeviceNames }
 	}
 
-	// 開始掃描
+
 	fun toggleDiscovery() = viewModelScope.launch {
 		SharedEvent.catching {
 			if (!isBluetoothOn()) {
@@ -120,17 +120,17 @@ class BluetoothViewModel @Inject constructor(
 		}
 	}
 
-	// 停止掃描
+
 	fun stopDiscovery() {
 		bluetoothAdapter?.cancelDiscovery()
 	}
 
-	// 選定為自動連結的設備
+
 	private fun setAutoConnectBluetoothDevice(device:BluetoothDevice) {
 		autoConnectDeviceStateFlow.value = device
 	}
 
-	// 連接藍牙設備
+
 	fun connectDevice(device:BluetoothDevice? = autoConnectDeviceStateFlow.value) = viewModelScope.launch {
 		SharedEvent.catching {
 			if (bluetoothOffTip()) return@catching
@@ -142,7 +142,7 @@ class BluetoothViewModel @Inject constructor(
 		}
 	}
 
-	// 中斷連線
+
 	fun disconnectDevice() {
 		parentDeviceClient?.stopSocket()
 		parentDeviceClient = null
@@ -151,20 +151,20 @@ class BluetoothViewModel @Inject constructor(
 		commTextStateFlow.value = Tip("未連結設備")
 	}
 
-	//endregion
 
-	//region 藍牙資料收發__________________________________________________
 
-	// 常數
+
+
+
 	private val MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 
-	// 實例
+
 	var transceiver:ParentDeviceTransceiver? = null
 
-	// 可觀察事件
+
 	val connectEventFlow = MutableSharedFlow<ConnectEvent>()
 
-	// 藍牙連線事件
+
 	fun onConnectEvent(event:ConnectEvent) = viewModelScope.launch {
 		SharedEvent.catching {
 			when (event) {
@@ -180,7 +180,7 @@ class BluetoothViewModel @Inject constructor(
 				}
 
 				ConnectEvent.ConnectionLost -> {
-					// 如果是通信中途發生中斷, 要處理結果
+
 					if (commStateFlow.value == CommState.Communicating) onCommEnd()
 					connectEventFlow.emit(ConnectEvent.ConnectionLost)
 					disconnectDevice()
@@ -208,7 +208,7 @@ class BluetoothViewModel @Inject constructor(
 		}
 	}
 
-	// 母機連接
+
 	private inner class ParentDeviceClient(private val device:BluetoothDevice) : Thread() {
 		private var socket:BluetoothSocket? = null
 
@@ -238,7 +238,7 @@ class BluetoothViewModel @Inject constructor(
 		}
 	}
 
-	// 母機收發器
+
 	inner class ParentDeviceTransceiver(private val bluetoothSocket:BluetoothSocket?) : Thread() {
 		private val inputStream:InputStream?
 		private val outputStream:OutputStream?
@@ -284,13 +284,13 @@ class BluetoothViewModel @Inject constructor(
 			}
 		}
 	}
-	//endregion
 
-	//region 傳送接收訊息邏輯&UI層處理__________________________________________________
 
-	private var startTime:Long = 0L // 計算耗時用
 
-	// 發送Text給母機
+
+	private var startTime:Long = 0L
+
+
 	fun sendTextToDevice(toSendText:String) {
 		if (toSendText.isEmpty()) return
 		if (transceiver == null) return
@@ -298,14 +298,14 @@ class BluetoothViewModel @Inject constructor(
 		transceiver?.write(sendSP)
 	}
 
-	// 相關屬性
+
 	val commStateFlow = MutableStateFlow<CommState>(CommState.NotConnected)
 	val commTextStateFlow = MutableStateFlow(Tip("未連結設備"))
 	val commEndSharedEvent = MutableSharedFlow<CommEndEvent>()
 	var commResult:MutableMap<String, BaseInfo> = mutableMapOf()
 
-	// 溝通中處理變數
-	private var callingChannel = "66" // 通信頻道, 通信前更改
+
+	private var callingChannel = "66"
 	private var sendSteps = mutableListOf<BaseStep>()
 	private var receiveSteps = mutableListOf<BaseStep>()
 	private var totalReceiveCount = 0
@@ -313,21 +313,21 @@ class BluetoothViewModel @Inject constructor(
 	private var fullResp:UByteArray = UByteArray(0)
 	private var timeoutJob:Job? = null
 
-	// 溝通結束處理
+
 	private fun onCommEnd() = viewModelScope.launch {
 		SharedEvent.catching {
 			if (commStateFlow.value != CommState.Communicating) return@catching
-			// Log.i("@@@耗時", "${elapsedTime()} 秒 (總耗時)")
-			// 恢復變數
+
+
 			sendSteps.clear()
 			receiveSteps.clear()
 			timeoutJob?.cancel()
-			// 異常1_自訂errMsg
+
 			val err1 = if (commResult.containsKey("error_msg")) {
 				val msg = (commResult["error_msg"] as BaseInfo).text
 				msg
 			} else ""
-			// 異常2_指定回傳條件
+
 			val err2 = if (commResult.containsKey("error_DL9")) {
 				"通信忙線中，請稍後再試"
 			} else if (commResult.containsKey("error_D16")) {
@@ -337,10 +337,10 @@ class BluetoothViewModel @Inject constructor(
 			} else {
 				""
 			}
-			// 依組合決定通信結束後小吃文字
+
 			val metaInfo = commResult["meta"] as MetaInfo
 			when (metaInfo.op) {
-				// R80 異常訊息
+
 				"R80" -> {
 					val d05mList = if (commResult.containsKey("D05m")) {
 						(commResult["D05m"] as D05mInfo).list
@@ -356,8 +356,8 @@ class BluetoothViewModel @Inject constructor(
 					}
 				}
 
-				// R87 異常訊息
-				// 檢查開始時R87傳了什麼steps，如果結果沒有對應的結果op，顯示對應錯誤
+
+
 				"R87" -> {
 					val errList = mutableListOf<String>()
 					metaInfo.r87Steps!!.forEach { step ->
@@ -387,7 +387,7 @@ class BluetoothViewModel @Inject constructor(
 					}
 				}
 			}
-			// 結果處理
+
 			if (commResult.containsKey("error")) {
 				commEndSharedEvent.emit(CommEndEvent.Error(commResult))
 			} else {
@@ -398,7 +398,7 @@ class BluetoothViewModel @Inject constructor(
 		}
 	}
 
-	// 發送自訂電文組合
+
 	fun sendSingleTelegram(toSendText:String) = viewModelScope.launch {
 		SharedEvent.catching {
 			if (commStateFlow.value != CommState.ReadyCommunicate) return@catching
@@ -417,7 +417,7 @@ class BluetoothViewModel @Inject constructor(
 		}
 	}
 
-	// 發送R80電文組合
+
 	fun sendR80Telegram(meterIds:List<String>, callingChannel:String) = viewModelScope.launch {
 		SharedEvent.catching {
 			if (commStateFlow.value != CommState.ReadyCommunicate) return@catching
@@ -441,7 +441,7 @@ class BluetoothViewModel @Inject constructor(
 		}
 	}
 
-	// 發送R87電文組合
+
 	fun sendR87Telegram(meterId:String, r87Steps:List<R87Step>, callingChannel:String) = viewModelScope.launch {
 		SharedEvent.catching {
 			if (commStateFlow.value != CommState.ReadyCommunicate) return@catching
@@ -453,15 +453,15 @@ class BluetoothViewModel @Inject constructor(
 			sendSteps = mutableListOf(
 				__5Step(),
 				R89Step(meterId),
-				//如果需分割, 要在下方補n個 R70
+
 				*r87Steps.flatMapIndexed { index, step ->
 					val cc2 = if (index == 0) "\u0040" else "\u0000"
 					val cc3 = (appTelegramInc).toChar()
 					appTelegramInc += 2
 					when (step.op) {
-						// 2part
+
 						"R23" -> listOf(step.copy(cc = "\u0021$cc2$cc3\u0000"), R70Step(step.adr))
-						// 1part
+
 						else -> listOf(step.copy(cc = "\u0021$cc2$cc3\u0000"))
 					}
 				}.toTypedArray(),
@@ -473,7 +473,7 @@ class BluetoothViewModel @Inject constructor(
 						"R01" -> listOf(D87D01Step())
 						"R05" -> listOf(D87D05Step())
 						"R19" -> listOf(D87D19Step())
-						"R23" -> listOf(D87D23Step(), D87D23Step()) //R23有2part
+						"R23" -> listOf(D87D23Step(), D87D23Step())
 						"R24" -> listOf(D87D24Step())
 						"R16" -> listOf(D87D16Step())
 						"S16" -> listOf(D87D16Step())
@@ -488,7 +488,7 @@ class BluetoothViewModel @Inject constructor(
 						"C41" -> listOf(D87D41Step())
 						"C42" -> listOf(D87D42Step())
 						"C02" -> listOf(D87D02Step())
-						// todo 新增R87時_這裡加接收Step
+
 						else -> listOf()
 					}
 				}.toTypedArray()
@@ -499,7 +499,7 @@ class BluetoothViewModel @Inject constructor(
 		}
 	}
 
-	// 設定子機頻道
+
 	fun sendTelegramToGW(meterId:String) = viewModelScope.launch {
 		SharedEvent.catching {
 			if (commStateFlow.value != CommState.ReadyCommunicate) return@catching
@@ -526,10 +526,10 @@ class BluetoothViewModel @Inject constructor(
 		}
 	}
 
-	// 依步驟發送電文 !!!電文處理中途
+
 	private suspend fun sendByStep() = viewModelScope.launch {
 		SharedEvent.catching {
-			// Log.i("@@@耗時", "${elapsedTime()} 秒")
+
 			withContext(Dispatchers.IO) { timeout() }
 			if (sendSteps.isEmpty()) {
 				onCommEnd()
@@ -545,14 +545,14 @@ class BluetoothViewModel @Inject constructor(
 				}
 
 				is __5Step -> {
-					commTextStateFlow.value = Tip("正在與母機建立連結", "", progressText) // 5↔D70
+					commTextStateFlow.value = Tip("正在與母機建立連結", "", progressText)
 					val sendSP = RD64H.telegramConvert("5", "+s+p")
 					wt(WT134)
 					transceiver?.write(sendSP)
 				}
 
 				is R80Step -> {
-					commTextStateFlow.value = Tip("抄表中", "", progressText) // R80↔D05
+					commTextStateFlow.value = Tip("抄表中", "", progressText)
 					val btParentId = (commResult["D70"] as D70Info).btParentId
 					val sendText = RD64H.createR80Text(btParentId, sendStep.meterIds, callingChannel)
 					val sendSP = RD64H.telegramConvert(sendText, "+s+p")
@@ -569,7 +569,7 @@ class BluetoothViewModel @Inject constructor(
 				}
 
 				is R89Step -> {
-					commTextStateFlow.value = Tip("正在要求通信許可", "", progressText) // R89↔D36
+					commTextStateFlow.value = Tip("正在要求通信許可", "", progressText)
 					val sendText = "ZA${sendStep.meterId}R89${callingChannel}ZD${sendStep.meterId}R36"
 					val sendSP = RD64H.telegramConvert(sendText, "+s+p")
 					wt(WT134)
@@ -578,22 +578,22 @@ class BluetoothViewModel @Inject constructor(
 
 				is R87Step -> {
 					when (sendStep.op) {
-						"R01" -> commTextStateFlow.value = Tip("正在讀取讀數", "", progressText) // R87R01
-						"R05" -> commTextStateFlow.value = Tip("正在讀取讀數", "", progressText) // R87R05
-						"R19" -> commTextStateFlow.value = Tip("正在讀取時刻", "", progressText) // R87R19
-						"R23" -> commTextStateFlow.value = Tip("正在讀取五回遮斷履歷", "", progressText) // R87R23
-						"R24" -> commTextStateFlow.value = Tip("正在讀取表內部資料", "", progressText) // R87R24
-						"R16" -> commTextStateFlow.value = Tip("正在讀取表狀態", "", progressText) // R87R16
-						"S16" -> commTextStateFlow.value = Tip("正在設定表狀態", "", progressText) // R87S16
-						"R57" -> commTextStateFlow.value = Tip("正在讀取時間使用量", "", progressText) // R87R57
-						"R58" -> commTextStateFlow.value = Tip("正在讀取最大使用量", "", progressText) // R87R58
-						"R59" -> commTextStateFlow.value = Tip("正在讀取1日最大使用量", "", progressText) // R87R59
-						"S31" -> commTextStateFlow.value = Tip("正在設定登錄母火流量", "", progressText) // R87S31
-						"R50" -> commTextStateFlow.value = Tip("正在讀取壓力遮斷判定值", "", progressText) // R87R50
-						"S50" -> commTextStateFlow.value = Tip("正在設定壓力遮斷判定值", "", progressText) // R87S50
-						"R51" -> commTextStateFlow.value = Tip("正在讀取壓力值", "", progressText) // R87R51
-						"C41" -> commTextStateFlow.value = Tip("正在設定中心遮斷", "", progressText) // R87C41
-						"C02" -> commTextStateFlow.value = Tip("正在中斷Session", "", progressText) // R87C02
+						"R01" -> commTextStateFlow.value = Tip("正在讀取讀數", "", progressText)
+						"R05" -> commTextStateFlow.value = Tip("正在讀取讀數", "", progressText)
+						"R19" -> commTextStateFlow.value = Tip("正在讀取時刻", "", progressText)
+						"R23" -> commTextStateFlow.value = Tip("正在讀取五回遮斷履歷", "", progressText)
+						"R24" -> commTextStateFlow.value = Tip("正在讀取表內部資料", "", progressText)
+						"R16" -> commTextStateFlow.value = Tip("正在讀取表狀態", "", progressText)
+						"S16" -> commTextStateFlow.value = Tip("正在設定表狀態", "", progressText)
+						"R57" -> commTextStateFlow.value = Tip("正在讀取時間使用量", "", progressText)
+						"R58" -> commTextStateFlow.value = Tip("正在讀取最大使用量", "", progressText)
+						"R59" -> commTextStateFlow.value = Tip("正在讀取1日最大使用量", "", progressText)
+						"S31" -> commTextStateFlow.value = Tip("正在設定登錄母火流量", "", progressText)
+						"R50" -> commTextStateFlow.value = Tip("正在讀取壓力遮斷判定值", "", progressText)
+						"S50" -> commTextStateFlow.value = Tip("正在設定壓力遮斷判定值", "", progressText)
+						"R51" -> commTextStateFlow.value = Tip("正在讀取壓力值", "", progressText)
+						"C41" -> commTextStateFlow.value = Tip("正在設定中心遮斷", "", progressText)
+						"C02" -> commTextStateFlow.value = Tip("正在中斷Session", "", progressText)
 					}
 					val r87 = "ZD${sendStep.adr}R87"
 					val aLine = RD64H.createR87Aline(
@@ -620,7 +620,7 @@ class BluetoothViewModel @Inject constructor(
 		}
 	}
 
-	// timeout fun: 80秒無回應則結束通信
+
 	private suspend fun timeout() {
 		timeoutJob?.cancel()
 		timeoutJob = viewModelScope.launch {
@@ -630,21 +630,21 @@ class BluetoothViewModel @Inject constructor(
 		}
 	}
 
-	private val WT134 = 1000L // 1000L
-	private val WT2 = 3500L // 3500L, 受信可能期間=3~6秒
+	private val WT134 = 1000L
+	private val WT2 = 3500L
 
 	private suspend inline fun wt(delay:Long) {
 		delay(delay)
 	}
 
-	// 經過時間
+
 	private fun elapsedTime():String {
 		val diffMillisecond = System.currentTimeMillis() - startTime
 		val diffSecond = diffMillisecond.toFloat() / 1000
 		return String.format("%.1f", diffSecond)
 	}
 
-	// 依步驟接收電文 !!!電文處理中途
+
 	private fun onReceiveByStep(readSP:ByteArray) = viewModelScope.launch {
 		SharedEvent.catching {
 			withContext(Dispatchers.IO) { timeout() }
@@ -653,7 +653,7 @@ class BluetoothViewModel @Inject constructor(
 				return@catching
 			}
 
-			// 檢查是否完整電文(前後有STX,ETX,BCC), 若不完整則等下個電文再串接
+
 			val readS = RD64H.telegramConvert(readSP, "-p").toUByteArray()
 			Log.i("@@@ Recv_Tx", """TEXT:[${readS.toText()}] HEX:[${readSP.toHex()}]""")
 			if (readS[0] == RD64H.STXByte) {
@@ -668,7 +668,7 @@ class BluetoothViewModel @Inject constructor(
 			}
 			val fullRespText = fullResp.toText()
 
-			// 確定接收完整電文，執行電文接收處理
+
 			receivedCount++
 			var continueSend = false
 			val receiveStep = receiveSteps[0]
@@ -815,14 +815,14 @@ class BluetoothViewModel @Inject constructor(
 						continueSend = true
 					}
 
-					// todo 新增R87時_這裡加Step處理
+
 				}
 
 				if (continueSend) sendByStep()
 			} catch (error:Exception) {
 				error.printStackTrace()
 				commResult["error_msg"] = BaseInfo(error.message ?: "")
-				// 錯誤處理: 檢查是不是D16 或 D36
+
 				kotlin.runCatching {
 					val info = BaseInfo.get(fullRespText, D16Info::class.java) as D16Info
 					commResult["error_D16"] = info
@@ -840,25 +840,25 @@ class BluetoothViewModel @Inject constructor(
 		}
 	}
 
-	// 進度文字
+
 	private val progressText:String
 		get() {
 			val percentage = (receivedCount.toDouble() / totalReceiveCount * 100).toInt()
 			return "$percentage%"
 		}
 
-	//endregion
+
 
 	companion object {
-		var appTelegramInc = 0 // 電文Index遞增用
+		var appTelegramInc = 0
 	}
 
 }
 
-// 掃描狀態
+
 enum class ScanState { Idle, Scanning, Error }
 
-// 連接事件
+
 sealed class ConnectEvent {
 	object Listening : ConnectEvent()
 	object Connecting : ConnectEvent()
@@ -869,7 +869,7 @@ sealed class ConnectEvent {
 	data class BytesReceived(val byteArray:ByteArray) : ConnectEvent()
 }
 
-// 溝通狀態
+
 sealed class CommState {
 	object NotConnected : CommState()
 	object Connecting : CommState()
@@ -877,7 +877,7 @@ sealed class CommState {
 	object Communicating : CommState()
 }
 
-// 溝通結束事件
+
 sealed class CommEndEvent {
 	data class Success(val commResult:Map<String, Any>) : CommEndEvent()
 	data class Error(val commResult:Map<String, Any>) : CommEndEvent()

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
 
-  <!-- 網路 & 狀態 -->
+
   <uses-permission android:name="android.permission.INTERNET" />
   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-  <!-- 藍芽 -->
+
   <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
   <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
   <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
@@ -13,20 +13,20 @@
   <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
   <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
   <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-  <!--  <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />-->
-  <!--  <uses-feature android:name="android.hardware.bluetooth" android:required="true"/>-->
-  <!--  <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />-->
 
-  <!-- csv讀寫 -->
+
+
+
+
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
   <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
 
-  <!-- 震動 -->
+
   <uses-permission android:name="android.permission.VIBRATE" />
 
 
-  <!-- android:windowSoftInputMode="adjustResize" -->
+
   <application android:name=".Application"
     android:allowBackup="true"
     android:dataExtractionRules="@xml/data_extraction_rules"

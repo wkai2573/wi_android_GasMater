@@ -38,7 +38,6 @@ android {
 }
 
 dependencies {
-
     implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.9.0'
@@ -50,37 +49,14 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-
-    //==UI==
-    // material
-
-    // navigation
-    // https://developer.android.com/guide/navigation/navigation-getting-started
     implementation 'androidx.navigation:navigation-fragment-ktx:2.6.0'
     implementation 'androidx.navigation:navigation-ui-ktx:2.6.0'
-
-    //==依賴注入==
-    // Hilt
-    // https://developer.android.com/training/dependency-injection/hilt-android?hl=zh-tw#kotlin
-    // https://developer.android.com/training/dependency-injection/hilt-jetpack?hl=zh-tw#kotlin
     implementation "com.google.dagger:hilt-android:2.44"
     kapt "com.google.dagger:hilt-compiler:2.44"
-    // Hilt + navigation
     implementation 'androidx.hilt:hilt-navigation-fragment:1.0.0'
-
-    //==線程==
-    // coroutine
-    // 參考: https://medium.com/jastzeonic/kotlin-coroutine-%E9%82%A3%E4%B8%80%E5%85%A9%E4%BB%B6%E4%BA%8B%E6%83%85-685e02761ae0
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
-
-    //==安全性== 加密SharedPreferences
     implementation 'androidx.security:security-crypto:1.1.0-alpha06'
-
-    //==csv讀寫== https://github.com/doyaaaaaken/kotlin-csv
     implementation 'com.github.doyaaaaaken:kotlin-csv-jvm:1.9.2' // for JVM platform
-//    implementation 'com.github.doyaaaaaken:kotlin-csv-js:1.9.2' // for Kotlin JS platform
-
-    //==FTP==
     implementation 'commons-net:commons-net:3.9.0'
 }

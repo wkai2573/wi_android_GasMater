@@ -36,7 +36,7 @@ import kotlinx.coroutines.launch
 
 class MeterAdvFragment : Fragment() {
 
-	// binding & viewModel
+
 	private var _binding:FragmentMeterAdvBinding? = null
 	private val binding get() = _binding!!
 	private val csvVM by activityViewModels<CsvViewModel>()
@@ -44,7 +44,7 @@ class MeterAdvFragment : Fragment() {
 	private val meterVM by activityViewModels<MeterViewModel>()
 	private val advVM by activityViewModels<MeterAdvViewModel>()
 
-	// 實例 & 常數 & 變數
+
 	private val meterBaseFragment:MeterBaseFragment get() = ((parentFragment as MeterRowFragment).parentFragment as MeterBaseFragment)
 	private val setPassword = "1234567"
 	private var r87Steps:MutableList<R87Step> = mutableListOf()
@@ -64,15 +64,15 @@ class MeterAdvFragment : Fragment() {
 
 	override fun onViewCreated(view:View, savedInstanceState:Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
-		// 更新小吃錨點
+
 		SharedEvent.snackbarDefaultAnchorView = binding.sendFab
 
-		// 通信按鈕
+
 		binding.sendFab.setOnClickListener { btn ->
 			if (!btn.isPressed) return@setOnClickListener
 			if (r87Steps.isEmpty()) return@setOnClickListener
 			refresh()
-			// 視窗確認, 若steps含設定項-需要輸入密碼
+
 			if (r87Steps.any { it.op.startsWith('S') || it.op.startsWith('C') }) {
 				val inputLayoutBinding = InputLayoutBinding.inflate(LayoutInflater.from(requireContext()))
 				val inputLayout = inputLayoutBinding.textInput.apply {
@@ -113,7 +113,7 @@ class MeterAdvFragment : Fragment() {
 			}
 		}
 
-		// checkbox
+
 		binding.apply {
 			field23.binding?.readCheckbox?.let { it.setOnCheckedChangeListener { _, _ -> refresh() } }
 			field03.binding?.readCheckbox?.let { it.setOnCheckedChangeListener { _, _ -> refresh() } }
@@ -210,9 +210,9 @@ class MeterAdvFragment : Fragment() {
 			)
 		}
 
-		// 詳細按鈕
+
 		binding.apply {
-			// R03
+
 			field03.binding?.row1DetailBtn?.setOnClickListener {
 				val alarmInfo = field03.binding?.row1AlarmInfo?.text.toString()
 				if (alarmInfo.length != 8) return@setOnClickListener
@@ -242,7 +242,7 @@ class MeterAdvFragment : Fragment() {
 				}
 			}
 
-			// R16
+
 			field16.binding?.readDetailBtn?.setOnClickListener {
 				val readValue = field16.readValue
 				if (readValue.isEmpty()) return@setOnClickListener
@@ -277,7 +277,7 @@ class MeterAdvFragment : Fragment() {
 					r16sheet.show(requireActivity().supportFragmentManager, "r16sheet")
 				}
 			}
-			// R50
+
 			field50.binding?.readDetailBtn?.setOnClickListener {
 				val readValue = field50.readValue
 				if (readValue.isEmpty()) return@setOnClickListener
@@ -300,7 +300,7 @@ class MeterAdvFragment : Fragment() {
 			}
 		}
 
-		// 訂閱選擇的meterRow
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				meterVM.selectedMeterRowFlow.asStateFlow().collectLatest {
@@ -322,7 +322,7 @@ class MeterAdvFragment : Fragment() {
 			}
 		}
 
-		// 訂閱detail關閉後寫入設定欄
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				advVM.sheetDissmissSharedFlow.collectLatest { event ->
@@ -335,7 +335,7 @@ class MeterAdvFragment : Fragment() {
 			}
 		}
 
-		// 訂閱通信成功後, 取消全部checkboxes
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.commEndSharedEvent.collectLatest { event:CommEndEvent ->
@@ -350,7 +350,7 @@ class MeterAdvFragment : Fragment() {
 		refresh()
 	}
 
-	// 需要認證通信的電文，勾選前檢查需有MacKey
+
 	private fun hasMacKey(it:CheckBox):Boolean {
 		return if (RD64H.Auth.macKey.isEmpty()) {
 			lifecycleScope.launch {
@@ -363,7 +363,7 @@ class MeterAdvFragment : Fragment() {
 		} else true
 	}
 
-	// 分割字串by指定長度
+
 	private fun splitStringByLength(input:String, vararg lengths:Int):List<String> {
 		val result = mutableListOf<String>()
 		var startIndex = 0
@@ -377,7 +377,7 @@ class MeterAdvFragment : Fragment() {
 		return result
 	}
 
-	// 防連點
+
 	private fun preventDoubleClick(it:View) {
 		lifecycleScope.launch {
 			it.isEnabled = false
@@ -386,7 +386,7 @@ class MeterAdvFragment : Fragment() {
 		}
 	}
 
-	// 開始R87通信
+
 	private fun sendR87Telegram():Boolean {
 		val meterId = meterVM.selectedMeterRowFlow.value?.meterId ?: return true
 		val callingChannel = meterVM.selectedMeterRowFlow.value?.callingChannel ?: "66"
@@ -396,19 +396,19 @@ class MeterAdvFragment : Fragment() {
 		return false
 	}
 
-	// 刷新
+
 	private fun refresh() {
-		// 刷新變數
+
 		refreshSteps()
 		refreshEstimatedTime()
-		// 刷新fab
+
 		val isEnabled = estimatedTime > 0
 		binding.sendFab.isEnabled = isEnabled
 		val fabText = "通信" + if (isEnabled) " 約${estimatedTime}秒" else ""
 		binding.sendFab.text = fabText
 	}
 
-	// 刷新Steps: 依checkbox勾選轉成R87Steps
+
 	private fun refreshSteps() {
 		r87Steps = mutableListOf()
 		val meterId = meterVM.selectedMeterRowFlow.value?.meterId ?: return
@@ -442,7 +442,7 @@ class MeterAdvFragment : Fragment() {
 			r87Steps.add(R87Step(adr = meterId, op = "C02"))
 	}
 
-	// 刷新耗時
+
 	private fun refreshEstimatedTime() {
 		if (r87Steps.isEmpty()) {
 			estimatedTime = 0
@@ -456,13 +456,13 @@ class MeterAdvFragment : Fragment() {
 				else -> 1
 			}
 		}
-		val btParentTransmissionTime = 5 // 5 ~ 20
-		val estimatedTime = 1 +        // WT1
-				0 +                        // D70: 經測試僅需0s, 說明書上卻寫: 2s=TO4
-				1 +                        // WT4
-				26.2 +                     // D36: 經測試僅需26.2s, 說明書上卻寫: (36 + btParentTransmissionTime)=TO2
-				(3.5 + 17.2) * totalPart + // D87: 經測試僅需(WT2 + [11.8~17.2]) * n, 說明書上卻寫: (WT2 + 56) * n
-				3.5                        // WT2
+		val btParentTransmissionTime = 5
+		val estimatedTime = 1 +
+				0 +
+				1 +
+				26.2 +
+				(3.5 + 17.2) * totalPart +
+				3.5
 		this.estimatedTime = kotlin.math.ceil(estimatedTime).toInt()
 	}
 }

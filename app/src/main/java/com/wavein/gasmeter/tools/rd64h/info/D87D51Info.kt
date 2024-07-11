@@ -5,7 +5,7 @@ import com.wavein.gasmeter.tools.rd64h.SecurityLevel
 
 data class D87D51Info(override val text:String) : BaseInfo(text) {
 	var data:String = ""
-	var pressureValue:String = "" // 現在圧力値(51-01) 4位
+	var pressureValue:String = ""
 
 	init {
 		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常:D87D51Info")

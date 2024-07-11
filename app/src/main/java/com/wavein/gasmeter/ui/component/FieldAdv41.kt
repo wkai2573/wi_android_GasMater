@@ -7,7 +7,7 @@ import android.widget.LinearLayout
 import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.CustFieldAdv41Binding
 
-// 自訂View元件: 進階欄位_制御(C41 C02)
+
 class FieldAdv41 : LinearLayout {
 	var binding:CustFieldAdv41Binding? = null
 
@@ -29,14 +29,14 @@ class FieldAdv41 : LinearLayout {
 	}
 
 	private fun initLayout(attrs:AttributeSet?, defStyle:Int? = null) {
-		// 取得 xml 傳入參數
+
 		val typedArray = if (defStyle == null)
 			context.obtainStyledAttributes(attrs, R.styleable.FieldAdv41)
 		else
 			context.obtainStyledAttributes(attrs, R.styleable.FieldAdv41, defStyle, 0)
 		val title = typedArray.getString(R.styleable.FieldAdv41_fieldAdv41Title)
 		typedArray.recycle()
-		// ui
+
 		binding?.titleTv?.text = title
 	}
 }

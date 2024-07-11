@@ -42,13 +42,13 @@ import kotlin.experimental.xor
 @SuppressLint("MissingPermission")
 class TestFragment : Fragment() {
 
-	// binding & viewModel
+
 	private var _binding:FragmentTestBinding? = null
 	private val binding get() = _binding!!
 
 	override fun onDestroyView() {
 		super.onDestroyView()
-		// 防止內存洩漏
+
 		_binding = null
 		kotlin.runCatching {
 			requireContext().unregisterReceiver(receiver)
@@ -62,7 +62,7 @@ class TestFragment : Fragment() {
 
 	override fun onViewCreated(view:View, savedInstanceState:Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
-		// 檢查權限，沒權限則請求權限
+
 		if (hasPermissions()) {
 			onPermissionsAllow()
 		} else {
@@ -73,7 +73,7 @@ class TestFragment : Fragment() {
 		}
 	}
 
-	// 當權限皆允許
+
 	private fun onPermissionsAllow() {
 		binding.permission.layout.visibility = View.GONE
 
@@ -90,25 +90,25 @@ class TestFragment : Fragment() {
 			}
 		}
 		binding.button6.setOnClickListener { 傳送並接收訊息() }
-		binding.button7.setOnClickListener { binding.sendInput.editText?.setText("5") }                       // ZA00000000000000D70
+		binding.button7.setOnClickListener { binding.sendInput.editText?.setText("5") }
 		binding.button8.setOnClickListener { binding.sendInput.editText?.setText("A") }
 		binding.button9.setOnClickListener {
 			binding.sendInput.editText?.setText(
 				"ZA00000000000101R85125"
 			)
-		}  // G200000000000101D05000000101@@@BA@@3G13AB@I (S-18)
+		}
 		binding.button10.setOnClickListener {
 			binding.sendInput.editText?.setText(
 				"ZA00000000000101R16"
 			)
-		}    // ZA00000000000000D16@@9  アラーム情報(S-14頁)
+		}
 		binding.button11.setOnClickListener {
 			binding.sendInput.editText?.setText(
 				"ZA00000000000000R84121000000000000101????00000000000102????00000000000103????00000000000104????00000000000105????00000000000106????00000000000107????00000000000108????00000000000109????00000000000110????"
 			)
 		}
 
-		// 註冊廣播:偵測藍牙掃描結果
+
 		val intentFilter = IntentFilter().apply {
 			addAction("android.bluetooth.devicepicker.action.DEVICE_SELECTED")
 			addAction(BluetoothDevice.ACTION_FOUND)
@@ -119,7 +119,7 @@ class TestFragment : Fragment() {
 		requireContext().registerReceiver(receiver, intentFilter)
 	}
 
-	//region __________權限方法__________
+
 
 	private val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
 		arrayOf(
@@ -141,7 +141,7 @@ class TestFragment : Fragment() {
 		}
 	}
 
-	// 當權限不允許
+
 	private fun onPermissionsNoAllow() {
 		val revokedPermissions:List<String> =
 			getPermissionsMap().filterValues { isGranted -> !isGranted }.map { (permission, isGranted) -> permission }
@@ -155,11 +155,11 @@ class TestFragment : Fragment() {
 		binding.permission.revokedTv.text = revokedPermissionsText
 	}
 
-	// 是否有全部權限
+
 	private fun hasPermissions(context:Context = requireContext(), permissions:Array<String> = this.permissions):Boolean =
 		getPermissionsMap(context, permissions).all { (permission, isGranted) -> isGranted }
 
-	// 取得權限狀態
+
 	private fun getPermissionsMap(
 		context:Context = requireContext(),
 		permissions:Array<String> = this.permissions,
@@ -167,14 +167,14 @@ class TestFragment : Fragment() {
 		ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
 	}
 
-	//endregion
 
-	//region __________藍牙搜尋/配對__________
 
-	// 藍牙設備
+
+
+
 	private var btDevice:BluetoothDevice? = null
 
-	// 藍牙adapter
+
 	private val bluetoothManager:BluetoothManager by lazy {
 		requireContext().getSystemService(
 			Context.BLUETOOTH_SERVICE
@@ -182,16 +182,16 @@ class TestFragment : Fragment() {
 	}
 	private val bluetoothAdapter:BluetoothAdapter by lazy { bluetoothManager.adapter }
 
-	// 藍牙配對處理(接收廣播)
+
 	private val receiver:BroadcastReceiver = object : BroadcastReceiver() {
 		override fun onReceive(context:Context, intent:Intent) {
 			when (intent.action) {
-				// 選擇藍牙設備(這是直接呼叫手機預設的選藍牙來選device, 不建議)
+
 				"android.bluetooth.devicepicker.action.DEVICE_SELECTED" -> {
 					btDevice = IntentCompat.getParcelableExtra(intent, BluetoothDevice.EXTRA_DEVICE, BluetoothDevice::class.java)
 					顯示藍牙資訊()
 				}
-				// 當藍牙配對改變
+
 				BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
 					Log.i("@@@", "ACTION_BOND_STATE_CHANGED")
 					獲取已配對Azbil母機()
@@ -222,28 +222,28 @@ class TestFragment : Fragment() {
 		}
 	}
 
-	// 檢查藍牙並開啟
+
 	private fun 檢查藍牙並開啟(cb:() -> Unit) {
 		if (bluetoothManager == null || bluetoothManager.adapter == null) {
 			Toast.makeText(requireContext(), "設備不支援藍牙", Toast.LENGTH_SHORT).show()
 			return
 		}
 		if (!bluetoothAdapter.isEnabled) {
-			// 請求開啟藍牙
+
 			請求開啟藍牙(cb)
 		} else {
 			cb()
 		}
 	}
 
-	// 請求開啟藍牙
+
 	private fun 請求開啟藍牙(cb:() -> Unit) {
 		this.當藍牙開啟 = cb
 		val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
 		bluetoothRequestLauncher.launch(enableBtIntent)
 	}
 
-	// 藍牙開啟請求cb
+
 	private var 當藍牙開啟:() -> Unit = {}
 	private val bluetoothRequestLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
 		if (result.resultCode == Activity.RESULT_OK) {
@@ -253,7 +253,7 @@ class TestFragment : Fragment() {
 	}
 	private var 當掃描到設備:() -> Unit = {}
 
-	// 掃描設備 scanForDevices
+
 	private fun 掃描設備(cb:() -> Unit = {}) {
 		if (!bluetoothAdapter.isEnabled) return
 
@@ -304,7 +304,7 @@ class TestFragment : Fragment() {
 	}
 
 	private fun 傳送並接收訊息() {
-//		if (sendReceive == null) return
+
 		val sendText = binding.sendInput.editText?.editableText.toString()
 		if (sendText.isEmpty()) return
 
@@ -317,34 +317,34 @@ class TestFragment : Fragment() {
 		Snackbar.make(requireContext(), binding.root, msg, Snackbar.LENGTH_SHORT).show()
 
 
-		// 關閉軟鍵盤
+
 		val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
 		imm?.hideSoftInputFromWindow(binding.sendInput.editText?.windowToken, 0)
 	}
 
-	//endregion
 
 
-	//region __________藍牙連接 & 資料傳送/接收處理__________
-	// 藍牙連接參考 https://www.youtube.com/watch?v=5M4o5dGigbY&ab_channel=SarthiTechnology
 
-	// ==藍牙連線參數==
-	// 舊母機:MBH7BTZ43PANA  ADDR:E0:18:77:FC:F1:5C  PIN:5678
-//	private val DEVICE_NAME:String = "MBH7BTZ43PANA"
-//	private val DEVICE_ADDR:String = "E0:18:77:FC:F1:5C"
-	// 新母機:RD64HGL        ADDR:E8:EB:1B:6E:49:47  PIN:5893
+
+
+
+
+
+
+
+
 	private val DEVICE_NAME:String = "RD64HGL"
 	private val DEVICE_ADDR:String = "E8:EB:1B:6E:49:47"
 
-	// 藍牙連線
-	// private val MY_UUID = UUID.fromString("8ce255c0-223a-11e0-ac64-0803450c9a66")
+
+
 	private val MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
 	var sendReceive:SendReceive? = null
 
-	// 電文參數
+
 	private val STX = 0x02.toByte()
 	private val ETX = 0x03.toByte()
-	private fun getBcc(bytes:ByteArray):Byte { // 取得BCC(傳送bytes的最後驗證碼)
+	private fun getBcc(bytes:ByteArray):Byte {
 		var bcc:Byte = 0
 		if (bytes.isNotEmpty()) {
 			for (i in 1 until bytes.size) {
@@ -361,7 +361,7 @@ class TestFragment : Fragment() {
 	val STATE_CONNECTION_FAILED = 4
 	val STATE_MESSAGE_RECEIVED = 5
 
-	// 藍牙連線與資料處理
+
 	var bluetoothHandler:Handler = Handler(Looper.getMainLooper()) { msg ->
 		when (msg.what) {
 			STATE_LISTENING -> binding.stateTv.text = "Listening"
@@ -379,7 +379,7 @@ class TestFragment : Fragment() {
 		true
 	}
 
-	// 連接device用
+
 	private inner class ClientClass(private val device:BluetoothDevice) : Thread() {
 		private var socket:BluetoothSocket? = null
 
@@ -408,7 +408,7 @@ class TestFragment : Fragment() {
 		}
 	}
 
-	// 傳送與接收資料用
+
 	inner class SendReceive(private val bluetoothSocket:BluetoothSocket?) : Thread() {
 		private val inputStream:InputStream?
 		private val outputStream:OutputStream?
@@ -451,7 +451,7 @@ class TestFragment : Fragment() {
 		}
 	}
 
-	//endregion
+
 
 
 }

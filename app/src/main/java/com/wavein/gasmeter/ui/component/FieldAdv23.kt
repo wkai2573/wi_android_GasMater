@@ -8,7 +8,7 @@ import android.widget.TextView
 import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.CustFieldAdv23Binding
 
-// 自訂View元件: 進階欄位_5回遮斷專用(R23)
+
 class FieldAdv23 : LinearLayout {
 	var binding:CustFieldAdv23Binding? = null
 
@@ -32,7 +32,7 @@ class FieldAdv23 : LinearLayout {
 	}
 
 	private fun initLayout(attrs:AttributeSet?, defStyle:Int? = null) {
-		// 取得 xml 傳入參數
+
 		val typedArray = if (defStyle == null)
 			context.obtainStyledAttributes(attrs, R.styleable.FieldAdv23)
 		else
@@ -40,7 +40,7 @@ class FieldAdv23 : LinearLayout {
 		val title = typedArray.getString(R.styleable.FieldAdv23_fieldAdv23Title)
 		val readValue = typedArray.getString(R.styleable.FieldAdv23_fieldAdv23ReadValue) ?: ""
 		typedArray.recycle()
-		// ui
+
 		binding?.titleTv?.text = title
 		setReadValue(readValue)
 	}

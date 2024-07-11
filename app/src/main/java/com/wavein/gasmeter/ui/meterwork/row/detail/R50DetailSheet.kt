@@ -21,7 +21,7 @@ class R50DetailSheet : BottomSheetDialogFragment() {
 	private lateinit var binding:BsheetR50DetailBinding
 	private val advVM by activityViewModels<MeterAdvViewModel>()
 
-	// 傳入值
+
 	private val type by lazy { arguments?.getString("type") ?: "read" }
 	private val value by lazy { arguments?.getString("value") ?: "" }
 	private val param1 by lazy { kotlin.runCatching { value.substring(0, 3).toInt().toString() }.getOrElse { "" } }
@@ -32,7 +32,7 @@ class R50DetailSheet : BottomSheetDialogFragment() {
 
 	override fun onDismiss(dialog:DialogInterface) {
 		super.onDismiss(dialog)
-		// 關閉時將設定值傳送給訂閱者
+
 		if (type == "write") {
 			advVM.emitResult(SheetResult.S50(getResult()))
 		}
@@ -46,15 +46,15 @@ class R50DetailSheet : BottomSheetDialogFragment() {
 	override fun onViewCreated(view:View, savedInstanceState:Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
 
-		dialog?.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE) // 防止鍵盤覆蓋BottomSheet
+		dialog?.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
 		BottomSheetBehavior.from(binding.sheet).apply {
-			peekHeight = BottomSheetBehavior.PEEK_HEIGHT_AUTO // 最大高度
-			state = BottomSheetBehavior.STATE_EXPANDED // 要被鍵盤往上推, 需使用STATE_EXPANDED
+			peekHeight = BottomSheetBehavior.PEEK_HEIGHT_AUTO
+			state = BottomSheetBehavior.STATE_EXPANDED
 		}
 
 		binding.closeBtn.setOnClickListener { dismiss() }
 
-		//根據傳入值，設定UI
+
 		binding.input1.editText?.setText(param1)
 		binding.input2.editText?.setText(param2)
 		binding.input3.editText?.setText(param3)
@@ -87,7 +87,7 @@ class R50DetailSheet : BottomSheetDialogFragment() {
 		}
 	}
 
-	// 將ui設定 轉成 傳送用data
+
 	private fun getResult():String {
 		val param1 = binding.input1.editText?.text.toString().padStart(3, '0').substring(0, 3)
 		val param2 = binding.input2.editText?.text.toString().padStart(3, '0').substring(0, 3)

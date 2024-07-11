@@ -11,65 +11,59 @@ import com.wavein.gasmeter.tools.toString10
 import java.text.DecimalFormat
 
 data class MeterRow(
-	// 原csv欄位(不照順序,*號為csv有保存欄位名)
-	val group:String,                            // 群組 *群組號
-	val groupName:String? = null,                // 群組名稱 *區域名稱
-	val queue:String,                            // *抄錶順路
-	val custId:String,                           // *客戶編號
-	val custName:String,                         // *姓名
-	val custAddr:String,                         // *地址
-	val remark:String? = null,                   // *記事
 
-	val meterId:String,                          // 瓦斯表ID *通信ID
-	val meterDegree:Float? = null,               // 抄表值 *抄錶數值
-	val meterReadTime:String? = null,            // 抄表時間 *抄錶日期
+	val group:String,
+	val groupName:String? = null,
+	val queue:String,
+	val custId:String,
+	val custName:String,
+	val custAddr:String,
+	val remark:String? = null,
 
-	val lastMeterDegree:Float? = null,           // 前次抄表值 *前次抄表數值
-	val lastMeterReadTime:String? = null,        // 前次抄表時間 *前次抄表日期
-	val isManualMeterDegree:Boolean? = null,     // *人工輸入
-	val callingChannel:String? = null,           // *通信CH
-	var electricFieldStrength:String? = null,    // 電波強度
+	val meterId:String,
+	val meterDegree:Float? = null,
+	val meterReadTime:String? = null,
 
-	// 原csv欄位,未使用
-	val businessesCode:String? = null,           // *事業体碼
-	val dash:String? = null,                     // -
+	val lastMeterDegree:Float? = null,
+	val lastMeterReadTime:String? = null,
+	val isManualMeterDegree:Boolean? = null,
+	val callingChannel:String? = null,
+	var electricFieldStrength:String? = null,
 
-	// 進階欄位
-	val alarmInfo1:String? = null,                   // *告警1 (アラーム情報1 03-01 {8})
-	val alarmInfo2:String? = null,                   // *告警2 (アラーム情報2 03-02 {8}) (讀取時用R24)
-	val batteryVoltageDropAlarm:Boolean? = null,     // *電池電壓警報
-	val innerPipeLeakageAlarm:Boolean? = null,       // *洩漏警報
-	val shutoff:Boolean? = null,                     // *遮斷
-	val pressureValue:String? = null,                // *壓力值 (現在圧力値 51-01 {4})
-	val shutdownHistory1:String? = null,             // *遮斷履歷1 (遮断5回分履歴 23-01 {13*5})
-	val shutdownHistory2:String? = null,             // *遮斷履歷2
-	val shutdownHistory3:String? = null,             // *遮斷履歷3
-	val shutdownHistory4:String? = null,             // *遮斷履歷4
-	val shutdownHistory5:String? = null,             // *遮斷履歷5
-	val meterStatus:String? = null,                  // 表狀態 (メーター状態 16-02 {9})
-	val hourlyUsage:String? = null,                  // 每小時使用量 (時間使用量 57-01 {4})
-	val maximumUsage:String? = null,                 // 最大使用量 (最大使用量 58-01 {4})
-	val maximumUsageTime:String? = null,             // 最大使用量時間 (最大使用量日時 58-02 {8})
-	val oneDayMaximumUsage:String? = null,           // 1日最大使用量 (1日最大使用量 59-01 {6})
-	val oneDayMaximumUsageDate:String? = null,       // 1日最大使用量日期 (1日最大使用量月日 59-02 {4})
-	val registerFuseFlowRate1:String? = null,        // 登錄母火流量1 (登録口火流量1 24-06 {4*2}) (設定時用S31)
-	val registerFuseFlowRate2:String? = null,        // 登錄母火流量2
-	/** 壓力遮斷判定值 (圧力遮断判定値 50-01~50-05 {13})
-	 * 3bit (圧力低下判定値 50-01)
-	 * 3bit (低下復圧状態判定値 50-02)
-	 * 3bit (上昇復圧状態判定値 50-03)
-	 * 3bit (圧力上昇判定値 50-04)
-	 * 1bit (圧力遮断判定時間 50-05)
-	 */
+
+	val businessesCode:String? = null,
+	val dash:String? = null,
+
+
+	val alarmInfo1:String? = null,
+	val alarmInfo2:String? = null,
+	val batteryVoltageDropAlarm:Boolean? = null,
+	val innerPipeLeakageAlarm:Boolean? = null,
+	val shutoff:Boolean? = null,
+	val pressureValue:String? = null,
+	val shutdownHistory1:String? = null,
+	val shutdownHistory2:String? = null,
+	val shutdownHistory3:String? = null,
+	val shutdownHistory4:String? = null,
+	val shutdownHistory5:String? = null,
+	val meterStatus:String? = null,
+	val hourlyUsage:String? = null,
+	val maximumUsage:String? = null,
+	val maximumUsageTime:String? = null,
+	val oneDayMaximumUsage:String? = null,
+	val oneDayMaximumUsageDate:String? = null,
+	val registerFuseFlowRate1:String? = null,
+	val registerFuseFlowRate2:String? = null,
+	
 	val pressureShutOffJudgmentValue:String? = null,
 
 	) {
-	// 使用量
+
 	val degreeUsed get() = if (meterDegree == null || lastMeterDegree == null) null else meterDegree - lastMeterDegree
 
-	// 已抄數量提示
-	val degreeRead:Boolean get() = meterDegree != null // 已抄表
-	val degreeNegative:Boolean get() = meterDegree != null && (degreeUsed ?: 0f) < 0f // 使用量負數
+
+	val degreeRead:Boolean get() = meterDegree != null
+	val degreeNegative:Boolean get() = meterDegree != null && (degreeUsed ?: 0f) < 0f
 	val readTip:String get() = if (degreeRead) "已抄表" else "未抄表"
 	val readTipColor:Int get() = if (degreeRead) Color_Success else Color.RED
 	private val readTipSpannable:SpannableString
@@ -82,7 +76,7 @@ data class MeterRow(
 	val queueAndIdWithTip:SpannableString
 		get() = SpannableString.valueOf(SpannableStringBuilder().append("$this ").append(readTipSpannable))
 
-	// 異常提示
+
 	val error:String
 		get() {
 			return if (degreeNegative) {
@@ -94,13 +88,13 @@ data class MeterRow(
 			}
 		}
 
-	// combo下拉時顯示內容
+
 	override fun toString():String {
 		return queue
 	}
 
 	companion object {
-		// data轉bitsMap
+
 		fun data2BitsMap(data:String, charKeyLetter:String):Map<String, Map<String, Boolean>> {
 			val bitsMap = mutableMapOf<String, Map<String, Boolean>>()
 			for (i in data.indices) {
@@ -114,7 +108,7 @@ data class MeterRow(
 			return bitsMap
 		}
 
-		// bitsMap轉data
+
 		fun bitsMap2Data(bitsMap:Map<String, Map<String, Boolean>>):String {
 			var data = ""
 			bitsMap.forEach { (charKey, bMap) ->
@@ -132,7 +126,7 @@ data class MeterRow(
 
 }
 
-// csvRow 轉 meterRow
+
 fun Map<String, String>.toMeterRow():MeterRow? {
 	try {
 		val csvRow = this
@@ -156,7 +150,7 @@ fun Map<String, String>.toMeterRow():MeterRow? {
 			businessesCode = csvRow["事業体碼"] ?: return null,
 			lastMeterDegree = csvRow["前次抄表數值"]?.toFloatOrNull(),
 			lastMeterReadTime = csvRow["前次抄表日期"] ?: return null,
-			//degreeUsed = csvRow["使用量"]?.toFloatOrNull(),
+
 			alarmInfo1 = csvRow["告警1"] ?: return null,
 			alarmInfo2 = csvRow["告警2"] ?: return null,
 			pressureValue = csvRow["壓力值"] ?: return null,
@@ -172,12 +166,12 @@ fun Map<String, String>.toMeterRow():MeterRow? {
 	}
 }
 
-// csvRows 轉 meterRows
+
 fun List<Map<String, String>>.toMeterRows():List<MeterRow> {
 	return this.mapNotNull { csvRow -> csvRow.toMeterRow() }
 }
 
-// meterRow 轉 csvRow
+
 private fun MeterRow.toCsvRow():Map<String, String> {
 	return mapOf(
 		"抄錶順路" to this.queue,
@@ -211,19 +205,19 @@ private fun MeterRow.toCsvRow():Map<String, String> {
 	)
 }
 
-// meterRows 轉 csvRows
+
 fun List<MeterRow>.toCsvRows():List<Map<String, String>> {
 	return this.map { it.toCsvRow() }
 }
 
-// meterRows 轉 meterGroups
+
 fun List<MeterRow>.toMeterGroups():List<MeterGroup> {
 	return this
 		.groupBy { it.group }
 		.map { (group, meterRows) -> MeterGroup(group, meterRows) }
 }
 
-// csvRows 轉 meterGroups
+
 fun List<Map<String, String>>.csvToMeterGroups():List<MeterGroup> {
 	return this.toMeterRows().toMeterGroups()
 }

@@ -9,7 +9,7 @@ import androidx.gridlayout.widget.GridLayout
 import com.wavein.gasmeter.R
 import com.wavein.gasmeter.databinding.CustFieldAdv51Binding
 
-// 自訂View元件: 進階欄位_要求_可增加顯示欄位(R51,R57,R58,R59)
+
 class FieldAdv51 : LinearLayout {
 	var binding:CustFieldAdv51Binding? = null
 
@@ -31,7 +31,7 @@ class FieldAdv51 : LinearLayout {
 	}
 
 	private fun initLayout(attrs:AttributeSet?, defStyle:Int? = null) {
-		// 取得 xml 傳入參數
+
 		val typedArray = if (defStyle == null)
 			context.obtainStyledAttributes(attrs, R.styleable.FieldAdv51)
 		else
@@ -42,7 +42,7 @@ class FieldAdv51 : LinearLayout {
 		readMap = readHeaders.zip(readValues).toMap()
 		setReadMap(readMap)
 		typedArray.recycle()
-		// ui
+
 		binding?.titleTv?.text = title
 	}
 

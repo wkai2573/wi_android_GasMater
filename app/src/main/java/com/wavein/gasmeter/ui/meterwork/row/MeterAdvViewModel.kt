@@ -10,9 +10,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MeterAdvViewModel @Inject constructor(
-	private val savedStateHandle:SavedStateHandle, //導航參數(hilt注入)
-	// 注入實例
-	//...
+	private val savedStateHandle:SavedStateHandle,
+
+
 ) : ViewModel() {
 
 	val sheetDissmissSharedFlow = MutableSharedFlow<SheetResult>()
@@ -23,7 +23,7 @@ class MeterAdvViewModel @Inject constructor(
 }
 
 
-// 溝通結束事件
+
 sealed class SheetResult {
 	data class S16(val data:String) : SheetResult()
 	data class S50(val data:String) : SheetResult()

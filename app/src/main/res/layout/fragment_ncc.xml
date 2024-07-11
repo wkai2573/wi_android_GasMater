@@ -175,7 +175,7 @@
     android:paddingEnd="4dp"
     app:srcCompat="@drawable/logo_azbil_300x103" />
 
-  <!-- 權限要求layout -->
+
   <include
     android:id="@+id/permission"
     layout="@layout/layout_permission"

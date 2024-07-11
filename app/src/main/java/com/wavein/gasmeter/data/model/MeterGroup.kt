@@ -11,11 +11,11 @@ data class MeterGroup(
 	val group:String,
 	val meterRows:List<MeterRow>,
 ) {
-	// 總數 & 已抄表
+
 	private val totalCount:Int get() = meterRows.count()
 	private val readCount:Int get() = meterRows.count { it.degreeRead }
 
-	// 已抄數量提示
+
 	val allRead:Boolean get() = readCount == totalCount
 	val readTip:String get() = "${readCount}/${totalCount}"
 	val readTipColor:Int get() = if (allRead) Color_Success else Color.RED
@@ -29,7 +29,7 @@ data class MeterGroup(
 	val groupWithTip:SpannableString
 		get() = SpannableString.valueOf(SpannableStringBuilder().append("$this (").append(readTipSpannable).append(")"))
 
-	// 異常提示
+
 	val error:String
 		get() {
 			val degreeUsedNegativeCount = meterRows.filter { meterRow -> meterRow.degreeNegative }.size
@@ -40,7 +40,7 @@ data class MeterGroup(
 			}
 		}
 
-	// combo下拉時顯示內容: 群組號(區域名稱)
+
 	override fun toString():String {
 		return "${this.group}(${this.meterRows[0].groupName})"
 	}

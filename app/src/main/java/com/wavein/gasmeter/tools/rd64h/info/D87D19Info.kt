@@ -4,7 +4,7 @@ import com.wavein.gasmeter.tools.rd64h.ALine
 import com.wavein.gasmeter.tools.rd64h.SecurityLevel
 
 data class D87D19Info(override val text:String) : BaseInfo(text) {
-	var data:String = "" // 時刻(19-01) 12位
+	var data:String = ""
 
 	init {
 		val matchResult = Regex("^ZD(.{14})D87(.+)$").find(text) ?: throw Exception("異常:D87D19Info")

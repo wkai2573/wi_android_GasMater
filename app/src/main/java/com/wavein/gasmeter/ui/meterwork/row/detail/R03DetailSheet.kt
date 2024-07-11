@@ -19,7 +19,7 @@ class R03DetailSheet : BottomSheetDialogFragment() {
 	private lateinit var binding:BsheetR03DetailBinding
 	private val advVM by activityViewModels<MeterAdvViewModel>()
 
-	// 傳入值
+
 	private val valueBitsMap by lazy {
 		var value = arguments?.getString("value") ?: "@@@@@@@@"
 		if (value.length < 8) value = value.padEnd(8, '@')
@@ -59,7 +59,7 @@ class R03DetailSheet : BottomSheetDialogFragment() {
 
 		binding.closeBtn.setOnClickListener { dismiss() }
 
-		//根據傳入值，設定UI(維持按鈕顯示 & 各option的值)
+
 		optionViews.forEach {
 			val tagSplit = it.tag.toString().split("|")
 			val charIndex = tagSplit[0]

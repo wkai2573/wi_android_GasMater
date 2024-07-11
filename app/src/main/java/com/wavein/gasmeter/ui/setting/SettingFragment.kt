@@ -57,7 +57,7 @@ import java.util.Locale
 @SuppressLint("MissingPermission")
 class SettingFragment : Fragment() {
 
-	// binding & viewModel
+
 	private var _binding:FragmentSettingBinding? = null
 	private val binding get() = _binding!!
 	private val blVM by activityViewModels<BluetoothViewModel>()
@@ -66,12 +66,12 @@ class SettingFragment : Fragment() {
 	private val ftpVM by activityViewModels<FtpViewModel>()
 	private val settingVM by activityViewModels<SettingViewModel>()
 
-	// cb
+
 	private var onBluetoothOn:(() -> Unit)? = null
 
-	// 靜態變數
+
 	companion object {
-		var firstSelectLastBtDevice = true // 首次選擇上次設備
+		var firstSelectLastBtDevice = true
 	}
 
 	override fun onDestroyView() {
@@ -89,14 +89,11 @@ class SettingFragment : Fragment() {
 		checkPermissionAndInitUi()
 	}
 
-	// 當所有權限皆允許
+
 	@OptIn(ExperimentalUnsignedTypes::class)
 	private fun onAllPermissionAllow() {
 		binding.permission.layout.visibility = View.GONE
 
-		// 藍牙設備__________
-
-		// APP開啟時 首次選擇上次設備
 		if (firstSelectLastBtDevice) {
 			firstSelectLastBtDevice = false
 			val lastBtDeviceMac = Preference[Preference.LAST_BT_DEVICE_MAC, ""]!!
@@ -114,7 +111,6 @@ class SettingFragment : Fragment() {
 			checkBluetoothOn { BtDialogFragment.open(requireContext()) }
 		}
 
-		// 訂閱藍牙設備
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.autoConnectDeviceStateFlow.asStateFlow().collectLatest { device ->
@@ -131,7 +127,7 @@ class SettingFragment : Fragment() {
 			}
 		}
 
-		// 訂閱藍牙事件: 連線成功後立即中斷連線
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				blVM.connectEventFlow.asSharedFlow().collectLatest { event ->
@@ -164,9 +160,9 @@ class SettingFragment : Fragment() {
 			}
 		}
 
-		// 檔案管理__________
 
-		// 訂閱Csv檔案
+
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				csvVM.selectedFileStateFlow.asStateFlow().collectLatest { fileState ->
@@ -189,7 +185,7 @@ class SettingFragment : Fragment() {
 		binding.selectCsvFromLocalBtn.setOnClickListener {
 			val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
 				addCategory(Intent.CATEGORY_OPENABLE)
-				type = "text/*" // 檔案類型 ("text/csv"會無效)
+				type = "text/*"
 			}
 			csvFilePickerLauncher.launch(intent)
 		}
@@ -277,9 +273,6 @@ class SettingFragment : Fragment() {
 				onSaveCallback = { ftpVM.saveFtpInfo(it) })
 		}
 
-		// 產品註冊__________
-
-		// ui
 		val savedAppkey = Preference[Preference.APP_KEY, ""]!!
 		val savedCompany = Preference[Preference.USER_COMPANY, ""]!!
 		val savedDep = Preference[Preference.USER_DEP, ""]!!
@@ -304,12 +297,10 @@ class SettingFragment : Fragment() {
 				return@setOnClickListener
 			}
 			ftpVM.checkAppActivate(uuid, appkey, company, dep, username)
-			// 關閉軟鍵盤
 			val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
 			imm?.hideSoftInputFromWindow(binding.appkeyInput.editText?.windowToken, 0)
 		}
 
-		// 訂閱FTP連接狀態 (loading)
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				ftpVM.ftpConnStateFlow.asStateFlow().collectLatest {
@@ -324,7 +315,6 @@ class SettingFragment : Fragment() {
 			}
 		}
 
-		// 訂閱開通狀態
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				ftpVM.appStateFlow.asStateFlow().collectLatest {
@@ -377,13 +367,6 @@ class SettingFragment : Fragment() {
 			}
 		}
 
-		/**
-		 * 初始化APP開通狀態
-		 * 開啟APP, 狀態=未檢查 ->
-		 * 	有開通+有網路 -> 檢查序號，然後 { 狀態=開通|未開通 }
-		 * 	有開通+無網路 { 狀態=開通 }
-		 * 	無開通 { 狀態=未開通 }
-		 */
 		if (ftpVM.appStateFlow.value == AppState.NotChecked) {
 			when (Preference[Preference.APP_ACTIVATED, false]!!) {
 				true -> {
@@ -399,9 +382,9 @@ class SettingFragment : Fragment() {
 			}
 		}
 
-		// 系統設定__________
 
-		// 訂閱系統區塊顯示
+
+
 		viewLifecycleOwner.lifecycleScope.launch {
 			viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 				ftpVM.systemAreaOpenedStateFlow.asStateFlow().collectLatest {
@@ -413,14 +396,14 @@ class SettingFragment : Fragment() {
 			}
 		}
 
-		// 其他初始化__________
 
-		// 每次開啟時上傳log
+
+
 		ftpVM.uploadLog()
 	}
 
 
-	// 檢查藍牙是否開啟
+
 	private fun checkBluetoothOn(onBluetoothOn:() -> Unit) {
 		this.onBluetoothOn = onBluetoothOn
 		if (!blVM.isBluetoothOn()) {
@@ -430,7 +413,7 @@ class SettingFragment : Fragment() {
 		}
 	}
 
-	// 藍牙請求器
+
 	private val bluetoothRequestLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
 		if (result.resultCode == Activity.RESULT_OK) {
 			this.onBluetoothOn?.invoke()
@@ -439,27 +422,27 @@ class SettingFragment : Fragment() {
 		this.onBluetoothOn = null
 	}
 
-	// csv檔案PickerLauncher
+
 	private val csvFilePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
 		csvVM.readCsvByPicker(requireContext(), result, meterVM)
 	}
 
-	//region __________權限方法__________
 
-	// 檢查權限並重置UI
+
+
 	private fun checkPermissionAndInitUi() {
 		if (hasPermissions() && hasExternalStorageManagerPermission()) {
 			onAllPermissionAllow()
 			return
 		}
-		// 有權限不同意
+
 		onAnyPermissionNoAllow()
 	}
 
-	// 通常權限
+
 	private val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
 		arrayOf(
-			// 藍牙需要
+
 			Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_FINE_LOCATION,
 		)
 	} else {
@@ -468,7 +451,7 @@ class SettingFragment : Fragment() {
 		)
 	}
 
-	// 通常權限_通常權限請求器
+
 	private val requestPermissionLauncher:ActivityResultLauncher<Array<String>> by lazy {
 		registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissionsMap ->
 			if (!hasExternalStorageManagerPermission()) {
@@ -479,11 +462,11 @@ class SettingFragment : Fragment() {
 		}
 	}
 
-	// 通常權限_是否有通常權限
+
 	private fun hasPermissions(context:Context = requireContext(), permissions:Array<String> = this.permissions):Boolean =
 		getPermissionsMap(context, permissions).all { (permission, isGranted) -> isGranted }
 
-	// 通常權限_取得通常權限狀態
+
 	private fun getPermissionsMap(
 		context:Context = requireContext(),
 		permissions:Array<String> = this.permissions,
@@ -491,7 +474,7 @@ class SettingFragment : Fragment() {
 		ActivityCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
 	}
 
-	// 外部存儲_請求外部存儲管理權限
+
 	private fun requestExternalStorageManagerPermission() {
 		if (!hasExternalStorageManagerPermission()) {
 			val intent = Intent().apply {
@@ -502,23 +485,23 @@ class SettingFragment : Fragment() {
 		}
 	}
 
-	// 外部存儲_外部存儲管理權限請求器
+
 	private val requestExternalStorageManagerPermissionLauncher:ActivityResultLauncher<Intent> =
 		registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
 			checkPermissionAndInitUi()
 		}
 
-	// 外部存儲_是否有外部存儲管理權限
+
 	private fun hasExternalStorageManagerPermission() =
 		Build.VERSION.SDK_INT < Build.VERSION_CODES.R
 				|| Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Environment.isExternalStorageManager()
 
-	// 首次要求權限
+
 	private var firstRequestPermission = true
 
-	// 當有權限不允許
+
 	private fun onAnyPermissionNoAllow() {
-		// 權限提示文字
+
 		val revokedPermissions:List<String> = getPermissionsMap().filterValues { isGranted -> !isGranted }.map { (permission, isGranted) -> permission }
 		val permission1Warning = if (revokedPermissions.isEmpty()) "" else
 			"缺少權限: ${revokedPermissions.map { p -> p.replace(".+\\.".toRegex(), "") }.joinToString(", ")}"
@@ -531,7 +514,7 @@ class SettingFragment : Fragment() {
 		""".trimIndent()
 		binding.permission.revokedTv.text = revokedPermissionsText
 
-		// 權限請求按鈕
+
 		var requestPermissionHandle = {}
 		if (!hasPermissions()) {
 			requestPermissionHandle = { requestPermissionLauncher.launch(permissions) }
@@ -545,5 +528,5 @@ class SettingFragment : Fragment() {
 		}
 	}
 
-	//endregion
+
 }

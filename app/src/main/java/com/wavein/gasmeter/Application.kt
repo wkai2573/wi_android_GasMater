@@ -7,6 +7,6 @@ import dagger.hilt.android.HiltAndroidApp
 class Application : Application() {
 
 	companion object {
-		const val IS_DEV_MODE = false // todo 正式時記得設為false
+		const val IS_DEV_MODE = true
 	}
 }

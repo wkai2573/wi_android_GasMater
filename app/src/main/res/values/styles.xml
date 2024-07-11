@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-  <!-- 對話框樣式(棄用) -->
+
   <style name="MyAlertDialogTheme" parent="@style/ThemeOverlay.MaterialComponents.MaterialAlertDialog">
     <item name="materialAlertDialogTitleTextStyle">@style/AlertDialog.Title.Text</item>
     <item name="materialAlertDialogBodyTextStyle">@style/AlertDialog.Body.Text</item>
@@ -17,46 +17,46 @@
   </style>
 
 
-  <!-- 進度條 -->
-  <!-- https://miguel-lasa.medium.com/lightning-round-android-gradient-progress-bar-d7ee38223c3f -->
+
+
   <style name="MacroHorizontalProgressBarStyle" parent="Widget.AppCompat.ProgressBar.Horizontal">
     <item name="android:layout_width">0dp</item>
     <item name="android:layout_height">5dp</item>
     <item name="android:max">100</item>
   </style>
 
-  <!-- MaterialButtonToggleGroup -->
-  <!-- https://blog.csdn.net/Yu1441/article/details/126225531 -->
-  <!--选项卡style-->
+
+
+
   <style name="MyMaterialButtonToggleGroup" parent="Widget.MaterialComponents.MaterialButtonToggleGroup">
-    <!--选项卡背景边框和选中颜色，如果MaterialButton设置边框颜色后无效-->
-    <!--<item name="colorPrimary">@color/white</item>-->
-    <!--排列方式-->
+
+
+
     <item name="android:orientation">horizontal</item>
-    <!--左上角弧度-->
+
     <item name="cornerSizeTopLeft">4dp</item>
-    <!--右上角弧度-->
+
     <item name="cornerSizeTopRight">4dp</item>
-    <!--左下角弧度-->
+
     <item name="cornerSizeBottomLeft">4dp</item>
-    <!--右下角弧度-->
+
     <item name="cornerSizeBottomRight">4dp</item>
   </style>
 
-  <!--選項卡內部按鈕顏色-->
+
   <style name="MyOutlinedButton" parent="Widget.MaterialComponents.Button.OutlinedButton">
     <item name="android:minWidth">10dip</item>
     <item name="android:paddingLeft">8dp</item>
     <item name="android:paddingTop">0dp</item>
     <item name="android:paddingRight">8dp</item>
     <item name="android:paddingBottom">0dp</item>
-    <!--邊框顏色-->
-    <!--<item name="strokeColor">?attr/background</item>-->
-    <!--邊框寬度-->
-    <!--<item name="strokeWidth">1dp</item>-->
-    <!--文字按下抬起顏色-->
-    <!--<item name="android:textColor">@drawable/outline_text_color</item>-->
-    <!--背景按下抬起顏色-->
-    <!--<item name="backgroundTint">@drawable/outline_bg_color</item>-->
+
+
+
+
+
+
+
+
   </style>
 </resources>
